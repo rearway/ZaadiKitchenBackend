@@ -1,0 +1,49 @@
+Zaadi Kitchen — 3. Admin Dashboard — Feature Sign-Off,,,,,,,
+Client Sign-Off Key:  ✓ Agreed     ✗ Disputed     ? Needs Clarification     — Not reviewed,,,,,,,
+#,Feature / Module,Description,Acceptance Criteria,Priority,Est. Hours,Client Sign-Off,Notes / Amendments
+  DAILY OPERATIONS,,,,,,,
+1,Live meal count dashboard,Real-time meal totals by type with production lock status.,"• Counts update in real-time (or on refresh)
+• Lock status shows Locked / Cooking correctly after 6 PM
+• Breakdown by meal type accurate
+• Total count matches label generator count",Critical,12h,—,
+2,Label generator & print,"PDF labels at 100×60 mm via Puppeteer, batch select, 1-click print.","• Labels render at exactly 100×60 mm
+• Batch select works for all or subset of orders
+• Print dialog triggered with 1 click
+• Label includes: customer name, address, floor/desk, meal name, date
+• Tested on thermal printer hardware before UAT",Critical,12h,—,
+3,Driver CSV export,Per-building delivery list for driver briefing.,"• CSV downloads with 1 click
+• Grouped by building, then floor
+• Includes all fields needed for driver briefing",High,4h,—,
+4,Delivery status board,Per-building delivery overview with issue flags.,"• All active deliveries visible
+• Issue flags visible for reported problems
+• Driver assignment visible per delivery",High,8h,—,
+  MENU MANAGEMENT,,,,,,,
+5,Weekly menu CRUD,"Create, edit, delete meals with photo upload and nutritional data.","• All CRUD operations functional
+• Photo uploaded to S3 and displayed in app within 5 minutes
+• Calorie and allergen data saved and reflected in app
+• Salad flag toggleable per meal",High,10h,—,
+6,Plan configuration,"Edit plan prices, skip allowances, pause limits, salad pricing.","• Price changes reflected in app immediately
+• Skip allowance changes apply to new subscriptions only
+• Pause day limits enforced in app after config change",High,6h,—,
+  CUSTOMER SUPPORT,,,,,,,
+7,Customer list & search,"Filter customers by plan state, type, building, sign-up date.","• Search returns results within 2 seconds
+• All filter combinations work correctly
+• Results paginated — max 50 per page",High,6h,—,
+8,Customer detail view,"Full plan history, skip/pause log, ratings, address on file.","• All plan history accurate and in order
+• Skip and pause log timestamped
+• Ratings visible with photo thumbnails
+• Current delivery address shown",High,8h,—,
+9,Issue queue,Driver-reported and customer feedback combined queue.,"• All reported issues appear in queue
+• Resolve and close actions update status
+• Closed issues archived — not deleted",High,8h,—,
+10,Manual credit / refund,Wallet credit with mandatory admin note and audit trail.,"• Credit requires admin note before submission
+• Audit trail records admin user, amount, note, timestamp
+• Credit reflected in customer wallet immediately",High,4h,—,
+  REVENUE & ANALYTICS,,,,,,,
+11,MRR / revenue overview,"Monthly recurring revenue, new vs churned subscribers, plan distribution.","• MRR calculated correctly from active subscriptions
+• New vs churned chart accurate by month
+• Plan distribution pie chart reflects current subscribers
+• Figures match billing history totals",High,10h,—,
+12,Referral stats panel,"Top referrers, codes used, credits issued.","• Top referrers ranked by referral count
+• Total codes used and credits issued accurate
+• Data exportable to CSV",Medium,4h,—,

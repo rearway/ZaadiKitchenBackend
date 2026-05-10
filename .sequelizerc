@@ -1,0 +1,13 @@
+const path = require('path')
+
+module.exports = {
+  config: path.resolve(__dirname, '.sequelizerc.js'),
+  'migrations-path': path.resolve(
+    __dirname,
+    'src/infrastructure/SequelizePersistence/migrations'
+  ),
+  'seeders-path': path.resolve(
+    __dirname,
+    'src/infrastructure/SequelizePersistence/seeders'
+  ),
+}

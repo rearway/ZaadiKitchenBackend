@@ -1,0 +1,12 @@
+Zaadi Kitchen — 4. Landing Page — Feature Sign-Off,,,,,,,
+Client Sign-Off Key:  ✓ Agreed     ✗ Disputed     ? Needs Clarification     — Not reviewed,,,,,,,
+#,Feature / Module,Description,Acceptance Criteria,Priority,Est. Hours,Client Sign-Off,Notes / Amendments
+  LANDING PAGE,,,,,,,
+1,Hero + plan pricing section,Static marketing content with plan comparison cards.,"• Hero section displays brand messaging and key visual
+• All plan tiers shown with correct pricing
+• Key benefits listed accurately
+• Page loads in under 3 seconds on mobile",High,6h,—,
+2,App download + SEO,App Store and Play Store deep links with meta tags.,"• App Store link opens correct iOS listing
+• Play Store link opens correct Android listing
+• Page title and meta description set correctly
+• Open Graph tags set for social sharing",High,4h,—,

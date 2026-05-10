@@ -1,0 +1,96 @@
+Zaadi Kitchen — 2. Backend APIs — Feature Sign-Off,,,,,,,
+Client Sign-Off Key:  ✓ Agreed     ✗ Disputed     ? Needs Clarification     — Not reviewed,,,,,,,
+#,Feature / Module,Description,Acceptance Criteria,Priority,Est. Hours,Client Sign-Off,Notes / Amendments
+  IDENTITY & AUTHENTICATION,,,,,,,
+1,send-otp / verify-otp,"OTP via FCM push notification, SMS fallback via Twilio.","• OTP delivered within 30 seconds
+• Rate limiting enforced — max 3 attempts before lockout
+• Attempt tracking stored server-side
+• SMS fallback triggered if FCM fails",Critical,12h,—,
+2,refresh-token / logout,JWT rotation with refresh token family management.,"• Access token refreshed silently before expiry
+• Logout invalidates all device tokens
+• Refresh token family prevents reuse after rotation",Critical,6h,—,
+3,update-profile,"Update name, language preference, FCM push token.","• All fields validated server-side
+• FCM token updated on each app launch",High,4h,—,
+4,Role middleware & guards,CUSTOMER / DRIVER / ADMIN guards on all protected routes.,"• CUSTOMER cannot access DRIVER or ADMIN endpoints
+• DRIVER cannot access ADMIN endpoints
+• Unauthorized requests return 403 with clear message",Critical,6h,—,
+  ADDRESS & BUILDINGS,,,,,,,
+5,search-buildings,Google Places API proxy with internal DB cache.,"• Results returned within 2 seconds
+• Repeated searches served from cache to reduce API cost
+• Results limited to GCC markets",High,6h,—,
+6,CRUD — address management,"save, list, edit, delete, set-default for delivery addresses.","• All CRUD operations return correct status codes
+• Default address reflected in subscription delivery
+• Deleted addresses cannot be used in new orders",High,8h,—,
+  SUBSCRIPTION & PLAN ENGINE,,,,,,,
+7,get-plan-status,"Returns state enum, days remaining, skip count, delivery count.","• State enum is always one of: NEW, ACTIVE, PAUSED, EXPIRED
+• Days remaining calculated accurately
+• Skip count reflects actual remaining skips",Critical,6h,—,
+8,create-subscription,"Creates new subscription with plan type, start date, address.","• Only triggered after confirmed payment webhook
+• Start date calculated correctly based on plan type
+• Subscription state set to ACTIVE immediately",Critical,6h,—,
+9,renew / upgrade plan,"Prorated cost, wallet credit offset, state transition.","• Prorated amount calculated correctly
+• Wallet credit applied before charging gateway
+• Subscription end date extended correctly on renewal",Critical,8h,—,
+10,pause-subscription,"Date range validation, max pause days, ACTIVE → PAUSED.","• Max pause days rule enforced server-side
+• State transitions to PAUSED at correct start date
+• Delivery records suspended for pause period",High,8h,—,
+11,resume-subscription,"Recalculate end date, PAUSED → ACTIVE, delivery re-schedule.","• End date recalculated to account for paused days
+• State transitions to ACTIVE immediately on resume
+• Delivery schedule reinstated from resume date",High,6h,—,
+  MEAL ENGINE,,,,,,,
+12,get-menu (weekly),"Per-day meals with calorie data, salad flag, switch eligibility.","• Correct meals returned for each day of the week
+• Calorie and allergen data accurate
+• Switch eligibility flag reflects 6 PM lock state",Critical,8h,—,
+13,switch-meal-type,Whole plan or specific days switch within allowed window.,"• Switch window validated server-side — blocked after 6 PM
+• Whole-plan switch updates all future records
+• Specific-day switch updates only selected days",High,8h,—,
+14,skip-day,"6 PM lock via Redis, skip counter decrement, audit log.","• 6 PM lock enforced — skip rejected after cutoff
+• Skip counter decrements atomically
+• Audit log entry created for every skip
+• Insufficient skip balance returns clear error",Critical,10h,—,
+15,undo-skip,"Time-window validation, counter restore, delivery re-add.","• Undo only permitted within defined window
+• Skip counter restored on successful undo
+• Delivery record reinstated in schedule",High,6h,—,
+16,add-salad toggle,Per-day per-user salad add-on.,"• Toggle state persisted per user per day
+• Salad reflected in production sheet counts
+• Toggle unavailable after 6 PM lock",Medium,4h,—,
+17,get-meal-history,Paginated delivery history with calorie totals.,"• Results paginated — max 20 per page
+• Each entry includes meal name, date, calories, status
+• Correct total calories per entry",Medium,6h,—,
+  OPS & DELIVERY,,,,,,,
+18,get-daily-production,Aggregated meal counts per type for kitchen and admin.,"• Counts accurate as of 6 PM lock each day
+• Broken down by meal type
+• Endpoint used by admin dashboard and label generator",Critical,8h,—,
+19,update-delivery-status,PENDING → OUT_FOR_DELIVERY → DELIVERED with timestamp.,"• Status transitions enforced in correct order only
+• Timestamp recorded at each transition
+• Driver GPS coordinates recorded on delivery",Critical,6h,—,
+20,report-issue,Driver issue reporting with photo upload.,"• Issue categories: Damaged, Missing, Wrong
+• Photo upload to S3 presigned URL
+• Issue appears in admin dashboard queue immediately",High,6h,—,
+21,generate-labels payload,Per-order label data for admin PDF generator.,"• All required label fields returned: name, address, meal, date
+• Endpoint returns accurate post-6 PM lock counts
+• Consistent with production sheet data",Critical,6h,—,
+  ENGAGEMENT & REFERRAL,,,,,,,
+22,submit-rating,"Star rating, optional photo, optional text note.","• Rating 1–5 accepted only
+• S3 presigned URL generated for photo upload
+• Rating visible in admin customer detail view",Medium,6h,—,
+23,get-referral-stats,"Referral code, uses, and credits earned.","• Unique code per user confirmed
+• Use count accurate
+• Credits earned reflect actual referral completions",Medium,4h,—,
+24,apply-referral,"Validate code on sign-up, credit both parties.","• Invalid or expired code returns clear error
+• Referrer credited after referee completes first payment
+• Referee credited at sign-up",Medium,4h,—,
+  PAYMENTS,,,,,,,
+25,init-payment,Gateway session creation with amount calculation.,"• Session created with correct amount
+• Plan linked to payment session
+• Gateway session expires after 15 minutes",Critical,8h,—,
+26,webhook-handler,"Signature verification, idempotency key, subscription trigger.","• Signature verified before processing
+• Idempotency key prevents double-processing on retries
+• Subscription created/renewed only on confirmed payment
+• Failed payment webhook returns 200 to gateway (no retry storm)",Critical,8h,—,
+27,get-billing-history,Invoice list with PDF receipt generation via Puppeteer.,"• All transactions returned in reverse chronological order
+• PDF receipt generated per transaction
+• Receipt PDF correctly formatted with order details",High,6h,—,
+28,wallet ledger,"Credit/debit transactions, balance API, referral credit.","• Balance always accurate — no race conditions on concurrent credit
+• Each transaction has description, amount, timestamp
+• Balance cannot go below zero",High,6h,—,

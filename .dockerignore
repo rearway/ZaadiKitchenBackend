@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.git
+.github
+*.md
+.prettierrc
+eslint.config.mjs
+nest-cli.json
+docker-compose.yml
+test/

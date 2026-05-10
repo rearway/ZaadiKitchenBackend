@@ -1,0 +1,26 @@
+,,
+,Zaadi Kitchen — Feature Sign-Off Document,
+,"Technical Team + Client Agreement on Scope, Features & Acceptance Criteria",
+,,
+,Project,Zaadi Kitchen — Meal Plan Subscription Platform
+,Prepared by,Rearway
+,Date,April 2026
+,Version,1.0 — For sign-off
+,Status,PENDING SIGN-OFF
+,,
+,HOW TO USE THIS DOCUMENT,
+,1. Review each feature row across the six component sheets.,
+,"2. Each row lists: Feature, Description, Acceptance Criteria, and Priority.",
+,3. Both parties must agree on the Acceptance Criteria before build begins.,
+,4. Use the 'Client Sign-Off' column to mark: ✓ Agreed / ✗ Disputed / ? Needs Clarification.,
+,5. Use the 'Notes' column to capture any agreed amendments.,
+,6. A feature is only in-scope if the Client Sign-Off column shows ✓ Agreed.,
+,7. The 'Out of Scope' sheet lists all explicitly excluded items.,
+,,
+,SHEETS IN THIS WORKBOOK,
+,1. Mobile App,"All Flutter screens — customer flows, driver mode, push notifications"
+,2. Backend APIs,"All NestJS modules — auth, subscriptions, meal engine, payments"
+,3. Admin Dashboard,"React ops dashboard — daily ops, labels, support, analytics"
+,4. Landing Page,"React marketing page — hero, pricing, app download"
+,5. Infrastructure & QA,"AWS setup, CI/CD, 6 PM lock cron, QA & UAT"
+,6. Out of Scope,Explicitly excluded items — confirmed not in v1

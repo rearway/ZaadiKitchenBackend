@@ -1,0 +1,141 @@
+Zaadi Kitchen — 1. Mobile App — Feature Sign-Off,,,,,,,
+Client Sign-Off Key:  ✓ Agreed     ✗ Disputed     ? Needs Clarification     — Not reviewed,,,,,,,
+#,Feature / Module,Description,Acceptance Criteria,Priority,Est. Hours,Client Sign-Off,Notes / Amendments
+  A — ONBOARDING & AUTHENTICATION,,,,,,,
+1,Splash screen & language toggle,App launch screen with logo animation and EN/AR language switch.,"• Logo animation plays on launch
+• Language toggle switches EN↔AR instantly
+• Selected language persists across sessions
+• RTL layout applies correctly when Arabic is selected",High,4h,—,Assume client will share the Logo and other branding details
+2,Phone number entry,Screen for entering mobile number with country code picker.,"• International format validated before submission
+• Country code picker includes all GCC countries
+• Invalid number shows inline error — no submission",Critical,3h,—,
+3,OTP verification,OTP delivered via Push Notification (FCM) with SMS as fallback.,"• OTP delivered within 30 seconds
+• 60-second resend timer enforced on screen
+• Max 3 attempts before temporary lockout
+• Correct OTP proceeds to sign-up or home screen",Critical,6h,—,
+4,Sign-up — basic info,"Collects full name, optional email, date of birth.","• All required fields validated before submission
+• Email validated as valid format if provided
+• Form state preserved if user navigates back",High,4h,—,
+5,Sign-up — office/building search,Google Places text search for office building selection.,"• Search returns results within 2 seconds
+• Building selection saved to user profile
+• No map embed — text search only",High,5h,—,
+6,Sign-up — desk/delivery details,"Captures floor number, desk number, and delivery instructions.","• All fields accept free text
+• Delivery instructions optional, max 200 characters
+• Details saved and displayed on home screen",High,3h,—,
+7,Auth state machine,JWT token management and subscription state guard on all routes.,"• JWT refresh happens silently before expiry
+• Persistent login survives app restart
+• Expired/invalid token redirects to OTP screen
+• Subscription state (NEW/ACTIVE/PAUSED/EXPIRED) gates correct screens",Critical,8h,—,
+  B — PRE-SUBSCRIPTION (NEW USER),,,,,,,
+8,Discovery home screen,Home screen shown before any plan is purchased.,"• Menu is visible in preview/locked state
+• Choose Plan CTA is prominent
+• Benefit highlights displayed
+• Cannot access subscription screens without a plan",High,8h,—,
+9,Plan selection screen,"Comparison cards for Trial, Weekly, Monthly, Quarterly plans.","• All plan tiers displayed with correct pricing
+• Selected plan visually highlighted
+• Proceeding to checkout only enabled with a selection",Critical,6h,—,
+10,Address setup — first time,Geolocation prompt + building search + desk details on first purchase.,"• Geolocation permission prompt shown
+• Building search pre-filled if location granted
+• Address saved before checkout proceeds",High,6h,—,
+11,Onboarding route guard,Prevents access to subscription features before plan purchase.,"• Any attempt to access subscription screens redirects to plan selection
+• Guard works after app restart",High,4h,—,
+  C — ACTIVE SUBSCRIBER CORE SCREENS,,,,,,,
+12,Dynamic home screen,"Main screen for active subscribers — shows today's meal, plan status, quick actions.","• Today's meal card displayed with correct meal details
+• Plan status bar shows days remaining and plan type
+• Active delivery address shown
+• Quick Skip button visible and functional
+• Deep links to all major sections present",Critical,16h,—,
+13,Address list screen,Manage saved delivery addresses.,"• All saved addresses listed
+• Add, edit, delete, and set-default all function correctly
+• Default address reflected on home screen",High,6h,—,
+14,Menu list — Mon to Fri tabbed,Weekly meal menu with daily tabs.,"• Each day tab shows correct meals
+• Meal cards show name, photo, and calorie summary
+• Switch eligibility badge shown where applicable",High,10h,—,
+15,Meal detail screen,Full nutritional breakdown per meal.,"• Ingredients, macros, allergens, and calorie breakdown displayed
+• Add Salad toggle functional if salad is available
+• Photos load within 2 seconds",Medium,6h,—,
+16,Switch meal type screen,Switch meal for entire plan or specific days.,"• User can choose 'Entire Plan' or 'Specific Days'
+• Day picker functional for specific-day mode
+• Switch window enforced — unavailable past 6 PM for next day",High,8h,—,
+17,My plan / manage screen,"Plan overview — days remaining, skip count, delivery count, renewal.","• Days remaining calculated correctly
+• Skip count shows remaining / total
+• Renewal prompt banner appears when ≤ 5 days remain",High,8h,—,
+18,Skip a day screen,Skip next-day meal delivery with 6 PM cutoff enforcement.,"• Calendar picker shows skippable days only
+• 6 PM lock enforced — tomorrow unavailable after 6 PM
+• Skip counter decrements immediately
+• Undo available within allowed window",Critical,8h,—,
+19,Pause subscription screen,Pause active subscription for a date range.,"• Date range picker functional
+• Maximum pause days rule enforced
+• Confirmation screen shown before pause applied
+• Subscription state changes to PAUSED correctly",High,8h,—,
+20,Profile screen,Edit personal details and notification preferences.,"• Name and language preference editable and saved
+• Push notification settings toggle functional
+• Changes reflected immediately across app",Medium,6h,—,
+21,Refer a friend screen,Unique referral code with share sheet and credit tracking.,"• Unique referral code displayed per user
+• Native share sheet triggered on share tap
+• Credits earned displayed correctly
+• Referral code validated on new user sign-up",Medium,6h,—,
+22,Rate meal screen,1–5 star rating with optional photo and text.,"• Star rating 1–5 selectable
+• Photo upload optional — uploaded to S3
+• Text note optional, max 500 characters
+• Rating submitted and confirmed to user",Medium,8h,—,
+23,Meal history & calorie tracker,Paginated delivery history with calorie totals.,"• History sorted by date, newest first
+• Each entry shows meal name, date, calories
+• Cumulative calorie chart renders correctly
+• Pagination loads additional records correctly",Medium,10h,—,
+  D — RENEWAL & PAYMENT FLOWS,,,,,,,
+24,Home screen — expired state,Home screen shown when subscription has expired.,"• EXPIRED state detected and correct screen shown
+• Renewal CTA prominent
+• No active meal card shown",Critical,4h,—,
+25,Renew / upgrade plan screen,Plan selection for renewal with upgrade highlights.,"• Current plan highlighted
+• Upgrade options shown with pricing difference
+• Selecting a plan proceeds to checkout",Critical,6h,—,
+26,Checkout & order confirmation,Order summary with promo code and wallet credit.,"• Order summary shows correct plan and price
+• Promo code entry validates and applies discount
+• Wallet credit applies if available
+• Total amount shown before payment",Critical,6h,—,
+27,Payment gateway screen,"Apple Pay, Google Pay, and card — Telr or Tap integration.","• Apple Pay available on iOS where supported
+• Google Pay available on Android where supported
+• Card form validates number, expiry, CVV
+• Payment failure shows clear error message
+• Payment success triggers subscription creation",Critical,10h,—,
+28,Payment success screen,Confirmation screen with receipt summary.,"• Lottie animation plays on success
+• Receipt summary shows plan, amount, next delivery date
+• User can navigate to home from this screen",High,4h,—,
+29,Billing & payment history,Invoice list with downloadable PDF receipts.,"• All transactions listed with status
+• PDF receipt downloadable per transaction
+• Receipt PDF is correctly formatted",Medium,6h,—,
+  E — PAUSED STATE,,,,,,,
+30,Home screen — paused state,Home screen shown when subscription is paused.,"• PAUSED state detected and correct screen shown
+• Days remaining in pause shown
+• Resume CTA visible and functional",High,4h,—,
+31,Resume subscription screen,Confirm resume with optional new start date.,"• Resume confirmation shown before applying
+• Optional new start date selectable
+• Subscription transitions to ACTIVE on confirmation",High,4h,—,
+  F — DRIVER MODE,,,,,,,
+32,Driver login gate,Hidden driver entry — role determined from OTP response.,"• Driver role flag from API routes to driver home
+• No separate driver app — same build
+• Customer cannot access driver screens",Critical,4h,—,
+33,Delivery list screen,Sorted delivery list by building and floor.,"• Deliveries grouped by building then floor
+• Per-order status toggle visible
+• List refreshes on pull-to-refresh",Critical,8h,—,
+34,Delivery detail & confirm,Mark individual deliveries as delivered.,"• Mark-delivered action updates status immediately
+• Quick-call shortcut dials customer number
+• Issue reporting accessible from detail screen",Critical,8h,—,
+35,QR scan verification,Camera QR scan to confirm delivery.,"• Camera opens on tap
+• Valid QR confirms delivery
+• Invalid QR shows error
+• Confirmation feedback shown to driver",High,8h,—,
+  G — CROSS-CUTTING CONCERNS,,,,,,,
+36,EN / AR full localisation,"All strings translated, RTL layout throughout.","• Every visible string has an Arabic translation
+• RTL layout applied correctly in Arabic mode
+• Arabic date and number formats used
+• Language switch works from profile screen",Critical,16h,—,
+37,Push notifications (FCM),"Delivery reminders, skip-window alerts, renewal nudges via FCM.","• Delivery reminder sent day-before or morning-of delivery
+• Skip-window alert sent before 6 PM cutoff
+• Renewal nudge sent ≤ 5 days before expiry
+• Tapping notification deep-links to correct screen
+• User can disable notifications from profile",Critical,8h,—,
+38,Wallet / credit balance,"In-app credit display, referral earnings, usage history.","• Balance displayed correctly on checkout and profile
+• Referral credits applied correctly
+• Usage history shows credit/debit transactions",Medium,6h,—,Need to get clarity of what is logic for referal earinings

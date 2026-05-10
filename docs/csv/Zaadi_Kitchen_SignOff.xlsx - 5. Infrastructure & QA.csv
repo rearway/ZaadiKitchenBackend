@@ -1,0 +1,32 @@
+Zaadi Kitchen — 5. Infrastructure & QA — Feature Sign-Off,,,,,,,
+Client Sign-Off Key:  ✓ Agreed     ✗ Disputed     ? Needs Clarification     — Not reviewed,,,,,,,
+#,Feature / Module,Description,Acceptance Criteria,Priority,Est. Hours,Client Sign-Off,Notes / Amendments
+  AWS INFRASTRUCTURE SETUP,,,,,,,
+1,AWS core setup,"ECS/Fargate, RDS PostgreSQL, ElastiCache Redis, S3, CloudFront.","• All AWS services provisioned in correct region (GCC/ME)
+• RDS PostgreSQL accessible only from ECS security group
+• Redis accessible only from ECS security group
+• S3 bucket configured with correct access policies
+• CloudFront CDN serving static assets correctly",Critical,16h,—,
+2,CI/CD pipeline,GitHub Actions → staging and production environments.,"• Push to main branch deploys to staging automatically
+• Production deployment requires manual approval
+• Secrets managed via GitHub Secrets — no plaintext in repo
+• Failed deployments trigger alert",Critical,8h,—,
+3,6 PM lock cron job,Redis-based daily job to freeze skip/switch operations.,"• Job runs at exactly 18:00 server time daily
+• Monitoring alert fires if job runs late or fails
+• API endpoints enforce lock independent of cron
+• Lock status visible in admin dashboard",Critical,4h,—,
+4,FCM + WhatsApp infra,"Firebase project, WhatsApp Business API, webhook config.","• FCM credentials configured for both iOS and Android
+• WhatsApp Business API approved and live
+• Webhook endpoint reachable from Twilio
+• Test notification delivered successfully in staging",Critical,4h,—,
+  QUALITY ASSURANCE & UAT,,,,,,,
+5,QA testing — all flows,Full QA pass across all user flows and edge cases.,"• All subscription state transitions tested: NEW→ACTIVE→PAUSED→EXPIRED
+• 6 PM lock tested — skip and switch rejected after cutoff
+• Payment sandbox tested with success and failure scenarios
+• Push notification delivery confirmed on iOS and Android
+• EN and AR layouts tested on physical devices
+• All API error states return correct status codes and messages",Critical,28h,—,
+6,UAT + bug fix buffer,Client UAT round with bug fix and regression re-test.,"• Client has access to staging environment for UAT
+• All critical and high bugs fixed before go-live
+• Regression test run after each bug fix batch
+• Go-live checklist signed off by both parties",Critical,16h,—,

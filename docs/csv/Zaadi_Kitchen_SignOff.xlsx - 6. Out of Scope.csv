@@ -1,0 +1,17 @@
+Zaadi Kitchen — Confirmed Out of Scope (v1),,,,
+These items are explicitly excluded from v1 scope. Client must confirm each with ✓ in column E.,,,,
+#,Item,Reason / Notes,Can be added in v2?,Client Confirmed Out of Scope
+1,Native iOS / Android development,Flutter covers both platforms from a single codebase.,No — Flutter is the platform,—
+2,Map-based delivery tracking,No real-time GPS routing or map view for drivers in v1.,Yes — v2 candidate,—
+3,Third-party ERP / POS integrations,No integration with kitchen ERP or POS systems in v1.,Yes — v2 candidate,—
+4,Multi-kitchen / multi-city support,"Single city, single kitchen assumed for v1.",Yes — v2 candidate,—
+5,Ongoing AWS hosting costs,Infrastructure costs post-launch are pass-through — not in estimate.,N/A — operational cost,—
+6,App Store / Play Store submission fees,Apple Developer ($99/yr) and Google Play ($25 one-time) paid by client.,N/A — client cost,—
+7,Additional UAT rounds beyond one,One UAT round included. Additional rounds quoted separately.,Yes — at additional cost,—
+8,Arabic translation of content,UI strings translated. Meal content / marketing copy provided by client.,N/A — client responsibility,—
+9,Google Places API costs,API costs are pass-through — not included in quoted estimate.,N/A — operational cost,—
+10,WhatsApp Business API approval,Client must apply on Day 1. Approval is Twilio/Meta process — not in scope.,N/A — client action,—
+11,Payment gateway merchant account setup,Client opens Telr or Tap account. Integration is in scope.,N/A — client action,—
+12,Email marketing / CRM integrations,"No MailChimp, Klaviyo, or CRM system integrations in v1.",Yes — v2 candidate,—
+13,Advanced analytics / BI dashboards,"Basic MRR and referral stats only. No Mixpanel, Amplitude, or custom BI.",Yes — v2 candidate,—
+14,Loyalty / points programme,Referral credits only. No broader loyalty or points system in v1.,Yes — v2 candidate,—
