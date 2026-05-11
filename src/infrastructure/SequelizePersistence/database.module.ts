@@ -19,7 +19,7 @@ import { RefreshTokenModel } from './models/RefreshTokenModel.js'
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const isProduction = configService.get<string>('NODE_ENV') !== 'development'
+        const isSslEnabled = configService.get<string>('DB_SSL') === 'true'
 
         return {
           dialect: 'postgres',
@@ -31,8 +31,8 @@ import { RefreshTokenModel } from './models/RefreshTokenModel.js'
           models: [UserModel, OtpSessionModel, RefreshTokenModel],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
-          logging: isProduction ? false : console.log,
-          dialectOptions: isProduction
+          logging: isSslEnabled ? false : console.log,
+          dialectOptions: isSslEnabled
             ? {
                 ssl: {
                   require: true,
