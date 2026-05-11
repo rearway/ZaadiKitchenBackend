@@ -22,6 +22,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.sequelizerc ./
 COPY --from=builder /app/.sequelizerc.js ./
+COPY --from=builder /app/src/infrastructure/SequelizePersistence/migrations ./src/infrastructure/SequelizePersistence/migrations
 COPY --from=builder /app/start.sh ./
 RUN chmod +x start.sh
 
