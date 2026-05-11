@@ -41,7 +41,7 @@ export function makeUC(deps: Deps) {
             // Find admin user by email
             const user = await userLoader.getUserByEmail(email)
 
-            if (!user || user.role !== UserRole.ADMIN) {
+            if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.OPS)) {
                 const { AuthenticationError } = await import(
                     '../../../shared/errors/index.js'
                 )

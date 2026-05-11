@@ -38,7 +38,7 @@ export class UserModel extends Model {
 
     @AllowNull(false)
     @Default('CUSTOMER')
-    @Column(DataType.ENUM('CUSTOMER', 'DRIVER', 'ADMIN'))
+    @Column(DataType.ENUM('CUSTOMER', 'DRIVER', 'ADMIN', 'OPS'))
     role: string
 
     @AllowNull(false)

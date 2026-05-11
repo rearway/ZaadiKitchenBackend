@@ -9,6 +9,7 @@ export type SendOtpOutput = {
     data: {
         phone: string
         expiresInSeconds: number
+        otpCode?: string // Only returned in development — remove before prod
     }
 }
 
@@ -84,14 +85,25 @@ export function makeUC(deps: Deps) {
                 expiresAt,
             })
 
-            // Send OTP via WhatsApp/SMS
-            await otpService.sendOtp(phone, code)
+            // Send OTP via WhatsApp/SMS — skip gracefully if not configured
+            try {
+                await otpService.sendOtp(phone, code)
+            } catch (sendError) {
+                logger.error(
+                    'OTP notification failed (WhatsApp/SMS not configured)',
+                    sendError instanceof Error ? sendError.message : String(sendError)
+                )
+                // Do not rethrow — OTP is still valid in DB, dev can read it from response
+            }
+
+            const isDev = process.env['NODE_ENV'] === 'development'
 
             return {
                 message: 'OTP sent successfully',
                 data: {
                     phone,
                     expiresInSeconds: expirySeconds,
+                    ...(isDev && { otpCode: code }), // DEV ONLY — remove once WhatsApp is live
                 },
             }
         } catch (error) {

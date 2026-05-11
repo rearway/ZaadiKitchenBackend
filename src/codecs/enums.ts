@@ -2,6 +2,7 @@ export enum UserRole {
     CUSTOMER = 'CUSTOMER',
     DRIVER = 'DRIVER',
     ADMIN = 'ADMIN',
+    OPS = 'OPS',
 }
 
 export enum SubscriptionState {

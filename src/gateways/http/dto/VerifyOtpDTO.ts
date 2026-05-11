@@ -2,12 +2,10 @@ import {
     IsString,
     IsNotEmpty,
     Matches,
-    IsEnum,
     IsOptional,
     Length,
 } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { UserRole } from '../../../codecs/enums'
 
 export class VerifyOtpDTO {
     @ApiProperty({
@@ -30,18 +28,8 @@ export class VerifyOtpDTO {
     @Length(6, 6, { message: 'OTP code must be exactly 6 digits' })
     code: string
 
-    @ApiProperty({
-        description: 'User role (CUSTOMER or DRIVER)',
-        enum: [UserRole.CUSTOMER, UserRole.DRIVER],
-        example: UserRole.CUSTOMER,
-    })
-    @IsEnum([UserRole.CUSTOMER, UserRole.DRIVER], {
-        message: 'Role must be CUSTOMER or DRIVER',
-    })
-    role: UserRole.CUSTOMER | UserRole.DRIVER
-
     @ApiPropertyOptional({
-        description: 'Full name (required for new users)',
+        description: 'Full name — only required for new customer registrations',
         example: 'Mohammed Ali',
     })
     @IsOptional()

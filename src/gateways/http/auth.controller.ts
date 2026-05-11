@@ -60,7 +60,6 @@ export class AuthController {
         const result = await this.useCases.commands.verifyOtp({
             phone: dto.phone,
             code: dto.code,
-            role: dto.role,
             fullName: dto.fullName,
             userAgent: req.headers['user-agent'],
             ipAddress: req.ip,

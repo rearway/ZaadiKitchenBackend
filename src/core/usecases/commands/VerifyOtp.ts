@@ -3,13 +3,12 @@ import crypto from 'crypto'
 
 import { Deps } from '../../entitygateway/index.js'
 import { UserRole } from '../../../codecs/enums.js'
-import { User, UserWithoutPassword } from '../../entities/index.js'
+import { UserWithoutPassword } from '../../entities/index.js'
 
 export interface VerifyOtpInput {
     phone: string
     code: string
-    role: UserRole.CUSTOMER | UserRole.DRIVER
-    fullName?: string
+    fullName?: string       // Only used when a new customer is created
     userAgent?: string
     ipAddress?: string
 }
@@ -41,7 +40,7 @@ export function makeUC(deps: Deps) {
         } = deps
 
         try {
-            const { phone, code, role, fullName, userAgent, ipAddress } = input
+            const { phone, code, fullName, userAgent, ipAddress } = input
 
             // Get active OTP session
             const session = await otpSessionLoader.getActiveSession(phone)
@@ -55,7 +54,6 @@ export function makeUC(deps: Deps) {
 
             // Check if OTP matches
             if (session.code !== code) {
-                // Increment attempt count
                 await otpSessionPersistor.incrementAttempt(session.id)
 
                 const { OtpInvalidError } = await import(
@@ -75,17 +73,33 @@ export function makeUC(deps: Deps) {
             // Mark OTP as verified
             await otpSessionPersistor.markVerified(session.id)
 
-            // Find or create user
+            // Look up existing user
             let user = await userLoader.getUserByPhone(phone)
             let isNewUser = false
 
             if (!user) {
+                // Only CUSTOMER can self-register via OTP.
+                // DRIVER accounts are pre-created manually in the DB.
                 isNewUser = true
                 user = await userPersistor.createUser({
                     phone,
                     fullName: fullName || 'User',
-                    role,
+                    role: UserRole.CUSTOMER,
                 })
+            } else if (user.role === UserRole.DRIVER) {
+                // Driver already exists — just log them in, no changes needed.
+                // If somehow a DRIVER doesn't exist, they cannot self-register.
+            } else if (
+                user.role === UserRole.ADMIN ||
+                user.role === UserRole.OPS
+            ) {
+                // Admin/Ops must use email+password login, not OTP.
+                const { AuthenticationError } = await import(
+                    '../../../shared/errors/index.js'
+                )
+                throw new AuthenticationError(
+                    'Admin and Ops accounts must use email and password to log in.'
+                )
             }
 
             // Check if user is active
@@ -98,7 +112,7 @@ export function makeUC(deps: Deps) {
                 )
             }
 
-            // Generate JWT access token
+            // Generate JWT access token — embed role so client knows which app to open
             const accessToken = jwt.sign(
                 { sub: user.id, role: user.role, phone: user.phone },
                 jwtSecret as jwt.Secret,
@@ -146,7 +160,6 @@ function parseExpiration(expiration: string): Date {
     const match = expiration.match(/^(\d+)([smhd])$/)
 
     if (!match) {
-        // Default to 30 days
         return new Date(now + 30 * 24 * 60 * 60 * 1000)
     }
 
