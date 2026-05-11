@@ -38,7 +38,7 @@ export class AuthController {
     @ApiResponse({ status: 400, description: 'Invalid phone format' })
     @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
     @HandleErrors('send-otp')
-    async sendOtp(@Body(ValidationPipe) dto: SendOtpDTO) {
+    async sendOtp(@Body() dto: SendOtpDTO) {
         const result = await this.useCases.commands.sendOtp({
             phone: dto.phone,
         })
@@ -54,7 +54,7 @@ export class AuthController {
     @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
     @HandleErrors('verify-otp')
     async verifyOtp(
-        @Body(ValidationPipe) dto: VerifyOtpDTO,
+        @Body() dto: VerifyOtpDTO,
         @Req() req: Request
     ) {
         const result = await this.useCases.commands.verifyOtp({
@@ -73,7 +73,7 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
     @HandleErrors('admin-login')
     async adminLogin(
-        @Body(ValidationPipe) dto: AdminLoginDTO,
+        @Body() dto: AdminLoginDTO,
         @Req() req: Request
     ) {
         const result = await this.useCases.commands.adminLogin({
@@ -103,7 +103,7 @@ export class AuthController {
     @ApiOperation({ summary: 'Logout current session' })
     @ApiResponse({ status: 200, description: 'Logged out successfully' })
     @HandleErrors('logout')
-    async logout(@Body(ValidationPipe) dto: RefreshTokenDTO) {
+    async logout(@Body() dto: RefreshTokenDTO) {
         const result = await this.useCases.commands.logout({
             refreshToken: dto.refreshToken,
         })
