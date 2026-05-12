@@ -19,29 +19,29 @@ export class OtpSessionModel extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    phone: string
+    declare phone: string
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    code: string
+    declare code: string
 
     @AllowNull(false)
     @Default(0)
     @Column(DataType.INTEGER)
-    attemptCount: number
+    declare attemptCount: number
 
     @AllowNull(false)
     @Default(false)
     @Column(DataType.BOOLEAN)
-    isVerified: boolean
+    declare isVerified: boolean
 
     @AllowNull(false)
     @Column(DataType.DATE)
-    expiresAt: Date
+    declare expiresAt: Date
 
     @AllowNull(true)
     @Column(DataType.DATE)
-    lockedUntil: Date | null
+    declare lockedUntil: Date | null
 
     @CreatedAt
     declare createdAt: Date

@@ -21,6 +21,7 @@ export class OtpSessionPersistenceService
             },
             order: [['createdAt', 'DESC']],
         })
+        console.log('model is ', model)
         return model ? this.toEntity(model) : null
     }
 

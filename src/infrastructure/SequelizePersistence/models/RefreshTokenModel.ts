@@ -22,28 +22,28 @@ export class RefreshTokenModel extends Model {
     @AllowNull(false)
     @ForeignKey(() => UserModel)
     @Column(DataType.UUID)
-    userId: string
+    declare userId: string
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    token: string
+    declare token: string
 
     @AllowNull(false)
     @Column(DataType.DATE)
-    expiresAt: Date
+    declare expiresAt: Date
 
     @AllowNull(false)
     @Default(false)
     @Column(DataType.BOOLEAN)
-    isRevoked: boolean
+    declare isRevoked: boolean
 
     @AllowNull(true)
     @Column(DataType.STRING)
-    userAgent: string | null
+    declare userAgent: string | null
 
     @AllowNull(true)
     @Column(DataType.STRING)
-    ipAddress: string | null
+    declare ipAddress: string | null
 
     @CreatedAt
     declare createdAt: Date
