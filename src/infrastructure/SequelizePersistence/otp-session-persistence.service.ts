@@ -72,7 +72,7 @@ export class OtpSessionPersistenceService
     async incrementAttempt(sessionId: string): Promise<void> {
         const model = await OtpSessionModel.findByPk(sessionId)
         if (model) {
-            await model.update({ attemptCount: model.attemptCount + 1 })
+            await model.increment('attemptCount')
         }
     }
 
