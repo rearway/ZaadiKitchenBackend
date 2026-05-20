@@ -2,14 +2,16 @@ import { Deps } from '../../entitygateway/index.js'
 
 export interface SendOtpInput {
     phone: string
+    channel: string
 }
 
 export type SendOtpOutput = {
     message: string
     data: {
         phone: string
+        channel: string
         expiresInSeconds: number
-        otpCode?: string // Only returned in development — remove before prod
+        otpCode?: string
     }
 }
 
@@ -18,7 +20,7 @@ export function makeUC(deps: Deps) {
         const { logger, otpSessionLoader, otpSessionPersistor, otpService } = deps
 
         try {
-            const { phone } = input
+            const { phone, channel } = input
 
             // Validate phone format (Saudi: +966XXXXXXXXX)
             const phoneRegex = /^\+966[0-9]{9}$/
@@ -56,9 +58,10 @@ export function makeUC(deps: Deps) {
             )
 
             if (recentCount >= maxAttempts) {
-                // Lock the phone for the remaining window
+                // Lock the phone for 30 minutes
+                const lockDurationMinutes = 30
                 const lockedUntil = new Date(
-                    Date.now() + windowMinutes * 60 * 1000
+                    Date.now() + lockDurationMinutes * 60 * 1000
                 )
                 await otpSessionPersistor.lockPhone(phone, lockedUntil)
 
@@ -71,11 +74,11 @@ export function makeUC(deps: Deps) {
                 )
             }
 
-            // Generate 6-digit OTP
-            const code = Math.floor(100000 + Math.random() * 900000).toString()
+            // Generate 4-digit OTP
+            const code = Math.floor(1000 + Math.random() * 9000).toString()
 
-            // OTP expires in 30 seconds
-            const expirySeconds = 30
+            // OTP expires in 120 seconds
+            const expirySeconds = 120
             const expiresAt = new Date(Date.now() + expirySeconds * 1000)
 
             // Store OTP session
@@ -102,8 +105,9 @@ export function makeUC(deps: Deps) {
                 message: 'OTP sent successfully',
                 data: {
                     phone,
+                    channel,
                     expiresInSeconds: expirySeconds,
-                    ...(isDev && { otpCode: code }), // DEV ONLY — remove once WhatsApp is live
+                    otpCode: code, // Kept in response until WhatsApp is integrated
                 },
             }
         } catch (error) {

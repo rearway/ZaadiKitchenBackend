@@ -11,6 +11,7 @@ export const LoggerS = Symbol('logger')
 export const UserPersistenceS = Symbol('user-persistence')
 export const OtpSessionPersistenceS = Symbol('otp-session-persistence')
 export const RefreshTokenPersistenceS = Symbol('refresh-token-persistence')
+export const DeliveryPersistenceS = Symbol('delivery-persistence')
 
 // External Services
 export const OtpServiceS = Symbol('otp-service')

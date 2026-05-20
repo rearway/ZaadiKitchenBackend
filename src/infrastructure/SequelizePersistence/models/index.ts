@@ -1,3 +1,7 @@
 export { UserModel } from './UserModel.js'
 export { OtpSessionModel } from './OtpSessionModel.js'
 export { RefreshTokenModel } from './RefreshTokenModel.js'
+export { DeliveryAreaModel } from './DeliveryAreaModel.js'
+export { BuildingModel } from './BuildingModel.js'
+export { OutOfZoneInterestModel } from './OutOfZoneInterestModel.js'
+export { DeliveryLocationModel } from './DeliveryLocationModel.js'

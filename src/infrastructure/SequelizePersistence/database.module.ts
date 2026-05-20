@@ -5,6 +5,10 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { UserModel } from './models/UserModel.js'
 import { OtpSessionModel } from './models/OtpSessionModel.js'
 import { RefreshTokenModel } from './models/RefreshTokenModel.js'
+import { DeliveryAreaModel } from './models/DeliveryAreaModel.js'
+import { BuildingModel } from './models/BuildingModel.js'
+import { OutOfZoneInterestModel } from './models/OutOfZoneInterestModel.js'
+import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -28,7 +32,15 @@ import { RefreshTokenModel } from './models/RefreshTokenModel.js'
           username: configService.get<string>('DB_USERNAME', 'zaadi'),
           password: configService.get<string>('DB_PASSWORD', 'zaadi_dev_password'),
           database: configService.get<string>('DB_NAME', 'zaadi_kitchen'),
-          models: [UserModel, OtpSessionModel, RefreshTokenModel],
+          models: [
+            UserModel, 
+            OtpSessionModel, 
+            RefreshTokenModel, 
+            DeliveryAreaModel, 
+            BuildingModel, 
+            OutOfZoneInterestModel, 
+            DeliveryLocationModel
+          ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
           logging: isSslEnabled ? false : console.log,
@@ -44,6 +56,15 @@ import { RefreshTokenModel } from './models/RefreshTokenModel.js'
       },
       inject: [ConfigService],
     }),
+    SequelizeModule.forFeature([
+      UserModel, 
+      OtpSessionModel, 
+      RefreshTokenModel, 
+      DeliveryAreaModel, 
+      BuildingModel, 
+      OutOfZoneInterestModel, 
+      DeliveryLocationModel
+    ]),
   ],
   exports: [SequelizeModule],
 })

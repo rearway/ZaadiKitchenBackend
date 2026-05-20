@@ -7,6 +7,15 @@ import * as AdminLogin from './commands/AdminLogin.js'
 import * as RefreshAccessToken from './commands/RefreshAccessToken.js'
 import * as Logout from './commands/Logout.js'
 import * as AdminLogout from './commands/AdminLogout.js'
+import * as UpdateProfile from './commands/UpdateProfile.js'
+import * as UpdateLanguagePreference from './commands/UpdateLanguagePreference.js'
+import * as GetProfile from './queries/GetProfile.js'
+import * as GetActiveDeliveryAreas from './queries/GetActiveDeliveryAreas.js'
+import * as SearchDeliveryAreas from './queries/SearchDeliveryAreas.js'
+import * as GetBuildingsForArea from './queries/GetBuildingsForArea.js'
+import * as SubmitOutOfZoneInterest from './commands/SubmitOutOfZoneInterest.js'
+import * as SaveDeliveryLocation from './commands/SaveDeliveryLocation.js'
+import * as CreateDeliveryArea from './commands/CreateDeliveryArea.js'
 
 export function initUseCases(deps: Deps) {
     // Auth commands
@@ -47,8 +56,68 @@ export function initUseCases(deps: Deps) {
         ...defaultWrappers
     )
 
+    const updateProfile = wrapUC(
+        deps,
+        UpdateProfile.makeUC(deps),
+        UpdateProfile.name,
+        ...defaultWrappers
+    )
+    const updateLanguagePreference = wrapUC(
+        deps,
+        UpdateLanguagePreference.makeUC(deps),
+        UpdateLanguagePreference.name,
+        ...defaultWrappers
+    )
+    const getProfile = wrapUC(
+        deps,
+        GetProfile.makeUC(deps),
+        GetProfile.name,
+        ...defaultWrappers
+    )
+    const getActiveDeliveryAreas = wrapUC(
+        deps,
+        GetActiveDeliveryAreas.makeUC(deps),
+        GetActiveDeliveryAreas.name,
+        ...defaultWrappers
+    )
+    const searchDeliveryAreas = wrapUC(
+        deps,
+        SearchDeliveryAreas.makeUC(deps),
+        SearchDeliveryAreas.name,
+        ...defaultWrappers
+    )
+    const getBuildingsForArea = wrapUC(
+        deps,
+        GetBuildingsForArea.makeUC(deps),
+        GetBuildingsForArea.name,
+        ...defaultWrappers
+    )
+    const submitOutOfZoneInterest = wrapUC(
+        deps,
+        SubmitOutOfZoneInterest.makeUC(deps),
+        SubmitOutOfZoneInterest.name,
+        ...defaultWrappers
+    )
+    const saveDeliveryLocation = wrapUC(
+        deps,
+        SaveDeliveryLocation.makeUC(deps),
+        SaveDeliveryLocation.name,
+        ...defaultWrappers
+    )
+    const createDeliveryArea = wrapUC(
+        deps,
+        CreateDeliveryArea.makeUC(deps),
+        CreateDeliveryArea.name,
+        ...defaultWrappers
+    )
+
     return {
-        queries: {},
+        queries: {
+            getProfile,
+            getActiveDeliveryAreas,
+            searchDeliveryAreas,
+            getBuildingsForArea,
+        },
         commands: {
             sendOtp,
             verifyOtp,
@@ -56,6 +125,11 @@ export function initUseCases(deps: Deps) {
             refreshAccessToken,
             logout,
             adminLogout,
+            updateProfile,
+            updateLanguagePreference,
+            submitOutOfZoneInterest,
+            saveDeliveryLocation,
+            createDeliveryArea,
         },
     }
 }

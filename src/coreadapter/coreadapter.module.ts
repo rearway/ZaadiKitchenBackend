@@ -6,12 +6,14 @@ import {
     UserPersistenceS,
     OtpSessionPersistenceS,
     RefreshTokenPersistenceS,
+    DeliveryPersistenceS,
     OtpServiceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
 import { OtpSessionPersistenceService } from '../infrastructure/SequelizePersistence/otp-session-persistence.service.js'
 import { RefreshTokenPersistenceService } from '../infrastructure/SequelizePersistence/refresh-token-persistence.service.js'
+import { DeliveryPersistenceService } from '../infrastructure/SequelizePersistence/delivery-persistence.service.js'
 import { OtpStubService } from '../infrastructure/OtpService/index.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
@@ -25,6 +27,7 @@ import { coreAdapterService } from './coreadapter.service.js'
         { provide: UserPersistenceS, useClass: UserPersistenceService },
         { provide: OtpSessionPersistenceS, useClass: OtpSessionPersistenceService },
         { provide: RefreshTokenPersistenceS, useClass: RefreshTokenPersistenceService },
+        { provide: DeliveryPersistenceS, useClass: DeliveryPersistenceService },
 
         // External services
         { provide: OtpServiceS, useClass: OtpStubService },

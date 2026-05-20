@@ -8,7 +8,6 @@ import { UserWithoutPassword } from '../../entities/index.js'
 export interface VerifyOtpInput {
     phone: string
     code: string
-    fullName?: string       // Only used when a new customer is created
     userAgent?: string
     ipAddress?: string
 }
@@ -16,9 +15,12 @@ export interface VerifyOtpInput {
 export type VerifyOtpOutput = {
     message: string
     data: {
-        user: UserWithoutPassword
+        user: UserWithoutPassword & { onboardingComplete: boolean }
         accessToken: string
         refreshToken: string
+        tokenType: string
+        accessExpiresIn: number
+        refreshExpiresIn: number
         isNewUser: boolean
     }
 }
@@ -40,7 +42,7 @@ export function makeUC(deps: Deps) {
         } = deps
 
         try {
-            const { phone, code, fullName, userAgent, ipAddress } = input
+            const { phone, code, userAgent, ipAddress } = input
 
             // Get active OTP session
             const session = await otpSessionLoader.getActiveSession(phone)
@@ -83,7 +85,7 @@ export function makeUC(deps: Deps) {
                 isNewUser = true
                 user = await userPersistor.createUser({
                     phone,
-                    fullName: fullName || 'User',
+                    fullName: 'New User', // Will be updated in profile step
                     role: UserRole.CUSTOMER,
                 })
             } else if (user.role === UserRole.DRIVER) {
@@ -134,14 +136,25 @@ export function makeUC(deps: Deps) {
             // Strip password from user response
             const { password: _, ...userWithoutPassword } = user
 
+            // Determine onboarding complete logic
+            // For now, if it's a new user, onboarding is not complete. 
+            // Real logic checks if they have a saved delivery location.
+            const onboardingComplete = !isNewUser
+
             return {
                 message: isNewUser
                     ? 'Account created and logged in successfully'
                     : 'Logged in successfully',
                 data: {
-                    user: userWithoutPassword as UserWithoutPassword,
+                    user: {
+                        ...userWithoutPassword,
+                        onboardingComplete,
+                    } as UserWithoutPassword & { onboardingComplete: boolean },
                     accessToken,
                     refreshToken: refreshTokenValue,
+                    tokenType: 'Bearer',
+                    accessExpiresIn: parseExpirationSeconds(jwtAccessExpiration),
+                    refreshExpiresIn: parseExpirationSeconds(jwtRefreshExpirationMobile),
                     isNewUser,
                 },
             }
@@ -177,6 +190,22 @@ function parseExpiration(expiration: string): Date {
             return new Date(now + value * 24 * 60 * 60 * 1000)
         default:
             return new Date(now + 30 * 24 * 60 * 60 * 1000)
+    }
+}
+
+function parseExpirationSeconds(expiration: string): number {
+    const match = expiration.match(/^(\d+)([smhd])$/)
+    if (!match) return 30 * 24 * 60 * 60
+
+    const value = parseInt(match[1], 10)
+    const unit = match[2]
+
+    switch (unit) {
+        case 's': return value
+        case 'm': return value * 60
+        case 'h': return value * 60 * 60
+        case 'd': return value * 24 * 60 * 60
+        default: return 30 * 24 * 60 * 60
     }
 }
 

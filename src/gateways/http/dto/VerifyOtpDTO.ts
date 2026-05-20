@@ -20,19 +20,11 @@ export class VerifyOtpDTO {
     phone: string
 
     @ApiProperty({
-        description: '6-digit OTP code',
-        example: '123456',
+        description: '4-digit OTP code',
+        example: '1234',
     })
     @IsString()
     @IsNotEmpty()
-    @Length(6, 6, { message: 'OTP code must be exactly 6 digits' })
+    @Length(4, 4, { message: 'OTP code must be exactly 4 digits' })
     code: string
-
-    @ApiPropertyOptional({
-        description: 'Full name — only required for new customer registrations',
-        example: 'Mohammed Ali',
-    })
-    @IsOptional()
-    @IsString()
-    fullName?: string
 }

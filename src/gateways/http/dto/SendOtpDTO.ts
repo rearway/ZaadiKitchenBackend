@@ -12,4 +12,16 @@ export class SendOtpDTO {
         message: 'Phone must be in Saudi format: +966XXXXXXXXX',
     })
     phone: string
+
+    @ApiProperty({
+        description: 'Channel to send OTP',
+        enum: ['whatsapp', 'sms'],
+        example: 'whatsapp',
+    })
+    @IsString()
+    @IsNotEmpty()
+    @Matches(/^(whatsapp|sms)$/, {
+        message: 'Channel must be whatsapp or sms',
+    })
+    channel: string
 }
