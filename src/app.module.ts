@@ -26,7 +26,7 @@ import { DatabaseModule } from './infrastructure/SequelizePersistence/database.m
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m') as any,
+          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
         },
       }),
       inject: [ConfigService],

@@ -8,13 +8,13 @@ import { AdminDeliveryController } from './admin-delivery.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
-    imports: [CoreAdapterModule],
-    controllers: [
-        AuthController,
-        UserController,
-        DeliveryController,
-        AdminDeliveryController,
-        HealthController
-    ],
+  imports: [CoreAdapterModule],
+  controllers: [
+    AuthController,
+    UserController,
+    DeliveryController,
+    AdminDeliveryController,
+    HealthController,
+  ],
 })
-export class HttpModule { }
+export class HttpModule {}

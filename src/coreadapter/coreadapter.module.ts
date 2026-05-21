@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
 import {
-    LoggerS,
-    UserPersistenceS,
-    OtpSessionPersistenceS,
-    RefreshTokenPersistenceS,
-    DeliveryPersistenceS,
-    OtpServiceS,
+  LoggerS,
+  UserPersistenceS,
+  OtpSessionPersistenceS,
+  RefreshTokenPersistenceS,
+  DeliveryPersistenceS,
+  OtpServiceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -18,23 +18,26 @@ import { OtpStubService } from '../infrastructure/OtpService/index.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
-    imports: [ConfigModule],
-    providers: [
-        // Logger
-        { provide: LoggerS, useClass: LoggerService },
+  imports: [ConfigModule],
+  providers: [
+    // Logger
+    { provide: LoggerS, useClass: LoggerService },
 
-        // Persistence services
-        { provide: UserPersistenceS, useClass: UserPersistenceService },
-        { provide: OtpSessionPersistenceS, useClass: OtpSessionPersistenceService },
-        { provide: RefreshTokenPersistenceS, useClass: RefreshTokenPersistenceService },
-        { provide: DeliveryPersistenceS, useClass: DeliveryPersistenceService },
+    // Persistence services
+    { provide: UserPersistenceS, useClass: UserPersistenceService },
+    { provide: OtpSessionPersistenceS, useClass: OtpSessionPersistenceService },
+    {
+      provide: RefreshTokenPersistenceS,
+      useClass: RefreshTokenPersistenceService,
+    },
+    { provide: DeliveryPersistenceS, useClass: DeliveryPersistenceService },
 
-        // External services
-        { provide: OtpServiceS, useClass: OtpStubService },
+    // External services
+    { provide: OtpServiceS, useClass: OtpStubService },
 
-        // Core adapter — maps infra → Deps → initUseCases()
-        coreAdapterService,
-    ],
-    exports: [coreAdapterService],
+    // Core adapter — maps infra → Deps → initUseCases()
+    coreAdapterService,
+  ],
+  exports: [coreAdapterService],
 })
-export class CoreAdapterModule { }
+export class CoreAdapterModule {}

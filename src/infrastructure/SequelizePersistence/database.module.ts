@@ -30,16 +30,19 @@ import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
           host: configService.get<string>('DB_HOST', 'localhost'),
           port: configService.get<number>('DB_PORT', 5432),
           username: configService.get<string>('DB_USERNAME', 'zaadi'),
-          password: configService.get<string>('DB_PASSWORD', 'zaadi_dev_password'),
+          password: configService.get<string>(
+            'DB_PASSWORD',
+            'zaadi_dev_password'
+          ),
           database: configService.get<string>('DB_NAME', 'zaadi_kitchen'),
           models: [
-            UserModel, 
-            OtpSessionModel, 
-            RefreshTokenModel, 
-            DeliveryAreaModel, 
-            BuildingModel, 
-            OutOfZoneInterestModel, 
-            DeliveryLocationModel
+            UserModel,
+            OtpSessionModel,
+            RefreshTokenModel,
+            DeliveryAreaModel,
+            BuildingModel,
+            OutOfZoneInterestModel,
+            DeliveryLocationModel,
           ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
@@ -57,13 +60,13 @@ import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
       inject: [ConfigService],
     }),
     SequelizeModule.forFeature([
-      UserModel, 
-      OtpSessionModel, 
-      RefreshTokenModel, 
-      DeliveryAreaModel, 
-      BuildingModel, 
-      OutOfZoneInterestModel, 
-      DeliveryLocationModel
+      UserModel,
+      OtpSessionModel,
+      RefreshTokenModel,
+      DeliveryAreaModel,
+      BuildingModel,
+      OutOfZoneInterestModel,
+      DeliveryLocationModel,
     ]),
   ],
   exports: [SequelizeModule],

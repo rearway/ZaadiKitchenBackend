@@ -2,42 +2,50 @@ import { Deps } from '../../entitygateway/index.js'
 import { DeliveryArea } from '../../entities/index.js'
 
 export interface CreateDeliveryAreaInput {
-    name: string
-    description?: string
-    status?: 'active' | 'coming_soon'
+  name: string
+  description?: string
+  status?: 'active' | 'coming_soon' | 'paused'
 }
 
 export type CreateDeliveryAreaOutput = {
-    message: string
-    data: DeliveryArea
+  message: string
+  data: DeliveryArea
 }
 
 export function makeUC(deps: Deps) {
-    return async function createDeliveryArea(input: CreateDeliveryAreaInput): Promise<CreateDeliveryAreaOutput> {
-        const { logger, deliveryAreaPersistor } = deps
-        try {
-            const { name, description, status } = input
+  return async function createDeliveryArea(
+    input: CreateDeliveryAreaInput
+  ): Promise<CreateDeliveryAreaOutput> {
+    const { logger, deliveryAreaPersistor } = deps
+    try {
+      const { name, description, status } = input
 
-            if (!name || name.trim().length === 0) {
-                const { ValidationError } = await import('../../../shared/errors/index.js')
-                throw new ValidationError('AREA_NAME_REQUIRED', { message: 'Area name is required' })
-            }
+      if (!name || name.trim().length === 0) {
+        const { ValidationError } =
+          await import('../../../shared/errors/index.js')
+        throw new ValidationError('AREA_NAME_REQUIRED', {
+          message: 'Area name is required',
+        })
+      }
 
-            const area = await deliveryAreaPersistor.createDeliveryArea({
-                name: name.trim(),
-                description: description?.trim(),
-                status: status || 'coming_soon',
-            })
+      const area = await deliveryAreaPersistor.createDeliveryArea({
+        name: name.trim(),
+        description: description?.trim(),
+        status: status || 'coming_soon',
+      })
 
-            return {
-                message: 'Delivery area created successfully',
-                data: area,
-            }
-        } catch (error) {
-            logger.error('Failed to create delivery area', error instanceof Error ? error.message : String(error))
-            throw error
-        }
+      return {
+        message: 'Delivery area created successfully',
+        data: area,
+      }
+    } catch (error) {
+      logger.error(
+        'Failed to create delivery area',
+        error instanceof Error ? error.message : String(error)
+      )
+      throw error
     }
+  }
 }
 
 export const name = 'CreateDeliveryArea'
