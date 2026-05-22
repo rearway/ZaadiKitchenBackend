@@ -1,0 +1,376 @@
+import type { Deps } from '../../core/entitygateway/index.js'
+
+// ─── Entity fixtures ──────────────────────────────────────────────────────────
+
+export const makeUser = (overrides: Record<string, unknown> = {}) => ({
+  id: 'user-uuid-1',
+  phone: '+966512345678',
+  email: null as string | null,
+  fullName: 'Test User',
+  role: 'CUSTOMER' as const,
+  isActive: true,
+  password: null as string | null,
+  referralCode: 'TESTCODE1',
+  languagePreference: 'EN' as const,
+  pushNotificationToken: null as string | null,
+  createdAt: new Date('2025-01-01T00:00:00Z'),
+  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  ...overrides,
+})
+
+export const makeAdminUser = (overrides: Record<string, unknown> = {}) =>
+  makeUser({
+    id: 'admin-uuid-1',
+    email: 'admin@zaadikitchen.com',
+    phone: null,
+    role: 'ADMIN',
+    password: '$2b$10$hashedpassword',
+    referralCode: null,
+    ...overrides,
+  })
+
+export const makeOtpSession = (overrides: Record<string, unknown> = {}) => ({
+  id: 'otp-uuid-1',
+  phone: '+966512345678',
+  code: '1234',
+  expiresAt: new Date(Date.now() + 120_000),
+  isVerified: false,
+  attemptCount: 0,
+  lockedUntil: null as Date | null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makeRefreshToken = (overrides: Record<string, unknown> = {}) => ({
+  id: 'rtoken-uuid-1',
+  userId: 'user-uuid-1',
+  token: 'test-refresh-token-value',
+  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  isRevoked: false,
+  userAgent: 'TestAgent/1.0',
+  ipAddress: '127.0.0.1',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makePlan = (overrides: Record<string, unknown> = {}) => ({
+  id: 'plan-uuid-month',
+  name: 'Month Plan',
+  slug: 'month',
+  priceSar: 500,
+  mealCount: 22,
+  pricePerMealSar: 22.7,
+  skipDaysAllowed: 66,
+  pauseDaysAllowed: 66,
+  isMostPopular: true,
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makeCheckoutSession = (overrides: Record<string, unknown> = {}) => ({
+  id: 'sess-uuid-1',
+  userId: 'user-uuid-1',
+  planId: 'plan-uuid-month',
+  mealType: 'executive' as const,
+  basePriceSar: 500,
+  walletCreditSar: 0,
+  promoDiscountSar: 0,
+  totalDueSar: 500,
+  promoCode: null as string | null,
+  promoAttemptCount: 0,
+  promoLocked: false,
+  status: 'active' as const,
+  expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makePaymentMethod = (overrides: Record<string, unknown> = {}) => ({
+  id: 'pm-uuid-1',
+  userId: 'user-uuid-1',
+  type: 'mada',
+  token: 'tok_test_xxxx',
+  label: 'Mada ····4242',
+  isDefault: true,
+  isLastUsed: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makeOrder = (overrides: Record<string, unknown> = {}) => ({
+  id: 'order-uuid-1',
+  userId: 'user-uuid-1',
+  subscriptionId: null as string | null,
+  planId: 'plan-uuid-month',
+  paymentMethodId: 'pm-uuid-1',
+  mealType: 'executive' as const,
+  mealCount: 22,
+  startDate: '2025-06-01',
+  planPriceSar: 500,
+  walletCreditSar: 0,
+  promoDiscountSar: 0,
+  promoCode: null as string | null,
+  discountLabel: null as string | null,
+  totalPaidSar: 500,
+  paymentMethodType: 'mada',
+  paymentMethodLabel: 'Mada ····4242',
+  gatewayPaymentId: 'mock_pay_123',
+  status: 'confirmed' as const,
+  isNewUser: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makeSubscription = (overrides: Record<string, unknown> = {}) => ({
+  id: 'sub-uuid-1',
+  userId: 'user-uuid-1',
+  orderId: 'order-uuid-1',
+  planId: 'plan-uuid-month',
+  mealType: 'executive' as const,
+  status: 'active' as const,
+  totalMealDays: 22,
+  deliveredCount: 0,
+  skippedCount: 0,
+  startDate: '2025-06-01',
+  endDate: '2025-07-01',
+  skipDaysAllowed: 66,
+  skipDaysUsed: 0,
+  pauseDaysAllowed: 66,
+  pauseDaysUsed: 0,
+  pausedFrom: null as string | null,
+  pausedUntil: null as string | null,
+  pauseCeilingDate: null as string | null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makeDeliveryDay = (overrides: Record<string, unknown> = {}) => ({
+  id: 'dd-uuid-1',
+  subscriptionId: 'sub-uuid-1',
+  userId: 'user-uuid-1',
+  date: '2025-06-01',
+  mealType: 'executive' as const,
+  mealName: null as string | null,
+  status: 'scheduled' as const,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+export const makePromoCode = (overrides: Record<string, unknown> = {}) => ({
+  id: 'promo-uuid-1',
+  code: 'TESTREF10',
+  type: 'referral' as const,
+  discountSar: 100,
+  ownerUserId: 'user-uuid-referrer',
+  validForPlanSlug: null as string | null,
+  maxUses: 100 as number | null,
+  timesUsed: 0,
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+})
+
+// ─── Mock Deps factory ────────────────────────────────────────────────────────
+
+export function buildDeps(overrides: Partial<Deps> = {}): Deps {
+  const base: Deps = {
+    logger: {
+      log: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Deps['logger'],
+
+    jwtSecret: 'test-jwt-secret-key-at-least-32-chars-long',
+    jwtAccessExpiration: '15m',
+    jwtRefreshExpirationMobile: '30d',
+    jwtRefreshExpirationAdmin: '8h',
+
+    userLoader: {
+      getUserById: jest.fn().mockResolvedValue(null),
+      getUserByPhone: jest.fn().mockResolvedValue(null),
+      getUserByEmail: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['userLoader'],
+
+    userPersistor: {
+      createUser: jest.fn().mockResolvedValue(makeUser()),
+      updateUser: jest.fn().mockResolvedValue(makeUser()),
+    } as unknown as Deps['userPersistor'],
+
+    otpSessionLoader: {
+      getActiveSession: jest.fn().mockResolvedValue(null),
+      getLockedSession: jest.fn().mockResolvedValue(null),
+      getRecentAttemptCount: jest.fn().mockResolvedValue(0),
+    } as unknown as Deps['otpSessionLoader'],
+
+    otpSessionPersistor: {
+      createSession: jest.fn().mockResolvedValue(makeOtpSession()),
+      markVerified: jest.fn().mockResolvedValue(undefined),
+      incrementAttempt: jest.fn().mockResolvedValue(undefined),
+      lockPhone: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['otpSessionPersistor'],
+
+    refreshTokenLoader: {
+      getTokenByValue: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['refreshTokenLoader'],
+
+    refreshTokenPersistor: {
+      createToken: jest.fn().mockResolvedValue(makeRefreshToken()),
+      revokeToken: jest.fn().mockResolvedValue(undefined),
+      revokeAllUserTokens: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['refreshTokenPersistor'],
+
+    otpService: {
+      sendOtp: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['otpService'],
+
+    deliveryAreaLoader: {
+      getAreaById: jest.fn().mockResolvedValue(null),
+      getActiveAreas: jest.fn().mockResolvedValue([]),
+      searchAreas: jest.fn().mockResolvedValue([]),
+      getAllAreas: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['deliveryAreaLoader'],
+
+    deliveryAreaPersistor: {
+      createArea: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['deliveryAreaPersistor'],
+
+    buildingLoader: {
+      getBuildingsByAreaId: jest.fn().mockResolvedValue([]),
+      getBuildingById: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['buildingLoader'],
+
+    buildingPersistor: {
+      createBuilding: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['buildingPersistor'],
+
+    outOfZoneInterestPersistor: {
+      createInterest: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['outOfZoneInterestPersistor'],
+
+    deliveryLocationLoader: {
+      getLocationByUserId: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['deliveryLocationLoader'],
+
+    deliveryLocationPersistor: {
+      saveLocation: jest.fn().mockResolvedValue(null),
+      upsertLocation: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['deliveryLocationPersistor'],
+
+    planLoader: {
+      getPlanBySlug: jest.fn().mockResolvedValue(null),
+      getPlanById: jest.fn().mockResolvedValue(null),
+      getAllPlans: jest.fn().mockResolvedValue([]),
+      getActivePlans: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['planLoader'],
+
+    planPersistor: {
+      createPlan: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['planPersistor'],
+
+    checkoutSessionLoader: {
+      getSessionById: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['checkoutSessionLoader'],
+
+    checkoutSessionPersistor: {
+      createSession: jest.fn().mockResolvedValue(makeCheckoutSession()),
+      updateSession: jest.fn().mockResolvedValue(makeCheckoutSession()),
+      expireAllUserSessions: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['checkoutSessionPersistor'],
+
+    promoCodeLoader: {
+      getPromoByCode: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['promoCodeLoader'],
+
+    promoCodePersistor: {
+      incrementTimesUsed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['promoCodePersistor'],
+
+    paymentMethodLoader: {
+      getMethodById: jest.fn().mockResolvedValue(null),
+      getMethodsByUserId: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['paymentMethodLoader'],
+
+    paymentMethodPersistor: {
+      createMethod: jest.fn().mockResolvedValue(makePaymentMethod()),
+      deleteMethod: jest.fn().mockResolvedValue(undefined),
+      markAsLastUsed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['paymentMethodPersistor'],
+
+    orderLoader: {
+      getOrderById: jest.fn().mockResolvedValue(null),
+      getLastOrderByUserId: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['orderLoader'],
+
+    orderPersistor: {
+      createOrder: jest.fn().mockResolvedValue(makeOrder()),
+      updateOrder: jest.fn().mockResolvedValue(makeOrder()),
+    } as unknown as Deps['orderPersistor'],
+
+    subscriptionLoader: {
+      getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(null),
+      getSubscriptionById: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['subscriptionLoader'],
+
+    subscriptionPersistor: {
+      createSubscription: jest.fn().mockResolvedValue(makeSubscription()),
+      updateSubscription: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['subscriptionPersistor'],
+
+    deliveryDayLoader: {
+      getDeliveryDayByDate: jest.fn().mockResolvedValue(null),
+      getDeliveryDaysBySubscription: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['deliveryDayLoader'],
+
+    deliveryDayPersistor: {
+      bulkCreateDeliveryDays: jest.fn().mockResolvedValue([makeDeliveryDay()]),
+      updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['deliveryDayPersistor'],
+
+    publicHolidayLoader: {
+      getHolidayDates: jest.fn().mockResolvedValue([]),
+      getHolidaysByYear: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['publicHolidayLoader'],
+
+    publicHolidayPersistor: {
+      createHoliday: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['publicHolidayPersistor'],
+
+    walletLoader: {
+      getBalanceByUserId: jest.fn().mockResolvedValue(0),
+      getTransactionsByUserId: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['walletLoader'],
+
+    walletPersistor: {
+      createTransaction: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['walletPersistor'],
+
+    referralLoader: {
+      getReferralByUserId: jest.fn().mockResolvedValue(null),
+      getReferralsByReferrerId: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['referralLoader'],
+
+    referralPersistor: {
+      createReferral: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['referralPersistor'],
+
+    paymentGateway: {
+      charge: jest.fn().mockResolvedValue({
+        success: true,
+        gatewayPaymentId: 'mock_pay_uuid',
+      }),
+    } as unknown as Deps['paymentGateway'],
+  }
+
+  return { ...base, ...overrides }
+}

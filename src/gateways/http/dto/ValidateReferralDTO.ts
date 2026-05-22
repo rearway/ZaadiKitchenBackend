@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty } from 'class-validator'
-import { ApiProperty } from '@nestjs/swagger'
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class ValidateReferralDTO {
   @ApiProperty({ example: 'AHMED15' })
@@ -7,8 +7,8 @@ export class ValidateReferralDTO {
   @IsNotEmpty()
   code!: string
 
-  @ApiProperty({ example: 'month' })
+  @ApiPropertyOptional({ example: 'month' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  plan_id!: string
+  plan_id?: string
 }
