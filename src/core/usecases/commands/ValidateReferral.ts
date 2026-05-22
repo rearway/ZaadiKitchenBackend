@@ -3,7 +3,7 @@ import { Deps } from '../../entitygateway/index.js'
 export interface ValidateReferralInput {
   userId: string
   code: string
-  planId: string
+  planId?: string
 }
 
 export type ValidateReferralOutput =
@@ -43,16 +43,18 @@ export function makeUC(deps: Deps) {
       }
 
       // Check plan match
-      const plan = await planLoader.getPlanBySlug(planId)
-      if (
-        promo.validForPlanSlug &&
-        plan &&
-        promo.validForPlanSlug !== plan.slug
-      ) {
-        return {
-          valid: false,
-          error_code: 'PLAN_MISMATCH',
-          message: 'This code is not valid for the selected plan.',
+      if (planId) {
+        const plan = await planLoader.getPlanBySlug(planId)
+        if (
+          promo.validForPlanSlug &&
+          plan &&
+          promo.validForPlanSlug !== plan.slug
+        ) {
+          return {
+            valid: false,
+            error_code: 'PLAN_MISMATCH',
+            message: 'This code is not valid for the selected plan.',
+          }
         }
       }
 
