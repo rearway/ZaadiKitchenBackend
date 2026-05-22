@@ -11,7 +11,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'users', timestamps: true })
+@Table({ tableName: 'users', timestamps: true, underscored: true })
 export class UserModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
@@ -54,6 +54,11 @@ export class UserModel extends Model {
   @Default(true)
   @Column(DataType.BOOLEAN)
   declare isActive: boolean
+
+  @AllowNull(true)
+  @Unique
+  @Column(DataType.STRING(20))
+  declare referralCode: string | null
 
   @CreatedAt
   declare createdAt: Date

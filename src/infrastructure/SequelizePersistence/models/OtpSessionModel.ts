@@ -10,7 +10,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'otp_sessions', timestamps: true })
+@Table({ tableName: 'otp_sessions', timestamps: true, underscored: true })
 export class OtpSessionModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

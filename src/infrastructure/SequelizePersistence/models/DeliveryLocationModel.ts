@@ -15,7 +15,7 @@ import { UserModel } from './UserModel.js'
 import { DeliveryAreaModel } from './DeliveryAreaModel.js'
 import { BuildingModel } from './BuildingModel.js'
 
-@Table({ tableName: 'delivery_locations', timestamps: true })
+@Table({ tableName: 'delivery_locations', timestamps: true, underscored: true })
 export class DeliveryLocationModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

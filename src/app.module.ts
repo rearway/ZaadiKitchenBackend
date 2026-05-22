@@ -25,9 +25,8 @@ import { DatabaseModule } from './infrastructure/SequelizePersistence/database.m
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signOptions: { expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m') as any },
       }),
       inject: [ConfigService],
     }),

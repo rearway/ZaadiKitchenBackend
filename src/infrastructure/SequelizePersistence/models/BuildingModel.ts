@@ -13,7 +13,7 @@ import {
 } from 'sequelize-typescript'
 import { DeliveryAreaModel } from './DeliveryAreaModel.js'
 
-@Table({ tableName: 'buildings', timestamps: true })
+@Table({ tableName: 'buildings', timestamps: true, underscored: true })
 export class BuildingModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

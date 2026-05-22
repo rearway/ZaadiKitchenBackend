@@ -78,7 +78,7 @@ export function makeUC(deps: Deps) {
       const accessToken = jwt.sign(
         { sub: user.id, role: user.role, email: user.email },
         jwtSecret as jwt.Secret,
-        { expiresIn: jwtAccessExpiration }
+        { expiresIn: jwtAccessExpiration as unknown as jwt.SignOptions['expiresIn'] }
       )
 
       // Generate refresh token with shorter expiry for admin (8h)

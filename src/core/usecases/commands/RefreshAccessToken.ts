@@ -70,7 +70,7 @@ export function makeUC(deps: Deps) {
       if (user.email) payload.email = user.email
 
       const accessToken = jwt.sign(payload, jwtSecret as jwt.Secret, {
-        expiresIn: jwtAccessExpiration,
+        expiresIn: jwtAccessExpiration as unknown as jwt.SignOptions['expiresIn'],
       })
 
       return {

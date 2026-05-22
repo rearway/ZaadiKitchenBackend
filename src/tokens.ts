@@ -12,6 +12,17 @@ export const UserPersistenceS = Symbol('user-persistence')
 export const OtpSessionPersistenceS = Symbol('otp-session-persistence')
 export const RefreshTokenPersistenceS = Symbol('refresh-token-persistence')
 export const DeliveryPersistenceS = Symbol('delivery-persistence')
+export const PlanPersistenceS = Symbol('plan-persistence')
+export const CheckoutSessionPersistenceS = Symbol(
+  'checkout-session-persistence'
+)
+export const PaymentMethodPersistenceS = Symbol('payment-method-persistence')
+export const OrderPersistenceS = Symbol('order-persistence')
+export const SubscriptionPersistenceS = Symbol('subscription-persistence')
+export const PublicHolidayPersistenceS = Symbol('public-holiday-persistence')
+export const WalletPersistenceS = Symbol('wallet-persistence')
+export const ReferralPersistenceS = Symbol('referral-persistence')
 
 // External Services
 export const OtpServiceS = Symbol('otp-service')
+export const PaymentGatewayS = Symbol('payment-gateway')

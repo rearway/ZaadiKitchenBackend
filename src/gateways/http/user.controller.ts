@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Body,
+  Query,
   Inject,
   UseGuards,
   ValidationPipe,
@@ -13,6 +14,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger'
 
 import { CoreS } from '../../tokens.js'
@@ -108,5 +110,41 @@ export class UserController {
       userId: user.id,
     })
     return result
+  }
+
+  @Get('wallet')
+  @ApiOperation({ summary: 'Get wallet balance' })
+  @ApiResponse({ status: 200, description: 'Wallet balance returned' })
+  @HandleErrors('get-wallet')
+  async getWallet(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.queries.getWallet({ userId: user.id })
+  }
+
+  @Get('wallet/transactions')
+  @ApiOperation({ summary: 'Get wallet transaction history' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Transactions returned' })
+  @HandleErrors('get-wallet-transactions')
+  async getWalletTransactions(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string
+  ) {
+    return this.useCases.queries.getWalletTransactions({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    })
+  }
+
+  @Get('referral')
+  @ApiOperation({
+    summary: 'Get referral code and stats (alias for GET /referrals/me)',
+  })
+  @ApiResponse({ status: 200, description: 'Referral stats returned' })
+  @HandleErrors('get-referral-user')
+  async getReferral(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.queries.getReferral({ userId: user.id })
   }
 }

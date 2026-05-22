@@ -110,7 +110,7 @@ export function makeUC(deps: Deps) {
       const accessToken = jwt.sign(
         { sub: user.id, role: user.role, phone: user.phone },
         jwtSecret as jwt.Secret,
-        { expiresIn: jwtAccessExpiration }
+        { expiresIn: jwtAccessExpiration as unknown as jwt.SignOptions['expiresIn'] }
       )
 
       // Generate refresh token

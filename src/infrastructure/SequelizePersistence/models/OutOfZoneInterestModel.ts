@@ -13,7 +13,7 @@ import {
 } from 'sequelize-typescript'
 import { UserModel } from './UserModel.js'
 
-@Table({ tableName: 'out_of_zone_interests', timestamps: true })
+@Table({ tableName: 'out_of_zone_interests', timestamps: true, underscored: true })
 export class OutOfZoneInterestModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

@@ -9,6 +9,16 @@ import { DeliveryAreaModel } from './models/DeliveryAreaModel.js'
 import { BuildingModel } from './models/BuildingModel.js'
 import { OutOfZoneInterestModel } from './models/OutOfZoneInterestModel.js'
 import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
+import { PlanModel } from './models/PlanModel.js'
+import { CheckoutSessionModel } from './models/CheckoutSessionModel.js'
+import { PaymentMethodModel } from './models/PaymentMethodModel.js'
+import { OrderModel } from './models/OrderModel.js'
+import { SubscriptionModel } from './models/SubscriptionModel.js'
+import { DeliveryDayModel } from './models/DeliveryDayModel.js'
+import { PublicHolidayModel } from './models/PublicHolidayModel.js'
+import { WalletTransactionModel } from './models/WalletTransactionModel.js'
+import { PromoCodeModel } from './models/PromoCodeModel.js'
+import { UserReferralModel } from './models/UserReferralModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -43,6 +53,16 @@ import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
             BuildingModel,
             OutOfZoneInterestModel,
             DeliveryLocationModel,
+            PlanModel,
+            CheckoutSessionModel,
+            PaymentMethodModel,
+            OrderModel,
+            SubscriptionModel,
+            DeliveryDayModel,
+            PublicHolidayModel,
+            WalletTransactionModel,
+            PromoCodeModel,
+            UserReferralModel,
           ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
@@ -67,6 +87,16 @@ import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
       BuildingModel,
       OutOfZoneInterestModel,
       DeliveryLocationModel,
+      PlanModel,
+      CheckoutSessionModel,
+      PaymentMethodModel,
+      OrderModel,
+      SubscriptionModel,
+      DeliveryDayModel,
+      PublicHolidayModel,
+      WalletTransactionModel,
+      PromoCodeModel,
+      UserReferralModel,
     ]),
   ],
   exports: [SequelizeModule],

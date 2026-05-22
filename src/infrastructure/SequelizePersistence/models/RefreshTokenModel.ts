@@ -12,7 +12,7 @@ import {
 } from 'sequelize-typescript'
 import { UserModel } from './UserModel'
 
-@Table({ tableName: 'refresh_tokens', timestamps: true })
+@Table({ tableName: 'refresh_tokens', timestamps: true, underscored: true })
 export class RefreshTokenModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

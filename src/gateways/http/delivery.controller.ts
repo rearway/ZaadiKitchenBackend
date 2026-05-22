@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger'
 
 import { CoreS } from '../../tokens.js'
@@ -82,5 +83,23 @@ export class DeliveryController {
       query: dto.q,
     })
     return result
+  }
+
+  @Get('start-dates')
+  @ApiOperation({ summary: 'Get valid delivery start dates' })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Start dates returned' })
+  @HandleErrors('get-delivery-start-dates')
+  async getDeliveryStartDates(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('from') from?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.useCases.queries.getDeliveryStartDates({
+      userId: user.id,
+      from,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    })
   }
 }

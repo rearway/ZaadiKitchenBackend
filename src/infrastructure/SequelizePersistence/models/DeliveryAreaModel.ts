@@ -10,7 +10,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'delivery_areas', timestamps: true })
+@Table({ tableName: 'delivery_areas', timestamps: true, underscored: true })
 export class DeliveryAreaModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

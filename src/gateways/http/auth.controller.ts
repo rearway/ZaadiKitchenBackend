@@ -23,8 +23,8 @@ import {
   RolesGuard,
   Roles,
   CurrentUser,
-  JwtPayload,
 } from '../../infrastructure/Auth/index.js'
+import type { JwtPayload } from '../../infrastructure/Auth/index.js'
 import { HandleErrors } from '../../shared/decorators/index.js'
 import {
   SendOtpDTO,
