@@ -1,11 +1,12 @@
 import { Deps } from '../../entitygateway/index.js'
 import { DeliveryLocation } from '../../entities/index.js'
+import { ValidationError } from '../../../shared/errors/index.js'
 
 export interface SaveDeliveryLocationInput {
   userId: string
   areaId: string
-  building: string
   buildingId?: string
+  building?: string
   floor?: string
   deskArea?: string
   deliveryPreference?: 'hand_to_me' | 'reception'
@@ -14,20 +15,26 @@ export interface SaveDeliveryLocationInput {
 
 export type SaveDeliveryLocationOutput = {
   message: string
-  data: DeliveryLocation & { areaName: string }
+  data: DeliveryLocation & { areaName: string; onboardingComplete: boolean }
 }
 
 export function makeUC(deps: Deps) {
   return async function saveDeliveryLocation(
     input: SaveDeliveryLocationInput
   ): Promise<SaveDeliveryLocationOutput> {
-    const { logger, deliveryAreaLoader, deliveryLocationPersistor } = deps
+    const {
+      logger,
+      deliveryAreaLoader,
+      buildingLoader,
+      deliveryLocationPersistor,
+    } = deps
+
     try {
       const {
         userId,
         areaId,
-        building,
         buildingId,
+        building,
         floor,
         deskArea,
         deliveryPreference,
@@ -35,40 +42,51 @@ export function makeUC(deps: Deps) {
       } = input
 
       if (!areaId) {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError('AREA_REQUIRED', {
-          message: 'Area ID is required',
-        })
+        throw new ValidationError('Area ID is required')
       }
 
-      if (!building || building.trim().length === 0) {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError('BUILDING_REQUIRED', {
-          message: 'Building name is required',
-        })
+      if (!buildingId && (!building || building.trim().length === 0)) {
+        throw new ValidationError('Either a building ID or a building name is required')
       }
 
       const area = await deliveryAreaLoader.getAreaById(areaId)
       if (!area || area.status !== 'active') {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError('AREA_INVALID', {
-          message: 'Must be a valid active area ID',
-        })
+        throw new ValidationError('Must be a valid active area ID')
+      }
+
+      let resolvedBuildingId: string | undefined
+      let resolvedBuildingName: string
+
+      if (buildingId) {
+        // Building selected from admin-curated list — fetch canonical name and validate area match
+        const buildingRecord = await buildingLoader.getBuildingById(buildingId)
+
+        if (!buildingRecord) {
+          throw new ValidationError('Building not found')
+        }
+
+        if (buildingRecord.areaId !== areaId) {
+          throw new ValidationError('Building does not belong to the selected area')
+        }
+
+        resolvedBuildingId = buildingId
+        resolvedBuildingName = buildingRecord.name
+      } else {
+        // Free-text building name entered by the user
+        resolvedBuildingId = undefined
+        resolvedBuildingName = building!.trim()
       }
 
       const newLocation = await deliveryLocationPersistor.createLocation({
         userId,
         areaId,
-        buildingId,
-        buildingName: building.trim(),
+        buildingId: resolvedBuildingId,
+        buildingName: resolvedBuildingName,
         floor,
         deskArea,
         deliveryPreference: deliveryPreference || 'hand_to_me',
         riderNotes,
-        isPrimary: true, // Assuming first location is primary, or making this one primary
+        isPrimary: true,
       })
 
       return {
@@ -76,6 +94,7 @@ export function makeUC(deps: Deps) {
         data: {
           ...newLocation,
           areaName: area.name,
+          onboardingComplete: true,
         },
       }
     } catch (error) {

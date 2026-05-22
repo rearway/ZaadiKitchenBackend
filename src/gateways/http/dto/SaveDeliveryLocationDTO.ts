@@ -16,17 +16,18 @@ export class SaveDeliveryLocationDTO {
   @IsNotEmpty()
   areaId: string
 
-  @ApiProperty({
-    description: 'Building name. Max 200 characters',
+  @ApiPropertyOptional({
+    description: 'Free-text building name. Required when buildingId is not provided. Max 200 characters',
     maxLength: 200,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  building: string
+  building?: string
 
   @ApiPropertyOptional({
-    description: 'If building was selected from suggestion list',
+    description: 'Building ID from the admin-curated list. When provided, building name is resolved from DB.',
   })
   @IsOptional()
   @IsUUID()

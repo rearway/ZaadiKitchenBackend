@@ -165,6 +165,42 @@ export const makeDeliveryDay = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
+export const makeDeliveryArea = (overrides: Record<string, unknown> = {}) => ({
+  id: 'area-uuid-1',
+  name: 'Al Nakheel',
+  description: 'Business district',
+  status: 'active' as const,
+  createdAt: new Date('2025-01-01T00:00:00Z'),
+  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  ...overrides,
+})
+
+export const makeBuilding = (overrides: Record<string, unknown> = {}) => ({
+  id: 'building-uuid-1',
+  areaId: 'area-uuid-1',
+  name: 'Al Nakheel Tower',
+  floorsCount: undefined as number | undefined,
+  createdAt: new Date('2025-01-01T00:00:00Z'),
+  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  ...overrides,
+})
+
+export const makeDeliveryLocation = (overrides: Record<string, unknown> = {}) => ({
+  id: 'loc-uuid-1',
+  userId: 'user-uuid-1',
+  areaId: 'area-uuid-1',
+  buildingId: 'building-uuid-1' as string | undefined,
+  buildingName: 'Al Nakheel Tower',
+  floor: undefined as string | undefined,
+  deskArea: undefined as string | undefined,
+  deliveryPreference: 'hand_to_me' as const,
+  riderNotes: undefined as string | undefined,
+  isPrimary: true,
+  createdAt: new Date('2025-01-01T00:00:00Z'),
+  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  ...overrides,
+})
+
 export const makePromoCode = (overrides: Record<string, unknown> = {}) => ({
   id: 'promo-uuid-1',
   code: 'TESTREF10',
@@ -246,7 +282,8 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     } as unknown as Deps['deliveryAreaPersistor'],
 
     buildingLoader: {
-      getBuildingsByAreaId: jest.fn().mockResolvedValue([]),
+      getBuildingsByArea: jest.fn().mockResolvedValue([]),
+      searchBuildingsByArea: jest.fn().mockResolvedValue([]),
       getBuildingById: jest.fn().mockResolvedValue(null),
     } as unknown as Deps['buildingLoader'],
 
@@ -259,12 +296,12 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     } as unknown as Deps['outOfZoneInterestPersistor'],
 
     deliveryLocationLoader: {
-      getLocationByUserId: jest.fn().mockResolvedValue(null),
+      getPrimaryLocationByUserId: jest.fn().mockResolvedValue(null),
+      getLocationsByUserId: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['deliveryLocationLoader'],
 
     deliveryLocationPersistor: {
-      saveLocation: jest.fn().mockResolvedValue(null),
-      upsertLocation: jest.fn().mockResolvedValue(null),
+      createLocation: jest.fn().mockResolvedValue(makeDeliveryLocation()),
     } as unknown as Deps['deliveryLocationPersistor'],
 
     planLoader: {

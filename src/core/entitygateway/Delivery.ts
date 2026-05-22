@@ -19,6 +19,7 @@ export interface DeliveryAreaPersistor {
 export interface BuildingLoader {
   getBuildingsByArea(areaId: string): Promise<Building[]>
   searchBuildingsByArea(areaId: string, query: string): Promise<Building[]>
+  getBuildingById(buildingId: string): Promise<Building | null>
 }
 
 export interface BuildingPersistor {
@@ -36,4 +37,5 @@ export interface DeliveryLocationPersistor {
 
 export interface DeliveryLocationLoader {
   getPrimaryLocationByUserId(userId: string): Promise<DeliveryLocation | null>
+  getLocationsByUserId(userId: string): Promise<DeliveryLocation[]>
 }

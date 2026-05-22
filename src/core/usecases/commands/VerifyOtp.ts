@@ -37,7 +37,6 @@ export function makeUC(deps: Deps) {
       userPersistor,
       refreshTokenPersistor,
       jwtSecret,
-      jwtAccessExpiration,
       jwtRefreshExpirationMobile,
     } = deps
 
@@ -106,11 +105,11 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      // Generate JWT access token — embed role so client knows which app to open
+      // Generate JWT access token — 100-year expiry for mobile forever session
       const accessToken = jwt.sign(
         { sub: user.id, role: user.role, phone: user.phone },
         jwtSecret as jwt.Secret,
-        { expiresIn: jwtAccessExpiration as unknown as jwt.SignOptions['expiresIn'] }
+        { expiresIn: '36500d' }
       )
 
       // Generate refresh token
@@ -145,7 +144,7 @@ export function makeUC(deps: Deps) {
           accessToken,
           refreshToken: refreshTokenValue,
           tokenType: 'Bearer',
-          accessExpiresIn: parseExpirationSeconds(jwtAccessExpiration),
+          accessExpiresIn: 36500 * 24 * 60 * 60, // 100 years in seconds
           refreshExpiresIn: parseExpirationSeconds(jwtRefreshExpirationMobile),
           isNewUser,
         },

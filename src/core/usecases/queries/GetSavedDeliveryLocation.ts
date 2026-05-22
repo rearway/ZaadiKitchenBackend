@@ -7,7 +7,7 @@ export interface GetSavedDeliveryLocationInput {
 
 export type GetSavedDeliveryLocationOutput = {
   message: string
-  data: DeliveryLocation
+  data: DeliveryLocation[]
 }
 
 export function makeUC(deps: Deps) {
@@ -18,21 +18,11 @@ export function makeUC(deps: Deps) {
     try {
       const { userId } = input
 
-      const location =
-        await deliveryLocationLoader.getPrimaryLocationByUserId(userId)
-
-      if (!location) {
-        const { ResourceNotFoundError } =
-          await import('../../../shared/errors/index.js')
-        throw new ResourceNotFoundError(
-          'LOCATION_NOT_SET',
-          'No delivery    location saved yet'
-        )
-      }
+      const locations = await deliveryLocationLoader.getLocationsByUserId(userId)
 
       return {
-        message: 'Delivery location retrieved successfully',
-        data: location,
+        message: 'Delivery locations retrieved successfully',
+        data: locations,
       }
     } catch (error) {
       logger.error(

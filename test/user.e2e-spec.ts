@@ -357,42 +357,125 @@ describe('GET /api/v1/users/wallet/transactions', () => {
 // ─── POST /users/delivery-location ───────────────────────────────────────────
 
 describe('POST /api/v1/users/delivery-location', () => {
-  const validPayload = {
-    areaId: '550e8400-e29b-41d4-a716-446655440001',
-    building: 'Al-Nakheel Tower',
-    buildingId: '550e8400-e29b-41d4-a716-446655440002',
+  const validBuildingId = '550e8400-e29b-41d4-a716-446655440002'
+  const validAreaId = '550e8400-e29b-41d4-a716-446655440001'
+
+  const payloadWithBuildingId = {
+    areaId: validAreaId,
+    buildingId: validBuildingId,
     floor: '3',
     deskArea: 'Marketing Dept',
     deliveryPreference: 'reception',
     riderNotes: 'Call on arrival',
   }
 
-  const mockSaveResult = {
-    id: 'loc-uuid-1',
-    area_id: 'area-uuid-1',
-    building_id: 'building-uuid-1',
+  const payloadWithFreeText = {
+    areaId: validAreaId,
+    building: 'Al-Nakheel Tower',
     floor: '3',
-    desk_area: 'Marketing Dept',
+    deskArea: 'Marketing Dept',
+    deliveryPreference: 'hand_to_me',
   }
 
-  it('returns 201 when delivery location is saved', async () => {
+  const mockSaveResult = {
+    message: 'Delivery location saved successfully',
+    data: {
+      id: 'loc-uuid-1',
+      areaId: validAreaId,
+      areaName: 'Al Nakheel',
+      buildingId: validBuildingId,
+      buildingName: 'Al Nakheel Tower',
+      floor: '3',
+      deskArea: 'Marketing Dept',
+      deliveryPreference: 'reception',
+      isPrimary: true,
+      onboardingComplete: true,
+    },
+  }
+
+  it('returns 201 when location is saved using a buildingId from the curated list', async () => {
     mockUseCases.commands.saveDeliveryLocation.mockResolvedValue(mockSaveResult)
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/users/delivery-location')
       .set('Authorization', `Bearer ${bearerToken}`)
-      .send(validPayload)
+      .send(payloadWithBuildingId)
 
     expect(res.status).toBe(201)
-    expect(res.body.id).toBe('loc-uuid-1')
+    expect(res.body.data.onboardingComplete).toBe(true)
+    expect(res.body.data.buildingId).toBe(validBuildingId)
+  })
+
+  it('returns 201 when location is saved using a free-text building name', async () => {
+    mockUseCases.commands.saveDeliveryLocation.mockResolvedValue({
+      ...mockSaveResult,
+      data: { ...mockSaveResult.data, buildingId: undefined, buildingName: 'Al-Nakheel Tower' },
+    })
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/users/delivery-location')
+      .set('Authorization', `Bearer ${bearerToken}`)
+      .send(payloadWithFreeText)
+
+    expect(res.status).toBe(201)
+    expect(res.body.data.buildingName).toBe('Al-Nakheel Tower')
+  })
+
+  it('returns 400 when neither buildingId nor building is provided', async () => {
+    const { ValidationError } = require('../src/shared/errors/domain.errors')
+    mockUseCases.commands.saveDeliveryLocation.mockRejectedValue(
+      new ValidationError('Either a building ID or a building name is required')
+    )
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/users/delivery-location')
+      .set('Authorization', `Bearer ${bearerToken}`)
+      .send({ areaId: validAreaId })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 when areaId is missing', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/users/delivery-location')
+      .set('Authorization', `Bearer ${bearerToken}`)
+      .send({ building: 'Tower A' })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 when areaId is not a valid UUID', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/users/delivery-location')
+      .set('Authorization', `Bearer ${bearerToken}`)
+      .send({ areaId: 'not-a-uuid', building: 'Tower A' })
+
+    expect(res.status).toBe(400)
   })
 
   it('returns 401 when unauthenticated', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/users/delivery-location')
-      .send(validPayload)
+      .send(payloadWithFreeText)
 
     expect(res.status).toBe(401)
+  })
+
+  it('passes the authenticated userId and all fields to the use case', async () => {
+    mockUseCases.commands.saveDeliveryLocation.mockResolvedValue(mockSaveResult)
+
+    await request(app.getHttpServer())
+      .post('/api/v1/users/delivery-location')
+      .set('Authorization', `Bearer ${bearerToken}`)
+      .send(payloadWithBuildingId)
+
+    expect(mockUseCases.commands.saveDeliveryLocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-uuid-1',
+        areaId: validAreaId,
+        buildingId: validBuildingId,
+      })
+    )
   })
 })
 

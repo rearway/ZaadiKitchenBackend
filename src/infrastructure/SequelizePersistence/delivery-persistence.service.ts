@@ -102,6 +102,11 @@ export class DeliveryPersistenceService
     return models.map(m => this.toBuildingEntity(m))
   }
 
+  async getBuildingById(buildingId: string): Promise<Building | null> {
+    const model = await BuildingModel.findByPk(buildingId)
+    return model ? this.toBuildingEntity(model) : null
+  }
+
   async createBuilding(request: Partial<Building>): Promise<Building> {
     const model = await BuildingModel.create({
       areaId: request.areaId!,
@@ -148,6 +153,14 @@ export class DeliveryPersistenceService
       where: { userId, isPrimary: true },
     })
     return model ? this.toDeliveryLocationEntity(model) : null
+  }
+
+  async getLocationsByUserId(userId: string): Promise<DeliveryLocation[]> {
+    const models = await DeliveryLocationModel.findAll({
+      where: { userId },
+      order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']],
+    })
+    return models.map(m => this.toDeliveryLocationEntity(m))
   }
 
   private toDeliveryAreaEntity(model: DeliveryAreaModel): DeliveryArea {
