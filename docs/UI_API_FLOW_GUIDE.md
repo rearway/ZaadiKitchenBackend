@@ -15,9 +15,11 @@
 4. [Plans & Checkout Flow](#4-plans--checkout-flow)
 5. [Subscription Management](#5-subscription-management)
 6. [Wallet & Referrals](#6-wallet--referrals)
-7. [Admin / Ops Portal](#7-admin--ops-portal)
-8. [Complete Endpoint Index](#8-complete-endpoint-index)
-9. [Misalignments & Deviations from Spec](#9-misalignments--deviations-from-spec)
+7. [Home Screen Module](#7-home-screen-module)
+8. [Menu & Meal Detail Module](#8-menu--meal-detail-module)
+9. [Admin / Ops Portal](#9-admin--ops-portal)
+10. [Complete Endpoint Index](#10-complete-endpoint-index)
+11. [Misalignments & Deviations from Spec](#11-misalignments--deviations-from-spec)
 
 ---
 
@@ -224,7 +226,7 @@ Revokes the refresh token. The access token remains cryptographically valid (100
 
 ---
 
-### Admin Login *(Admin Portal only)*
+### 9.0 Admin Login *(Admin Portal only)*
 ```
 POST /auth/admin/login
 No auth required
@@ -1068,7 +1070,315 @@ See [4.4](#44-validate-referral-code-optional-before-checkout).
 
 ---
 
-## 7. Admin / Ops Portal
+## 7. Home Screen Module
+
+**Flow summary:**
+```
+App open
+  → GET /home                    (header banner, subscription state, plans)
+  → GET /home/this-week          (meal strip cards for this week)
+  → tap meal card → GET /meals/:meal_id   (bottom sheet)
+```
+
+---
+
+### 7.1 GET /home
+```
+GET /home
+🔒 Requires auth
+```
+
+Composite endpoint. Returns everything needed to render the Home screen header for any subscription state. The client does not need to know the user's state before calling — `subscription_status` drives which layout variant to render.
+
+**`subscription_status` values and banner themes:**
+
+| `subscription_status` | Banner theme | Primary CTA |
+|---|---|---|
+| `none` | `red` | "Start for SAR 28 →" |
+| `active` | `black` | Location "Edit" |
+| `expired` | `red` | "Renew →" |
+| `paused` | `black` | "Resume →" |
+| `cancelled` | `black` | "Renew →" |
+
+**Response `200 OK` — Unsubscribed:**
+```json
+{
+  "user": { "first_name": "Ahmed", "language": "EN" },
+  "subscription_status": "none",
+  "subscription": null,
+  "delivery_location": null,
+  "wallet_balance_sar": null,
+  "banner": {
+    "theme": "red",
+    "headline": "Fresh lunch, delivered daily.",
+    "subtext": "From our kitchen to your desk. Every day.",
+    "primary_cta": { "label": "Start for SAR 28 →", "action": "navigate_plan_selection" },
+    "secondary_cta": { "label": "Browse menu →", "action": "navigate_menu_tab" }
+  },
+  "quick_actions": null,
+  "plans": [
+    { "id": "try_it", "name": "Try It", "price_sar": 28, "meal_count": 1, "price_per_meal_sar": 28.00, "is_most_popular": false, "cta_label": "Subscribe →" }
+  ]
+}
+```
+
+**Response `200 OK` — Active subscriber:**
+```json
+{
+  "user": { "first_name": "Ahmed", "language": "EN" },
+  "subscription_status": "active",
+  "subscription": {
+    "subscription_id": "sub_01JM3XYZ",
+    "plan_name": "Month Plan",
+    "meal_type": "executive",
+    "days_remaining": 17,
+    "end_date": "2025-06-03",
+    "end_date_label": "Ends 3 Jun",
+    "skip_days_remaining": 63,
+    "pause_days_remaining": 63
+  },
+  "delivery_location": {
+    "building": "Al Nakheel Tower",
+    "floor": "Floor 7",
+    "area_name": "Al Nakheel"
+  },
+  "wallet_balance_sar": 50.00,
+  "banner": {
+    "theme": "black",
+    "plan_label": "Executive Plan",
+    "greeting": "Good morning, Ahmed 👋",
+    "days_remaining_label": "17 days left",
+    "end_date_label": "Ends 3 Jun",
+    "location_label": "📍 Al Nakheel Tower · Floor 7",
+    "location_edit_action": "navigate_edit_location"
+  },
+  "quick_actions": [
+    { "id": "skip", "label": "Skip a day", "icon": "⏭", "subtext": "Before 6 PM cutoff · No charge", "action": "navigate_skip_screen", "theme": "red_tint" },
+    { "id": "pause", "label": "Pause anytime", "icon": "⏸", "subtext": "Freeze your plan · No charge", "action": "open_pause_modal", "theme": "grey" }
+  ],
+  "plans": [...]
+}
+```
+
+> `wallet_balance_sar` is only populated for `active` and `expired` states. It is `null` for `none` and `paused`.
+
+---
+
+### 7.2 GET /home/this-week
+```
+GET /home/this-week
+🔒 Requires auth
+```
+
+Returns the horizontal meal strip cards for the current working week (Sun–Thu). Only returns days from today onwards. Each card includes a delivery-state overlay.
+
+**`card_state` values:**
+
+| Value | When | Opacity |
+|---|---|---|
+| `today` | Today's date | 100% |
+| `upcoming` | Future days this week | 100% |
+| `skipped` | Day is skipped (active subscriber) | 100% |
+| `past` | Dates before today | 100% |
+| `browse_only` | Any day when subscription is paused | 100% |
+| `past_greyed` | Before today, not delivered or skipped | 45% |
+
+**Response `200 OK`:**
+```json
+{
+  "week_label": "This Week's Meals",
+  "cards": [
+    {
+      "meal_id": "meal_01JK2ABX",
+      "name_en": "Lamb Kabsa",
+      "meal_type": "executive",
+      "kcal": 550,
+      "emoji": "🍛",
+      "delivery_date": "2025-05-05",
+      "day_label": "TODAY",
+      "card_state": "today",
+      "card_border": "red",
+      "action": { "type": "open_meal_detail", "cta_label": "Subscribe →" }
+    },
+    {
+      "meal_id": "meal_01JK2ACX",
+      "name_en": "Chicken Fattoush",
+      "meal_type": "salad",
+      "kcal": 380,
+      "emoji": "🥗",
+      "delivery_date": "2025-05-06",
+      "day_label": "Mon",
+      "card_state": "upcoming",
+      "card_border": "default",
+      "action": { "type": "open_meal_detail", "cta_label": "Skip →" }
+    }
+  ]
+}
+```
+
+**`action.cta_label` by subscription status:**
+
+| Status | CTA |
+|---|---|
+| `none` | "Subscribe →" |
+| `active` (skippable) | "Skip →" |
+| `active` (past cutoff or limit) | `null` |
+| `expired` / `cancelled` | "Renew →" |
+| `paused` | "Browse only" |
+
+---
+
+## 8. Menu & Meal Detail Module
+
+**Flow summary:**
+```
+Menu tab load  → GET /menu           (optional — header labels, filter chips)
+               → GET /menu/week      (both week strips, this week + next week)
+Menu card tap  → GET /meals/:meal_id (full screen)
+Home card tap  → GET /meals/:meal_id (bottom sheet)
+```
+
+---
+
+### 8.1 GET /menu
+```
+GET /menu
+🔒 Requires auth
+```
+
+Returns light metadata for the Menu tab header — week range labels and filter chip options. Optional: clients that compute week ranges client-side may skip this call.
+
+**Response `200 OK`:**
+```json
+{
+  "this_week": {
+    "label": "This week · Sun 5 – Thu 9 May",
+    "date_from": "2025-05-05",
+    "date_to": "2025-05-09"
+  },
+  "next_week": {
+    "label": "Next week · Sun 12 – Thu 16 May",
+    "date_from": "2025-05-12",
+    "date_to": "2025-05-16"
+  },
+  "filter_options": [
+    { "id": "all", "label": "All", "is_default": true },
+    { "id": "executive", "label": "Executive", "is_default": false },
+    { "id": "salad", "label": "Salad", "is_default": false }
+  ]
+}
+```
+
+---
+
+### 8.2 GET /menu/week
+```
+GET /menu/week?meal_type=all
+🔒 Requires auth
+```
+
+Returns the full 10-day meal schedule for both the current and next working week. **Both week strips in one call** — no second round-trip when the user scrolls to "Next week."
+
+**Query Parameters:**
+
+| Parameter | Values | Default |
+|---|---|---|
+| `meal_type` | `all` \| `executive` \| `salad` | `all` |
+
+Filtering is server-side — the client does not need to filter locally.
+
+**`skip_reason` values (when `skip_available: false`):**
+
+| Value | Condition |
+|---|---|
+| `past_cutoff` | After 18:00 AST the day before delivery |
+| `skip_limit_reached` | All `skip_days_allowed` used |
+| `not_subscribed` | No active subscription |
+| `subscription_paused` | Subscription paused |
+| `subscription_expired` | Subscription expired |
+| `subscription_cancelled` | Subscription cancelled |
+| `already_skipped` | Day already skipped |
+
+**Response `200 OK`:**
+```json
+{
+  "this_week": {
+    "label": "This week · Sun 5 – Thu 9 May",
+    "date_from": "2025-05-05",
+    "date_to": "2025-05-09",
+    "days": [
+      {
+        "meal_id": "meal_01JK2ACX",
+        "name_en": "Chicken Fattoush",
+        "meal_type": "salad",
+        "kcal": 380,
+        "emoji": "🥗",
+        "delivery_date": "2025-05-06",
+        "day_label": "TODAY",
+        "card_state": "today",
+        "is_today": true,
+        "skip_available": true,
+        "skip_reason": null
+      }
+    ]
+  },
+  "next_week": {
+    "label": "Next week · Sun 12 – Thu 16 May",
+    "date_from": "2025-05-12",
+    "date_to": "2025-05-16",
+    "days": [...]
+  }
+}
+```
+
+> **Note:** Only published weeks return meal data. If a week has not been published by the admin, its `days` array will be empty.
+
+---
+
+### 8.3 GET /meals/:meal_id
+```
+GET /meals/:meal_id
+🔒 Requires auth
+```
+
+Returns full detail for a single meal. Used for **both** the bottom sheet (Home card tap) and the full screen (Menu card tap) — the `view_mode` is a client-side routing decision.
+
+**Response `200 OK`:**
+```json
+{
+  "meal_id": "meal_01JK2ABX",
+  "name_en": "Lamb Kabsa",
+  "name_ar": "كبسة لحم",
+  "meal_type": "executive",
+  "emoji": "🍛",
+  "kcal": 550,
+  "macros": {
+    "protein_g": 38,
+    "carbs_g": 62,
+    "fat_g": 14
+  },
+  "chef_note": "Slow-cooked for 4 hours with saffron rice and dried lime.",
+  "key_ingredients": ["Lamb", "Saffron rice", "Dried lime"],
+  "delivery_date": "2025-05-05"
+}
+```
+
+| Field | Bottom Sheet | Full Screen |
+|---|---|---|
+| `name_en` / `name_ar` | ✅ | ✅ |
+| Meal type + kcal pill | ✅ | ✅ |
+| `macros` row | ✅ | ✅ |
+| `chef_note` | ✅ | ✅ |
+| `key_ingredients` | ❌ | ✅ |
+| Skip action | ✅ (if cutoff not passed) | ✅ |
+
+`delivery_date` is `null` if the meal is not assigned to the current or next published week.
+
+**Errors:** `RESOURCE_NOT_FOUND` (404)
+
+---
+
+## 9. Admin / Ops Portal
 
 ### Auth
 Admin and Ops users authenticate with **email + password** (not OTP).
@@ -1083,7 +1393,7 @@ See [Admin Login](#admin-login-admin-portal-only).
 
 ---
 
-### 7.1 Area Management ✅ Implemented
+### 9.1 Area Management ✅ Implemented
 
 **List All Areas (Admin view — includes all statuses)**
 ```
@@ -1140,7 +1450,218 @@ POST /admin/areas/:area_id/buildings
 
 ---
 
-### 7.2 Not Yet Implemented ❌
+### 9.2 Meal Library ✅ Implemented
+
+```
+GET    /admin/meals                          → List / search meals
+GET    /admin/meals/:meal_id                 → Meal detail
+POST   /admin/meals                          → Create meal (always draft)
+PATCH  /admin/meals/:meal_id                 → Update meal fields
+PATCH  /admin/meals/:meal_id/status          → Activate or draft a meal
+POST   /admin/meals/import                   → Bulk import from XLSX
+```
+
+**List meals — `GET /admin/meals`**
+
+| Query param | Values | Default | Notes |
+|---|---|---|---|
+| `status` | `all` \| `active` \| `draft` | `all` | |
+| `meal_type` | `all` \| `executive` \| `salad` | `all` | |
+| `q` | string | — | Search by English or Arabic name |
+| `page` | integer | `1` | |
+| `per_page` | integer | `20` | Max `50` |
+| `context` | `picker` | — | Picker mode: only `active` meals, excludes meals in `exclude_week_id` |
+| `exclude_week_id` | string | — | Used with `context=picker`. Meals already in this week get `already_used: true` |
+
+**Response `200 OK`:**
+```json
+{
+  "meals": [
+    {
+      "meal_id": "meal_01JK2ABX",
+      "name_en": "Lamb Kabsa",
+      "name_ar": "كبسة لحم",
+      "meal_type": "executive",
+      "kcal": 550,
+      "status": "active",
+      "already_used": false,
+      "used_on_day": null
+    }
+  ],
+  "pagination": { "page": 1, "per_page": 20, "total": 14, "total_pages": 1 }
+}
+```
+
+**Create meal — `POST /admin/meals`**
+
+```json
+{
+  "name_en": "Lamb Kabsa",
+  "name_ar": "كبسة لحم",
+  "meal_type": "executive",
+  "kcal": 550,
+  "macros": { "protein_g": 38, "carbs_g": 62, "fat_g": 14 },
+  "chef_note": "Slow-cooked for 4 hours.",
+  "key_ingredients": ["Lamb", "Saffron rice"],
+  "emoji": "🍛"
+}
+```
+
+Response `201`: `{ "meal_id": "...", "name_en": "...", "status": "draft", "created_at": "..." }`
+
+> `status` is always `draft` on creation. Activate separately via `PATCH /:id/status`.
+
+**Update meal status — `PATCH /admin/meals/:meal_id/status`**
+
+```json
+{ "status": "active" }
+```
+
+When drafting a meal that is in a published week, the server returns `409 MEAL_IN_PUBLISHED_WEEK`. Re-send with `"confirm_published_edit": true` to override.
+
+**Import meals — `POST /admin/meals/import`**
+
+- Content-Type: `multipart/form-data`
+- Field name: `file` (`.xlsx` file)
+- Max 100 rows per import. Partial import is allowed (rows with errors are skipped).
+- All imported meals are saved as `draft`.
+
+Required columns: `name_en`, `meal_type` (`executive`|`salad`), `kcal`.
+Optional: `name_ar`, `protein_g`, `carbs_g`, `fat_g`, `chef_note`, `key_ingredients` (comma-separated), `emoji`.
+
+```json
+{
+  "imported_count": 8,
+  "skipped_count": 2,
+  "errors": [{ "row": 4, "field": "kcal", "message": "kcal must be a positive integer." }],
+  "all_saved_as": "draft",
+  "note": "Photos must be uploaded manually. No auto-activation."
+}
+```
+
+**Domain errors:**
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `MEAL_IS_DRAFT` | 422 | Assigning a draft meal to a week slot |
+| `MEAL_IN_PUBLISHED_WEEK` | 409 | Drafting a meal that is in a published week |
+
+---
+
+### 9.3 Menu Manager ✅ Implemented
+
+The planner always manages two working weeks simultaneously:
+
+- **Current week (N):** Published and read-only. Rendered at 45% opacity.
+- **Next week (N+1):** Editable. Admin fills 5 days × 2 slots (Executive + Salad) = **10 slots**. Manual publish.
+
+Both weeks are auto-created on first access.
+
+```
+GET    /admin/menu/weeks                                   → List weeks (auto-creates current + next)
+GET    /admin/menu/weeks/:week_id                          → Full slot grid for a week
+POST   /admin/menu/weeks/:week_id/slots/:slot_id/assign    → Assign meal to slot
+DELETE /admin/menu/weeks/:week_id/slots/:slot_id           → Clear slot
+POST   /admin/menu/weeks/:week_id/publish                  → Publish week
+```
+
+**Week IDs** are formatted as `w{year}-{isoWeekNumber}` (e.g. `w2025-23`).  
+**Slot IDs** are formatted as `slot_{weekId}_{day}_{type}` (e.g. `slot_w2025-23_sun_exec`).
+
+**List weeks — `GET /admin/menu/weeks`**
+
+| Query param | Default | Notes |
+|---|---|---|
+| `from_week` | current week | Week ID to start from (e.g. `w2025-23`) |
+| `count` | `2` | Max `8` |
+
+```json
+{
+  "weeks": [
+    {
+      "week_id": "w2025-23",
+      "week_number": 23,
+      "label": "Week 23 — Current",
+      "date_range": "Sun 5 – Thu 9 May",
+      "date_from": "2025-05-05",
+      "date_to": "2025-05-09",
+      "status": "published",
+      "is_current_week": true,
+      "is_editable": false,
+      "fill_status": { "filled_days": 5, "total_days": 5, "label": "Published ✓" }
+    },
+    {
+      "week_id": "w2025-24",
+      "status": "draft",
+      "is_editable": true,
+      "fill_status": { "filled_days": 3, "total_days": 5, "label": "3 of 5 days filled" }
+    }
+  ],
+  "nav": { "prev_week": "w2025-22", "next_week": "w2025-25" }
+}
+```
+
+**Get week slot grid — `GET /admin/menu/weeks/:week_id`**
+
+Returns the 5-day × 2-slot grid. When `is_editable: false` (published week), all slot `is_editable` flags are `false` — render at 45% opacity with no interactions.
+
+```json
+{
+  "week_id": "w2025-24",
+  "status": "draft",
+  "is_editable": true,
+  "days": [
+    {
+      "delivery_date": "2025-05-12",
+      "day_label": "Sun",
+      "date_label": "12 May",
+      "slots": [
+        { "slot_id": "slot_w2025-24_sun_exec", "meal_type": "executive", "meal_type_label": "Exec", "meal": { "meal_id": "...", "name_en": "Lamb Kabsa", "kcal": 550 }, "is_filled": true, "is_editable": true },
+        { "slot_id": "slot_w2025-24_sun_salad", "meal_type": "salad", "meal_type_label": "Salad", "meal": null, "is_filled": false, "is_editable": true }
+      ]
+    }
+  ],
+  "publish_ready": false,
+  "publish_blocked_reason": "2 slots unfilled"
+}
+```
+
+**Assign meal — `POST /admin/menu/weeks/:week_id/slots/:slot_id/assign`**
+
+```json
+{ "meal_id": "meal_01JK2ABX" }
+```
+
+Returns updated slot + `week_fill_status: { filled_slots, total_slots, publish_ready }`.
+
+**Publish week — `POST /admin/menu/weeks/:week_id/publish`**
+
+- Requires all 10 slots to have a meal assigned.
+- Sets `last_served` and increments `times_served` on all assigned meals.
+- Irreversible.
+
+```json
+{
+  "week_id": "w2025-24",
+  "status": "published",
+  "published_at": "2025-05-09T11:00:00Z",
+  "published_by": "Admin User",
+  "customer_visible_from": "2025-05-12"
+}
+```
+
+**Domain errors:**
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `WEEK_NOT_COMPLETE` | 409 | Not all 10 slots filled |
+| `WEEK_ALREADY_PUBLISHED` | 409 | Week is already published |
+| `SLOT_NOT_EDITABLE` | 422 | Slot's week is published or past |
+| `MEAL_ALREADY_USED` | 409 | Meal already assigned in this week |
+
+---
+
+### 9.4 Not Yet Implemented ❌
 
 The following are in the admin spec but have **no backend implementation** yet:
 
@@ -1150,14 +1671,19 @@ The following are in the admin spec but have **no backend implementation** yet:
 | Daily Ops | `GET /admin/ops/daily-summary`, `POST /admin/ops/advance-stage`, `GET /admin/ops/export-delivery-sheet`, `GET /admin/ops/issues`, `POST /admin/ops/issues/:id/credit`, `POST /admin/ops/issues/:id/reject` |
 | Label Printing | `GET /admin/labels`, `GET /admin/labels/:id/download`, `GET /admin/labels/area/:id/download`, `GET /admin/labels/download-all`, `GET /admin/labels/:id/preview` |
 | Revenue Dashboard | `GET /admin/revenue/summary`, `GET /admin/revenue/daily-chart`, `GET /admin/revenue/plan-breakdown` |
-| Menu Manager | `GET /admin/menu/planner`, `PUT /admin/menu/planner/slots/:slot_id` |
 | Customer Management | `GET /admin/customers`, `GET /admin/customers/:id`, `POST /admin/customers/:id/deactivate`, `POST /admin/customers/:id/wallet/credit` |
 | Comms & Automations | `GET /admin/comms/automations`, `PUT /admin/comms/automations/:id` |
 | Rider App | `GET /rider/deliveries/today`, `POST /rider/deliveries/:id/complete`, `POST /rider/deliveries/:id/issue` |
 
 ---
 
-## 8. Complete Endpoint Index
+## 10. Complete Endpoint Index
+
+### Health
+
+| # | Method | Path | Auth | Status |
+|---|---|---|---|---|
+| 1 | GET | `/health` | None | ✅ |
 
 ### Customer App — All Endpoints
 
@@ -1202,6 +1728,11 @@ The following are in the admin spec but have **no backend implementation** yet:
 | 37 | GET | `/users/wallet` | JWT | ✅ |
 | 38 | GET | `/users/wallet/transactions` | JWT | ✅ |
 | 39 | GET | `/users/referral` | JWT | ✅ |
+| 40 | GET | `/home` | JWT | ✅ |
+| 41 | GET | `/home/this-week` | JWT | ✅ |
+| 42 | GET | `/menu` | JWT | ✅ |
+| 43 | GET | `/menu/week` | JWT | ✅ |
+| 44 | GET | `/meals/:meal_id` | JWT | ✅ |
 
 ### Admin / Ops Portal — All Endpoints
 
@@ -1213,36 +1744,45 @@ The following are in the admin spec but have **no backend implementation** yet:
 | 4 | GET | `/admin/areas` | ADMIN\|OPS | ✅ |
 | 5 | POST | `/admin/areas` | ADMIN\|OPS | ✅ |
 | 6 | POST | `/admin/areas/:id/buildings` | ADMIN\|OPS | ✅ |
-| 7 | GET | `/admin/dashboard/summary` | ADMIN\|OPS | ❌ |
-| 8 | GET | `/admin/ops/daily-summary` | ADMIN\|OPS | ❌ |
-| 9 | POST | `/admin/ops/advance-stage` | ADMIN\|OPS | ❌ |
-| 10 | GET | `/admin/ops/export-delivery-sheet` | ADMIN\|OPS | ❌ |
-| 11 | GET | `/admin/ops/issues` | ADMIN\|OPS | ❌ |
-| 12 | POST | `/admin/ops/issues/:id/credit` | ADMIN\|OPS | ❌ |
-| 13 | POST | `/admin/ops/issues/:id/reject` | ADMIN\|OPS | ❌ |
-| 14 | GET | `/admin/labels` | ADMIN\|OPS | ❌ |
-| 15 | GET | `/admin/revenue/summary` | ADMIN | ❌ |
-| 16 | GET | `/admin/revenue/daily-chart` | ADMIN | ❌ |
-| 17 | GET | `/admin/revenue/plan-breakdown` | ADMIN | ❌ |
-| 18 | GET | `/admin/menu/planner` | ADMIN\|OPS | ❌ |
-| 19 | PUT | `/admin/menu/planner/slots/:id` | ADMIN\|OPS | ❌ |
-| 20 | GET | `/admin/customers` | ADMIN\|OPS | ❌ |
-| 21 | GET | `/admin/customers/:id` | ADMIN\|OPS | ❌ |
-| 22 | POST | `/admin/customers/:id/deactivate` | ADMIN | ❌ |
-| 23 | POST | `/admin/customers/:id/wallet/credit` | ADMIN\|OPS | ❌ |
-| 24 | GET | `/rider/deliveries/today` | DRIVER | ❌ |
-| 25 | POST | `/rider/deliveries/:id/complete` | DRIVER | ❌ |
-| 26 | POST | `/rider/deliveries/:id/issue` | DRIVER | ❌ |
+| 7 | GET | `/admin/meals` | ADMIN\|OPS | ✅ |
+| 8 | GET | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
+| 9 | POST | `/admin/meals` | ADMIN\|OPS | ✅ |
+| 10 | PATCH | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
+| 11 | PATCH | `/admin/meals/:meal_id/status` | ADMIN\|OPS | ✅ |
+| 12 | POST | `/admin/meals/import` | ADMIN\|OPS | ✅ |
+| 13 | GET | `/admin/menu/weeks` | ADMIN\|OPS | ✅ |
+| 14 | GET | `/admin/menu/weeks/:week_id` | ADMIN\|OPS | ✅ |
+| 15 | POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN\|OPS | ✅ |
+| 16 | DELETE | `/admin/menu/weeks/:week_id/slots/:slot_id` | ADMIN\|OPS | ✅ |
+| 17 | POST | `/admin/menu/weeks/:week_id/publish` | ADMIN\|OPS | ✅ |
+| 18 | GET | `/admin/dashboard/summary` | ADMIN\|OPS | ❌ |
+| 19 | GET | `/admin/ops/daily-summary` | ADMIN\|OPS | ❌ |
+| 20 | POST | `/admin/ops/advance-stage` | ADMIN\|OPS | ❌ |
+| 21 | GET | `/admin/ops/export-delivery-sheet` | ADMIN\|OPS | ❌ |
+| 22 | GET | `/admin/ops/issues` | ADMIN\|OPS | ❌ |
+| 23 | POST | `/admin/ops/issues/:id/credit` | ADMIN\|OPS | ❌ |
+| 24 | POST | `/admin/ops/issues/:id/reject` | ADMIN\|OPS | ❌ |
+| 25 | GET | `/admin/labels` | ADMIN\|OPS | ❌ |
+| 26 | GET | `/admin/revenue/summary` | ADMIN | ❌ |
+| 27 | GET | `/admin/revenue/daily-chart` | ADMIN | ❌ |
+| 28 | GET | `/admin/revenue/plan-breakdown` | ADMIN | ❌ |
+| 29 | GET | `/admin/customers` | ADMIN\|OPS | ❌ |
+| 30 | GET | `/admin/customers/:id` | ADMIN\|OPS | ❌ |
+| 31 | POST | `/admin/customers/:id/deactivate` | ADMIN | ❌ |
+| 32 | POST | `/admin/customers/:id/wallet/credit` | ADMIN\|OPS | ❌ |
+| 33 | GET | `/rider/deliveries/today` | DRIVER | ❌ |
+| 34 | POST | `/rider/deliveries/:id/complete` | DRIVER | ❌ |
+| 35 | POST | `/rider/deliveries/:id/issue` | DRIVER | ❌ |
 
 ---
 
-## 9. Misalignments & Deviations from Spec
+## 11. Misalignments & Deviations from Spec
 
 These are differences between the API design documents and the current implementation that UI developers must be aware of.
 
 ---
 
-### 9.1 ⚠️ Refresh Token Endpoint Path
+### 11.1 ⚠️ Refresh Token Endpoint Path
 
 | | Path |
 |---|---|
@@ -1253,7 +1793,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 9.2 ⚠️ OTP Verify — `otp_id` Not Required in Request
+### 11.2 ⚠️ OTP Verify — `otp_id` Not Required in Request
 
 | | Behaviour |
 |---|---|
@@ -1264,7 +1804,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 9.3 ⚠️ GET /users/delivery-location Returns Array, Not Single Object
+### 11.3 ⚠️ GET /users/delivery-location Returns Array, Not Single Object
 
 | | Response |
 |---|---|
@@ -1275,7 +1815,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 9.4 ⚠️ Access Token Lifetime
+### 11.4 ⚠️ Access Token Lifetime
 
 | | Value |
 |---|---|
@@ -1286,7 +1826,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 9.5 ⚠️ Admin Auth — OTP vs Email/Password
+### 11.5 ⚠️ Admin Auth — OTP vs Email/Password
 
 | | Method |
 |---|---|
@@ -1297,7 +1837,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 9.6 ℹ️ Dual Referral Endpoints
+### 11.6 ℹ️ Dual Referral Endpoints
 
 Both of these exist and return referral data:
 - `GET /users/referral` — user-facing referral summary
@@ -1307,7 +1847,7 @@ Either works. Prefer `/users/referral` for the customer app.
 
 ---
 
-### 9.7 ℹ️ Response Field Naming Convention
+### 11.7 ℹ️ Response Field Naming Convention
 
 The spec examples use `snake_case` field names (e.g. `is_new_user`, `access_token`).
 
@@ -1317,4 +1857,4 @@ The backend returns **`camelCase`** (e.g. `isNewUser`, `accessToken`).
 
 ---
 
-*Last updated: 2026-05-22*
+*Last updated: 2026-05-23*

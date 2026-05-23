@@ -407,6 +407,39 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         gatewayPaymentId: 'mock_pay_uuid',
       }),
     } as unknown as Deps['paymentGateway'],
+
+    mealLoader: {
+      getMealById: jest.fn().mockResolvedValue(null),
+      getMeals: jest.fn().mockResolvedValue({ meals: [], total: 0 }),
+      getMealsByIds: jest.fn().mockResolvedValue([]),
+      getMealsInWeek: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['mealLoader'],
+
+    mealPersistor: {
+      createMeal: jest.fn().mockResolvedValue(null),
+      updateMeal: jest.fn().mockResolvedValue(null),
+      updateMealStatus: jest.fn().mockResolvedValue(null),
+      bulkCreateMeals: jest.fn().mockResolvedValue({ created: [], skipped: 0, errors: [] }),
+      incrementTimesServed: jest.fn().mockResolvedValue(undefined),
+      updateLastServed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['mealPersistor'],
+
+    menuWeekLoader: {
+      getWeekById: jest.fn().mockResolvedValue(null),
+      getWeeks: jest.fn().mockResolvedValue([]),
+      getSlotsByWeekId: jest.fn().mockResolvedValue([]),
+      getSlotById: jest.fn().mockResolvedValue(null),
+      getMealsInWeek: jest.fn().mockResolvedValue([]),
+      getMenuForDateRange: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['menuWeekLoader'],
+
+    menuWeekPersistor: {
+      ensureWeekExists: jest.fn().mockResolvedValue({ week: null, slots: [] }),
+      assignMealToSlot: jest.fn().mockResolvedValue(null),
+      clearSlot: jest.fn().mockResolvedValue(null),
+      publishWeek: jest.fn().mockResolvedValue(null),
+      transitionPastWeeks: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['menuWeekPersistor'],
   }
 
   return { ...base, ...overrides }

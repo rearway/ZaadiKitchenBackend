@@ -17,6 +17,8 @@ import {
   WalletPersistenceS,
   ReferralPersistenceS,
   PaymentGatewayS,
+  MealPersistenceS,
+  MenuWeekPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -31,6 +33,8 @@ import { SubscriptionPersistenceService } from '../infrastructure/SequelizePersi
 import { PublicHolidayPersistenceService } from '../infrastructure/SequelizePersistence/public-holiday-persistence.service.js'
 import { WalletPersistenceService } from '../infrastructure/SequelizePersistence/wallet-persistence.service.js'
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
+import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
+import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
 import { OtpStubService } from '../infrastructure/OtpService/index.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
@@ -69,6 +73,8 @@ import { coreAdapterService } from './coreadapter.service.js'
     },
     { provide: WalletPersistenceS, useClass: WalletPersistenceService },
     { provide: ReferralPersistenceS, useClass: ReferralPersistenceService },
+    { provide: MealPersistenceS, useClass: MealPersistenceService },
+    { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
 
     // External services
     { provide: OtpServiceS, useClass: OtpStubService },

@@ -18,6 +18,8 @@ import {
   WalletPersistenceS,
   ReferralPersistenceS,
   PaymentGatewayS,
+  MealPersistenceS,
+  MenuWeekPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -33,6 +35,8 @@ import { SubscriptionPersistenceService } from '../infrastructure/SequelizePersi
 import { PublicHolidayPersistenceService } from '../infrastructure/SequelizePersistence/public-holiday-persistence.service.js'
 import { WalletPersistenceService } from '../infrastructure/SequelizePersistence/wallet-persistence.service.js'
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
+import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
+import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
 import { OtpStubService } from '../infrastructure/OtpService/index.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 
@@ -54,7 +58,9 @@ export const coreAdapterService: FactoryProvider = {
     publicHolidayPersistence: PublicHolidayPersistenceService,
     walletPersistence: WalletPersistenceService,
     referralPersistence: ReferralPersistenceService,
-    paymentGateway: MockPaymentGatewayService
+    paymentGateway: MockPaymentGatewayService,
+    mealPersistence: MealPersistenceService,
+    menuWeekPersistence: MenuWeekPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -106,6 +112,10 @@ export const coreAdapterService: FactoryProvider = {
       referralLoader: referralPersistence,
       referralPersistor: referralPersistence,
       paymentGateway,
+      mealLoader: mealPersistence,
+      mealPersistor: mealPersistence,
+      menuWeekLoader: menuWeekPersistence,
+      menuWeekPersistor: menuWeekPersistence,
     }),
   inject: [
     LoggerS,
@@ -124,5 +134,7 @@ export const coreAdapterService: FactoryProvider = {
     WalletPersistenceS,
     ReferralPersistenceS,
     PaymentGatewayS,
+    MealPersistenceS,
+    MenuWeekPersistenceS,
   ],
 }

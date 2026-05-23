@@ -12,6 +12,10 @@ import { OrdersController } from './orders.controller.js'
 import { SubscriptionsController } from './subscriptions.controller.js'
 import { ReferralsController } from './referrals.controller.js'
 import { ConfigController } from './config.controller.js'
+import { AdminMealsController } from './admin-meals.controller.js'
+import { AdminMenuController } from './admin-menu.controller.js'
+import { HomeController } from './home.controller.js'
+import { MenuController } from './menu.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
@@ -29,6 +33,10 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     ReferralsController,
     ConfigController,
     HealthController,
+    AdminMealsController,
+    AdminMenuController,
+    HomeController,
+    MenuController,
   ],
 })
 export class HttpModule {}

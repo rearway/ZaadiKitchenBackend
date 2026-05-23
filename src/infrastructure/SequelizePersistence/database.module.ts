@@ -19,6 +19,9 @@ import { PublicHolidayModel } from './models/PublicHolidayModel.js'
 import { WalletTransactionModel } from './models/WalletTransactionModel.js'
 import { PromoCodeModel } from './models/PromoCodeModel.js'
 import { UserReferralModel } from './models/UserReferralModel.js'
+import { MealModel } from './models/MealModel.js'
+import { MenuWeekModel } from './models/MenuWeekModel.js'
+import { MenuSlotModel } from './models/MenuSlotModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -63,6 +66,9 @@ import { UserReferralModel } from './models/UserReferralModel.js'
             WalletTransactionModel,
             PromoCodeModel,
             UserReferralModel,
+            MealModel,
+            MenuWeekModel,
+            MenuSlotModel,
           ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
@@ -97,6 +103,9 @@ import { UserReferralModel } from './models/UserReferralModel.js'
       WalletTransactionModel,
       PromoCodeModel,
       UserReferralModel,
+      MealModel,
+      MenuWeekModel,
+      MenuSlotModel,
     ]),
   ],
   exports: [SequelizeModule],

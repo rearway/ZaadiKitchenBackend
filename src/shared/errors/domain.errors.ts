@@ -144,3 +144,55 @@ export class PlanMismatchError extends BaseError {
     super('PLAN_MISMATCH', 422, 'This code is not valid for the selected plan.')
   }
 }
+
+export class MealNotFoundError extends BaseError {
+  constructor() {
+    super('MEAL_NOT_FOUND', 404, 'Meal not found.')
+  }
+}
+
+export class MealAlreadyUsedInWeekError extends BaseError {
+  constructor(mealName: string, usedOnDay: string, usedInSlot: string, details?: unknown) {
+    super(
+      'MEAL_ALREADY_USED',
+      409,
+      `${mealName} is already assigned to ${usedOnDay} (${usedInSlot}) this week. Each meal can only appear once per week.`,
+      details
+    )
+  }
+}
+
+export class MealIsDraftError extends BaseError {
+  constructor() {
+    super('MEAL_IS_DRAFT', 422, 'Draft meals cannot be assigned to week slots. Activate the meal first.')
+  }
+}
+
+export class WeekNotCompleteError extends BaseError {
+  constructor(unfilledSlots: unknown[]) {
+    super('WEEK_NOT_COMPLETE', 409, `Cannot publish. ${unfilledSlots.length} slot${unfilledSlots.length > 1 ? 's are' : ' is'} still unfilled.`, { unfilled_slots: unfilledSlots })
+  }
+}
+
+export class WeekAlreadyPublishedError extends BaseError {
+  constructor() {
+    super('WEEK_ALREADY_PUBLISHED', 409, 'This week has already been published.')
+  }
+}
+
+export class SlotNotEditableError extends BaseError {
+  constructor() {
+    super('SLOT_NOT_EDITABLE', 422, 'This slot belongs to a published week and cannot be modified.')
+  }
+}
+
+export class MealInPublishedWeekError extends BaseError {
+  constructor(affectedWeeks: string[], details?: unknown) {
+    super(
+      'MEAL_IN_PUBLISHED_WEEK',
+      409,
+      `This meal is currently in the published menu for ${affectedWeeks.join(', ')}. Pass confirm_published_edit: true to proceed.`,
+      { affected_weeks: affectedWeeks, ...((details as object) ?? {}) }
+    )
+  }
+}

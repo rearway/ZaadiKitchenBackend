@@ -23,6 +23,9 @@ export const PublicHolidayPersistenceS = Symbol('public-holiday-persistence')
 export const WalletPersistenceS = Symbol('wallet-persistence')
 export const ReferralPersistenceS = Symbol('referral-persistence')
 
+export const MealPersistenceS = Symbol('meal-persistence')
+export const MenuWeekPersistenceS = Symbol('menu-week-persistence')
+
 // External Services
 export const OtpServiceS = Symbol('otp-service')
 export const PaymentGatewayS = Symbol('payment-gateway')

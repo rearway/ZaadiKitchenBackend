@@ -26,6 +26,13 @@ import * as ResumeSubscription from './commands/ResumeSubscription.js'
 import * as CancelSubscription from './commands/CancelSubscription.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
 import * as ValidateReferral from './commands/ValidateReferral.js'
+import * as CreateMeal from './commands/CreateMeal.js'
+import * as UpdateMeal from './commands/UpdateMeal.js'
+import * as UpdateMealStatus from './commands/UpdateMealStatus.js'
+import * as ImportMeals from './commands/ImportMeals.js'
+import * as AssignMealToSlot from './commands/AssignMealToSlot.js'
+import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
+import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
 
 import * as GetProfile from './queries/GetProfile.js'
 import * as GetActiveDeliveryAreas from './queries/GetActiveDeliveryAreas.js'
@@ -45,6 +52,15 @@ import * as GetWallet from './queries/GetWallet.js'
 import * as GetWalletTransactions from './queries/GetWalletTransactions.js'
 import * as GetReferral from './queries/GetReferral.js'
 import * as GetPublicHolidays from './queries/GetPublicHolidays.js'
+import * as GetAdminMeals from './queries/GetAdminMeals.js'
+import * as GetAdminMeal from './queries/GetAdminMeal.js'
+import * as GetMenuWeeks from './queries/GetMenuWeeks.js'
+import * as GetMenuWeek from './queries/GetMenuWeek.js'
+import * as GetHome from './queries/GetHome.js'
+import * as GetHomeThisWeek from './queries/GetHomeThisWeek.js'
+import * as GetMenuMeta from './queries/GetMenuMeta.js'
+import * as GetCustomerMenuWeek from './queries/GetCustomerMenuWeek.js'
+import * as GetMealDetail from './queries/GetMealDetail.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -211,6 +227,50 @@ export function initUseCases(deps: Deps) {
     ...defaultWrappers
   )
 
+  // Meal library commands
+  const createMeal = wrapUC(
+    deps,
+    CreateMeal.makeUC(deps),
+    CreateMeal.name,
+    ...defaultWrappers
+  )
+  const updateMeal = wrapUC(
+    deps,
+    UpdateMeal.makeUC(deps),
+    UpdateMeal.name,
+    ...defaultWrappers
+  )
+  const updateMealStatus = wrapUC(
+    deps,
+    UpdateMealStatus.makeUC(deps),
+    UpdateMealStatus.name,
+    ...defaultWrappers
+  )
+  const importMeals = wrapUC(
+    deps,
+    ImportMeals.makeUC(deps),
+    ImportMeals.name,
+    ...defaultWrappers
+  )
+  const assignMealToSlot = wrapUC(
+    deps,
+    AssignMealToSlot.makeUC(deps),
+    AssignMealToSlot.name,
+    ...defaultWrappers
+  )
+  const clearMenuSlot = wrapUC(
+    deps,
+    ClearMenuSlot.makeUC(deps),
+    ClearMenuSlot.name,
+    ...defaultWrappers
+  )
+  const publishMenuWeek = wrapUC(
+    deps,
+    PublishMenuWeek.makeUC(deps),
+    PublishMenuWeek.name,
+    ...defaultWrappers
+  )
+
   // Queries
   const getProfile = wrapUC(
     deps,
@@ -321,6 +381,62 @@ export function initUseCases(deps: Deps) {
     ...defaultWrappers
   )
 
+  // Meal library & menu queries
+  const getAdminMeals = wrapUC(
+    deps,
+    GetAdminMeals.makeUC(deps),
+    GetAdminMeals.name,
+    ...defaultWrappers
+  )
+  const getAdminMeal = wrapUC(
+    deps,
+    GetAdminMeal.makeUC(deps),
+    GetAdminMeal.name,
+    ...defaultWrappers
+  )
+  const getMenuWeeks = wrapUC(
+    deps,
+    GetMenuWeeks.makeUC(deps),
+    GetMenuWeeks.name,
+    ...defaultWrappers
+  )
+  const getMenuWeek = wrapUC(
+    deps,
+    GetMenuWeek.makeUC(deps),
+    GetMenuWeek.name,
+    ...defaultWrappers
+  )
+  const getHome = wrapUC(
+    deps,
+    GetHome.makeUC(deps),
+    GetHome.name,
+    ...defaultWrappers
+  )
+  const getHomeThisWeek = wrapUC(
+    deps,
+    GetHomeThisWeek.makeUC(deps),
+    GetHomeThisWeek.name,
+    ...defaultWrappers
+  )
+  const getMenuMeta = wrapUC(
+    deps,
+    GetMenuMeta.makeUC(deps),
+    GetMenuMeta.name,
+    ...defaultWrappers
+  )
+  const getCustomerMenuWeek = wrapUC(
+    deps,
+    GetCustomerMenuWeek.makeUC(deps),
+    GetCustomerMenuWeek.name,
+    ...defaultWrappers
+  )
+  const getMealDetail = wrapUC(
+    deps,
+    GetMealDetail.makeUC(deps),
+    GetMealDetail.name,
+    ...defaultWrappers
+  )
+
   return {
     queries: {
       getProfile,
@@ -341,6 +457,15 @@ export function initUseCases(deps: Deps) {
       getWalletTransactions,
       getReferral,
       getPublicHolidays,
+      getAdminMeals,
+      getAdminMeal,
+      getMenuWeeks,
+      getMenuWeek,
+      getHome,
+      getHomeThisWeek,
+      getMenuMeta,
+      getCustomerMenuWeek,
+      getMealDetail,
     },
     commands: {
       sendOtp,
@@ -368,6 +493,13 @@ export function initUseCases(deps: Deps) {
       cancelSubscription,
       switchMealType,
       validateReferral,
+      createMeal,
+      updateMeal,
+      updateMealStatus,
+      importMeals,
+      assignMealToSlot,
+      clearMenuSlot,
+      publishMenuWeek,
     },
   }
 }

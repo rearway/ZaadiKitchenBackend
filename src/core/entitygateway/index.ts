@@ -26,6 +26,8 @@ export * from './PublicHoliday.js'
 export * from './Wallet.js'
 export * from './Referral.js'
 export * from './PaymentGateway.js'
+export * from './Meal.js'
+export * from './MenuWeek.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -67,6 +69,8 @@ import type {
 import type { WalletLoader, WalletPersistor } from './Wallet.js'
 import type { ReferralLoader, ReferralPersistor } from './Referral.js'
 import type { PaymentGateway } from './PaymentGateway.js'
+import type { MealLoader, MealPersistor } from './Meal.js'
+import type { MenuWeekLoader, MenuWeekPersistor } from './MenuWeek.js'
 
 export type Deps = {
   logger: Logger
@@ -109,4 +113,8 @@ export type Deps = {
   referralLoader: ReferralLoader
   referralPersistor: ReferralPersistor
   paymentGateway: PaymentGateway
+  mealLoader: MealLoader
+  mealPersistor: MealPersistor
+  menuWeekLoader: MenuWeekLoader
+  menuWeekPersistor: MenuWeekPersistor
 }
