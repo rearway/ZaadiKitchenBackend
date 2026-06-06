@@ -3,11 +3,15 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
+  Param,
   Query,
   Inject,
   UseGuards,
   ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import {
   ApiTags,
@@ -25,6 +29,7 @@ import {
   UpdateProfileDTO,
   UpdateLanguageDTO,
   SaveDeliveryLocationDTO,
+  UpdateDeliveryLocationDTO,
 } from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -96,6 +101,59 @@ export class UserController {
       riderNotes: dto.riderNotes,
     })
     return result
+  }
+
+  @Patch('delivery-location/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Edit a saved delivery location' })
+  @ApiResponse({ status: 200, description: 'Delivery location updated' })
+  @HandleErrors('update-delivery-location')
+  async updateDeliveryLocation(
+    @Param('id') locationId: string,
+    @Body(ValidationPipe) dto: UpdateDeliveryLocationDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.updateDeliveryLocation({
+      userId: user.id,
+      locationId,
+      areaId: dto.areaId,
+      buildingId: dto.buildingId,
+      building: dto.building,
+      floor: dto.floor,
+      deskArea: dto.deskArea,
+      deliveryPreference: dto.deliveryPreference,
+      riderNotes: dto.riderNotes,
+    })
+  }
+
+  @Delete('delivery-location/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a saved delivery location' })
+  @ApiResponse({ status: 200, description: 'Delivery location deleted' })
+  @HandleErrors('delete-delivery-location')
+  async deleteDeliveryLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.deleteDeliveryLocation({
+      userId: user.id,
+      locationId,
+    })
+  }
+
+  @Patch('delivery-location/:id/primary')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set an address as the primary delivery location' })
+  @ApiResponse({ status: 200, description: 'Primary location updated' })
+  @HandleErrors('set-primary-delivery-location')
+  async setPrimaryDeliveryLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.setPrimaryDeliveryLocation({
+      userId: user.id,
+      locationId,
+    })
   }
 
   @Get('delivery-location')

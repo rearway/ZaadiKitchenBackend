@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ValidationPipe,
 } from '@nestjs/common'
 import {
   ApiTags,
@@ -29,6 +30,7 @@ import {
   ResumeSubscriptionDTO,
   SwitchMealTypeDTO,
   ToggleSaladDTO,
+  SubmitIssueDTO,
 } from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -150,6 +152,70 @@ export class SubscriptionsController {
   @HandleErrors('cancel-subscription')
   async cancel(@CurrentUser() user: UserWithoutPassword) {
     return this.useCases.commands.cancelSubscription({ userId: user.id })
+  }
+
+  @Get('me/history')
+  @ApiOperation({ summary: 'Paginated delivery history with kcal and rating per entry' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiQuery({ name: 'period', required: false, type: String, description: 'last_30_days | last_90_days' })
+  @ApiResponse({ status: 200, description: 'History returned' })
+  @HandleErrors('get-meal-history')
+  async getMealHistory(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string,
+    @Query('period') period?: string
+  ) {
+    return this.useCases.queries.getMealHistory({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+      period,
+    })
+  }
+
+  @Get('me/pending-ratings')
+  @ApiOperation({ summary: 'Get up to 5 delivered meals awaiting a rating' })
+  @ApiResponse({ status: 200, description: 'Pending rating days returned' })
+  @HandleErrors('get-pending-ratings')
+  async getPendingRatings(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.queries.getPendingRatings({ userId: user.id })
+  }
+
+  @Get('me/ratings')
+  @ApiOperation({ summary: 'Get submitted meal ratings (paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Ratings returned' })
+  @HandleErrors('get-submitted-ratings')
+  async getSubmittedRatings(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string
+  ) {
+    return this.useCases.queries.getSubmittedRatings({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    })
+  }
+
+  @Post('me/issues')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Report an issue with a delivery' })
+  @ApiResponse({ status: 201, description: 'Issue reported' })
+  @HandleErrors('submit-delivery-issue')
+  async submitIssue(
+    @Body(ValidationPipe) dto: SubmitIssueDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.submitDeliveryIssue({
+      userId: user.id,
+      deliveryDate: dto.deliveryDate,
+      issueType: dto.issueType,
+      description: dto.description,
+    })
   }
 
   @Patch('me/meal-type')

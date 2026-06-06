@@ -9,6 +9,24 @@ export interface DeliveryDayLoader {
     subscriptionId: string,
     date: string
   ): Promise<DeliveryDay | null>
+  getDeliveryDayById(id: string): Promise<DeliveryDay | null>
+  getDeliveryHistory(
+    userId: string,
+    page: number,
+    perPage: number,
+    period?: string
+  ): Promise<{ days: DeliveryHistoryEntry[]; total: number }>
+}
+
+export interface DeliveryHistoryEntry {
+  deliveryDayId: string
+  date: string
+  mealType: string
+  mealName: string | null
+  kcal: number | null
+  status: string
+  stars: number | null
+  tags: string[]
 }
 
 export interface DeliveryDayPersistor {

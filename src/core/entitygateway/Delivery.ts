@@ -58,9 +58,16 @@ export interface OutOfZoneInterestLoader {
 
 export interface DeliveryLocationPersistor {
   createLocation(request: Partial<DeliveryLocation>): Promise<DeliveryLocation>
+  updateLocation(
+    id: string,
+    data: Partial<DeliveryLocation>
+  ): Promise<DeliveryLocation>
+  deleteLocation(id: string): Promise<void>
+  setPrimaryLocation(id: string, userId: string): Promise<void>
 }
 
 export interface DeliveryLocationLoader {
   getPrimaryLocationByUserId(userId: string): Promise<DeliveryLocation | null>
   getLocationsByUserId(userId: string): Promise<DeliveryLocation[]>
+  getLocationById(id: string): Promise<DeliveryLocation | null>
 }

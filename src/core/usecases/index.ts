@@ -11,6 +11,9 @@ import * as UpdateProfile from './commands/UpdateProfile.js'
 import * as UpdateLanguagePreference from './commands/UpdateLanguagePreference.js'
 import * as SubmitOutOfZoneInterest from './commands/SubmitOutOfZoneInterest.js'
 import * as SaveDeliveryLocation from './commands/SaveDeliveryLocation.js'
+import * as UpdateDeliveryLocation from './commands/UpdateDeliveryLocation.js'
+import * as DeleteDeliveryLocation from './commands/DeleteDeliveryLocation.js'
+import * as SetPrimaryDeliveryLocation from './commands/SetPrimaryDeliveryLocation.js'
 import * as CreateDeliveryArea from './commands/CreateDeliveryArea.js'
 import * as UpdateDeliveryArea from './commands/UpdateDeliveryArea.js'
 import * as AddBuilding from './commands/AddBuilding.js'
@@ -39,6 +42,12 @@ import * as ImportMeals from './commands/ImportMeals.js'
 import * as AssignMealToSlot from './commands/AssignMealToSlot.js'
 import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
 import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
+import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
+import * as SubmitMealRating from './commands/SubmitMealRating.js'
+
+import * as GetPendingRatings from './queries/GetPendingRatings.js'
+import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
+import * as GetMealHistory from './queries/GetMealHistory.js'
 
 import * as GetProfile from './queries/GetProfile.js'
 import * as GetActiveDeliveryAreas from './queries/GetActiveDeliveryAreas.js'
@@ -133,6 +142,24 @@ export function initUseCases(deps: Deps) {
     deps,
     SaveDeliveryLocation.makeUC(deps),
     SaveDeliveryLocation.name,
+    ...defaultWrappers
+  )
+  const updateDeliveryLocation = wrapUC(
+    deps,
+    UpdateDeliveryLocation.makeUC(deps),
+    UpdateDeliveryLocation.name,
+    ...defaultWrappers
+  )
+  const deleteDeliveryLocation = wrapUC(
+    deps,
+    DeleteDeliveryLocation.makeUC(deps),
+    DeleteDeliveryLocation.name,
+    ...defaultWrappers
+  )
+  const setPrimaryDeliveryLocation = wrapUC(
+    deps,
+    SetPrimaryDeliveryLocation.makeUC(deps),
+    SetPrimaryDeliveryLocation.name,
     ...defaultWrappers
   )
   const createDeliveryArea = wrapUC(
@@ -313,6 +340,36 @@ export function initUseCases(deps: Deps) {
     deps,
     PublishMenuWeek.makeUC(deps),
     PublishMenuWeek.name,
+    ...defaultWrappers
+  )
+  const submitDeliveryIssue = wrapUC(
+    deps,
+    SubmitDeliveryIssue.makeUC(deps),
+    SubmitDeliveryIssue.name,
+    ...defaultWrappers
+  )
+  const submitMealRating = wrapUC(
+    deps,
+    SubmitMealRating.makeUC(deps),
+    SubmitMealRating.name,
+    ...defaultWrappers
+  )
+  const getPendingRatings = wrapUC(
+    deps,
+    GetPendingRatings.makeUC(deps),
+    GetPendingRatings.name,
+    ...defaultWrappers
+  )
+  const getSubmittedRatings = wrapUC(
+    deps,
+    GetSubmittedRatings.makeUC(deps),
+    GetSubmittedRatings.name,
+    ...defaultWrappers
+  )
+  const getMealHistory = wrapUC(
+    deps,
+    GetMealHistory.makeUC(deps),
+    GetMealHistory.name,
     ...defaultWrappers
   )
 
@@ -532,6 +589,9 @@ export function initUseCases(deps: Deps) {
       getCustomerMenuWeek,
       getMealDetail,
       getMealPhotoUploadUrl,
+      getPendingRatings,
+      getSubmittedRatings,
+      getMealHistory,
     },
     commands: {
       sendOtp,
@@ -544,6 +604,9 @@ export function initUseCases(deps: Deps) {
       updateLanguagePreference,
       submitOutOfZoneInterest,
       saveDeliveryLocation,
+      updateDeliveryLocation,
+      deleteDeliveryLocation,
+      setPrimaryDeliveryLocation,
       createDeliveryArea,
       updateDeliveryArea,
       addBuilding,
@@ -572,6 +635,8 @@ export function initUseCases(deps: Deps) {
       assignMealToSlot,
       clearMenuSlot,
       publishMenuWeek,
+      submitDeliveryIssue,
+      submitMealRating,
     },
   }
 }

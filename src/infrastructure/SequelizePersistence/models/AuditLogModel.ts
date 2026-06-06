@@ -10,7 +10,7 @@ import {
 } from 'sequelize-typescript'
 import type { AuditLogAction } from '../../../core/entities/AuditLog.js'
 
-@Table({ tableName: 'audit_logs', timestamps: false, underscored: true })
+@Table({ tableName: 'audit_logs', timestamps: true, updatedAt: false, underscored: true })
 export class AuditLogModel extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

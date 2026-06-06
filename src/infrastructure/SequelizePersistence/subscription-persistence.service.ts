@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Op } from 'sequelize'
+import { Op, QueryTypes } from 'sequelize'
 import {
   SubscriptionLoader,
   SubscriptionPersistor,
@@ -7,6 +7,7 @@ import {
 import {
   DeliveryDayLoader,
   DeliveryDayPersistor,
+  DeliveryHistoryEntry,
 } from '../../core/entitygateway/DeliveryDay.js'
 import { Subscription } from '../../core/entities/Subscription.js'
 import {
@@ -83,6 +84,81 @@ export class SubscriptionPersistenceService
       order: [['date', 'ASC']],
     })
     return models.map(m => this.toDeliveryDayEntity(m))
+  }
+
+  async getDeliveryHistory(
+    userId: string,
+    page: number,
+    perPage: number,
+    period?: string
+  ): Promise<{ days: DeliveryHistoryEntry[]; total: number }> {
+    const sequelize = DeliveryDayModel.sequelize!
+    const offset = (page - 1) * perPage
+
+    let dateFilter = ''
+    if (period === 'last_30_days') {
+      dateFilter = `AND dd.date >= CURRENT_DATE - INTERVAL '30 days'`
+    } else if (period === 'last_90_days') {
+      dateFilter = `AND dd.date >= CURRENT_DATE - INTERVAL '90 days'`
+    }
+
+    const [{ count }] = await sequelize.query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM delivery_days dd
+       WHERE dd.user_id = :userId
+         AND dd.status IN ('delivered', 'skipped') ${dateFilter}`,
+      { replacements: { userId }, type: QueryTypes.SELECT }
+    )
+    const total = parseInt(count, 10)
+
+    const rows = await sequelize.query<{
+      delivery_day_id: string
+      date: string
+      meal_type: string
+      meal_name: string | null
+      kcal: number | null
+      status: string
+      stars: number | null
+      tags: string | null
+    }>(
+      `SELECT dd.id as delivery_day_id,
+              dd.date,
+              dd.meal_type,
+              dd.meal_name,
+              m.kcal,
+              dd.status,
+              mr.stars,
+              mr.tags
+       FROM delivery_days dd
+       LEFT JOIN meals m ON m.name_en = dd.meal_name
+       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
+       WHERE dd.user_id = :userId
+         AND dd.status IN ('delivered', 'skipped') ${dateFilter}
+       ORDER BY dd.date DESC
+       LIMIT :limit OFFSET :offset`,
+      {
+        replacements: { userId, limit: perPage, offset },
+        type: QueryTypes.SELECT,
+      }
+    )
+
+    const days: DeliveryHistoryEntry[] = rows.map(r => ({
+      deliveryDayId: r.delivery_day_id,
+      date: r.date,
+      mealType: r.meal_type,
+      mealName: r.meal_name,
+      kcal: r.kcal,
+      status: r.status,
+      stars: r.stars,
+      tags: r.tags ? (typeof r.tags === 'string' ? JSON.parse(r.tags) : r.tags) : [],
+    }))
+
+    return { days, total }
+  }
+
+  async getDeliveryDayById(id: string): Promise<DeliveryDay | null> {
+    const model = await DeliveryDayModel.findByPk(id)
+    return model ? this.toDeliveryDayEntity(model) : null
   }
 
   async getDeliveryDayByDate(

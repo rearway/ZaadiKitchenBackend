@@ -21,6 +21,8 @@ import {
   MenuWeekPersistenceS,
   StorageS,
   AuditLogPersistenceS,
+  DeliveryIssuePersistenceS,
+  MealRatingPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -42,6 +44,8 @@ import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 import { S3StorageService } from '../infrastructure/S3Storage/index.js'
 import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
+import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
+import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -92,6 +96,8 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: PaymentGatewayS, useClass: MockPaymentGatewayService },
     { provide: StorageS, useClass: S3StorageService },
     { provide: AuditLogPersistenceS, useClass: AuditLogPersistenceService },
+    { provide: DeliveryIssuePersistenceS, useClass: DeliveryIssuePersistenceService },
+    { provide: MealRatingPersistenceS, useClass: MealRatingPersistenceService },
 
     // Core adapter — maps infra → Deps → initUseCases()
     coreAdapterService,

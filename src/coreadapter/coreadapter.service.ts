@@ -22,6 +22,8 @@ import {
   MenuWeekPersistenceS,
   StorageS,
   AuditLogPersistenceS,
+  DeliveryIssuePersistenceS,
+  MealRatingPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -43,6 +45,8 @@ import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 import { S3StorageService } from '../infrastructure/S3Storage/index.js'
 import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
+import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
+import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -66,7 +70,9 @@ export const coreAdapterService: FactoryProvider = {
     mealPersistence: MealPersistenceService,
     menuWeekPersistence: MenuWeekPersistenceService,
     storageGateway: S3StorageService,
-    auditLogPersistence: AuditLogPersistenceService
+    auditLogPersistence: AuditLogPersistenceService,
+    deliveryIssuePersistence: DeliveryIssuePersistenceService,
+    mealRatingPersistence: MealRatingPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -127,6 +133,10 @@ export const coreAdapterService: FactoryProvider = {
       storageGateway,
       auditLogPersistor: auditLogPersistence,
       auditLogLoader: auditLogPersistence,
+      deliveryIssuePersistor: deliveryIssuePersistence,
+      deliveryIssueLoader: deliveryIssuePersistence,
+      mealRatingPersistor: mealRatingPersistence,
+      mealRatingLoader: mealRatingPersistence,
     }),
   inject: [
     LoggerS,
@@ -149,5 +159,7 @@ export const coreAdapterService: FactoryProvider = {
     MenuWeekPersistenceS,
     StorageS,
     AuditLogPersistenceS,
+    DeliveryIssuePersistenceS,
+    MealRatingPersistenceS,
   ],
 }

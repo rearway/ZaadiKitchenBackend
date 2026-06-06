@@ -1,11 +1,15 @@
 import {
   Controller,
   Get,
+  Post,
   Param,
   Query,
+  Body,
   Inject,
   UseGuards,
   ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import {
   ApiTags,
@@ -18,7 +22,7 @@ import { CoreS } from '../../tokens.js'
 import type { UseCases } from '../../core/usecases/index.js'
 import { JwtAuthGuard, CurrentUser } from '../../infrastructure/Auth/index.js'
 import { HandleErrors } from '../../shared/decorators/index.js'
-import { GetCustomerMenuWeekQueryDTO } from './dto/index.js'
+import { GetCustomerMenuWeekQueryDTO, SubmitMealRatingDTO } from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
 @ApiTags('Menu')
@@ -56,5 +60,24 @@ export class MenuController {
   @HandleErrors('get-meal-detail')
   async getMealDetail(@Param('meal_id') mealId: string) {
     return this.useCases.queries.getMealDetail({ mealId })
+  }
+
+  @Post('meals/:meal_id/rating')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Submit a star rating for a delivered meal' })
+  @ApiResponse({ status: 201, description: 'Rating submitted' })
+  @HandleErrors('submit-meal-rating')
+  async submitRating(
+    @Param('meal_id') mealId: string,
+    @Body(ValidationPipe) dto: SubmitMealRatingDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.submitMealRating({
+      userId: user.id,
+      mealId,
+      deliveryDayId: dto.deliveryDayId,
+      stars: dto.stars,
+      tags: dto.tags,
+    })
   }
 }

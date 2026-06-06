@@ -304,10 +304,14 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     deliveryLocationLoader: {
       getPrimaryLocationByUserId: jest.fn().mockResolvedValue(null),
       getLocationsByUserId: jest.fn().mockResolvedValue([]),
+      getLocationById: jest.fn().mockResolvedValue(null),
     } as unknown as Deps['deliveryLocationLoader'],
 
     deliveryLocationPersistor: {
       createLocation: jest.fn().mockResolvedValue(makeDeliveryLocation()),
+      updateLocation: jest.fn().mockResolvedValue(makeDeliveryLocation()),
+      deleteLocation: jest.fn().mockResolvedValue(undefined),
+      setPrimaryLocation: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryLocationPersistor'],
 
     planLoader: {
@@ -374,6 +378,8 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     deliveryDayLoader: {
       getDeliveryDayByDate: jest.fn().mockResolvedValue(null),
       getDeliveryDaysBySubscription: jest.fn().mockResolvedValue([]),
+      getDeliveryDayById: jest.fn().mockResolvedValue(null),
+      getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
     } as unknown as Deps['deliveryDayLoader'],
 
     deliveryDayPersistor: {
@@ -465,6 +471,25 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getAuditLogsBySubscription: jest.fn().mockResolvedValue([]),
       getAuditLogsByUser: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['auditLogLoader'],
+
+    deliveryIssuePersistor: {
+      createIssue: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['deliveryIssuePersistor'],
+
+    deliveryIssueLoader: {
+      getIssuesBySubscription: jest.fn().mockResolvedValue([]),
+      getIssueById: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['deliveryIssueLoader'],
+
+    mealRatingPersistor: {
+      createRating: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['mealRatingPersistor'],
+
+    mealRatingLoader: {
+      getRatingByDeliveryDay: jest.fn().mockResolvedValue(null),
+      getPendingRatingDays: jest.fn().mockResolvedValue([]),
+      getRatingsByUser: jest.fn().mockResolvedValue({ ratings: [], total: 0 }),
+    } as unknown as Deps['mealRatingLoader'],
   }
 
   return { ...base, ...overrides }

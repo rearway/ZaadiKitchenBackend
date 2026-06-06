@@ -189,6 +189,45 @@ export class DeliveryPersistenceService
     return model ? this.toDeliveryLocationEntity(model) : null
   }
 
+  async getLocationById(id: string): Promise<DeliveryLocation | null> {
+    const model = await DeliveryLocationModel.findByPk(id)
+    return model ? this.toDeliveryLocationEntity(model) : null
+  }
+
+  async updateLocation(
+    id: string,
+    data: Partial<DeliveryLocation>
+  ): Promise<DeliveryLocation> {
+    const model = await DeliveryLocationModel.findByPk(id)
+    if (!model) throw new Error(`DeliveryLocation ${id} not found`)
+    await model.update(data)
+    return this.toDeliveryLocationEntity(model)
+  }
+
+  async deleteLocation(id: string): Promise<void> {
+    const model = await DeliveryLocationModel.findByPk(id)
+    if (!model) return
+    const userId = model.userId
+    const wasPrimary = model.isPrimary
+    await model.destroy()
+
+    if (wasPrimary) {
+      const next = await DeliveryLocationModel.findOne({
+        where: { userId },
+        order: [['createdAt', 'DESC']],
+      })
+      if (next) await next.update({ isPrimary: true })
+    }
+  }
+
+  async setPrimaryLocation(id: string, userId: string): Promise<void> {
+    await DeliveryLocationModel.update(
+      { isPrimary: false },
+      { where: { userId } }
+    )
+    await DeliveryLocationModel.update({ isPrimary: true }, { where: { id } })
+  }
+
   async getLocationsByUserId(userId: string): Promise<DeliveryLocation[]> {
     const models = await DeliveryLocationModel.findAll({
       where: { userId },

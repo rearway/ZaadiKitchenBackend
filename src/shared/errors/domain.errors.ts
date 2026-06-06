@@ -197,6 +197,12 @@ export class MealInPublishedWeekError extends BaseError {
   }
 }
 
+export class RatingAlreadySubmittedError extends BaseError {
+  constructor() {
+    super('RATING_ALREADY_SUBMITTED', 409, 'You have already rated this meal. Ratings cannot be changed after submission.')
+  }
+}
+
 export class ActivationRequiresConfirmationError extends BaseError {
   constructor(areaName: string) {
     super(
