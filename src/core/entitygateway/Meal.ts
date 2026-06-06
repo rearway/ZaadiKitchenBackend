@@ -26,6 +26,7 @@ export interface MealWithUsage extends Meal {
 
 export interface MealLoader {
   getMealById(id: string): Promise<Meal | null>
+  getMealByName(nameEn: string, excludeId?: string): Promise<Meal | null>
   getMeals(filters: {
     status?: 'draft' | 'active' | 'all'
     mealType?: 'executive' | 'salad' | 'all'
@@ -35,14 +36,22 @@ export interface MealLoader {
     excludeWeekId?: string
   }): Promise<{ meals: MealWithUsage[]; total: number }>
   getMealsByIds(ids: string[]): Promise<Meal[]>
-  getMealsInWeek(weekId: string): Promise<{ mealId: string; dayLabel: string }[]>
+  getMealsInWeek(
+    weekId: string
+  ): Promise<{ mealId: string; dayLabel: string }[]>
 }
 
 export interface MealPersistor {
   createMeal(input: CreateMealInput): Promise<Meal>
-  updateMeal(id: string, updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Meal>
+  updateMeal(
+    id: string,
+    updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Meal>
   updateMealStatus(id: string, status: 'active' | 'draft'): Promise<Meal>
-  bulkCreateMeals(meals: CreateMealInput[]): Promise<{ created: Meal[]; skipped: number; errors: ImportError[] }>
+  bulkCreateMeals(
+    meals: CreateMealInput[]
+  ): Promise<{ created: Meal[]; skipped: number; errors: ImportError[] }>
+  deleteMeal(id: string): Promise<void>
   incrementTimesServed(mealIds: string[]): Promise<void>
   updateLastServed(mealIds: string[], date: string): Promise<void>
 }

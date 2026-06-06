@@ -29,6 +29,7 @@ export function makeUC(deps: Deps) {
       subscriptionPersistor,
       deliveryDayLoader,
       deliveryDayPersistor,
+      auditLogPersistor,
     } = deps
     try {
       const { userId, deliveryDate } = input
@@ -80,6 +81,13 @@ export function makeUC(deps: Deps) {
       await subscriptionPersistor.updateSubscription(subscription.id, {
         skipDaysUsed: newSkipDaysUsed,
         skippedCount: subscription.skippedCount + 1,
+      })
+
+      await auditLogPersistor.createAuditLog({
+        userId,
+        subscriptionId: subscription.id,
+        action: 'skip_delivery',
+        metadata: { date: deliveryDate },
       })
 
       return {

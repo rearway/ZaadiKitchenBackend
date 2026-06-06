@@ -36,7 +36,7 @@ export function makeUC(deps: Deps) {
   return async function cancelSubscription(
     input: CancelSubscriptionInput
   ): Promise<CancelSubscriptionOutput> {
-    const { logger, subscriptionLoader, subscriptionPersistor } = deps
+    const { logger, subscriptionLoader, subscriptionPersistor, auditLogPersistor } = deps
     try {
       const { userId } = input
 
@@ -61,6 +61,12 @@ export function makeUC(deps: Deps) {
 
       await subscriptionPersistor.updateSubscription(subscription.id, {
         status: 'cancelled',
+      })
+
+      await auditLogPersistor.createAuditLog({
+        userId,
+        subscriptionId: subscription.id,
+        action: 'cancel_subscription',
       })
 
       const shortDate = formatShortDate(subscription.endDate)

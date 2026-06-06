@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -13,6 +14,7 @@ import {
   HttpCode,
   HttpStatus,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import {
@@ -107,6 +109,7 @@ export class AdminMealsController {
       chefNote: dto.chef_note,
       keyIngredients: dto.key_ingredients,
       emoji: dto.emoji,
+      photoUrl: dto.photo_url,
       confirmPublishedEdit: dto.confirm_published_edit,
     })
   }
@@ -125,6 +128,27 @@ export class AdminMealsController {
       status: dto.status,
       confirmPublishedEdit: dto.confirm_published_edit,
     })
+  }
+
+  @Get(':meal_id/photo-upload-url')
+  @ApiOperation({ summary: 'Get presigned S3 URL to upload a meal photo' })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-meal-photo-upload-url')
+  async getMealPhotoUploadUrl(
+    @Param('meal_id') mealId: string,
+    @Query('content_type') contentType: string
+  ) {
+    if (!contentType) throw new BadRequestException('content_type query param is required')
+    return this.useCases.queries.getMealPhotoUploadUrl({ mealId, contentType })
+  }
+
+  @Delete(':meal_id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a draft meal' })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('delete-meal')
+  async deleteMeal(@Param('meal_id') mealId: string) {
+    return this.useCases.commands.deleteMeal({ mealId })
   }
 
   @Post('import')

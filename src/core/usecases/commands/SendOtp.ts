@@ -17,20 +17,26 @@ export type SendOtpOutput = {
 
 export function makeUC(deps: Deps) {
   return async function sendOtp(input: SendOtpInput): Promise<SendOtpOutput> {
-    const { logger, otpSessionLoader, otpSessionPersistor, otpService } = deps
+    const {
+      logger,
+      otpSessionLoader,
+      otpSessionPersistor,
+      otpService,
+      skipOtp,
+    } = deps
 
     try {
       const { phone, channel } = input
 
-      // Validate phone format (Saudi: +966XXXXXXXXX)
-      const phoneRegex = /^\+966[0-9]{9}$/
-      if (!phoneRegex.test(phone)) {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError(
-          'Invalid phone number format. Expected +966XXXXXXXXX'
-        )
-      }
+      // // Validate phone format (Saudi: +966XXXXXXXXX)
+      // const phoneRegex = /^\+966[0-9]{9}$/
+      // if (!phoneRegex.test(phone)) {
+      //   const { ValidationError } =
+      //     await import('../../../shared/errors/index.js')
+      //   throw new ValidationError(
+      //     'Invalid phone number format. Expected +966XXXXXXXXX'
+      //   )
+      // }
 
       // Check if phone is locked out
       const lockedSession = await otpSessionLoader.getLockedSession(phone)
@@ -104,7 +110,7 @@ export function makeUC(deps: Deps) {
           phone,
           channel,
           expiresInSeconds: expirySeconds,
-          otpCode: code, // Kept in response until WhatsApp is integrated
+          ...(skipOtp && { otpCode: code }),
         },
       }
     } catch (error) {

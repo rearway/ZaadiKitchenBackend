@@ -19,6 +19,13 @@ export interface DeliveryDayPersistor {
     id: string,
     status: DeliveryDayStatus
   ): Promise<DeliveryDay>
+  bulkUpdateDeliveryDayStatus(
+    subscriptionId: string,
+    fromDate: string,
+    toDate: string,
+    fromStatus: DeliveryDayStatus,
+    toStatus: DeliveryDayStatus
+  ): Promise<number>
   updateMealTypeForSubscription(
     subscriptionId: string,
     mealType: 'executive' | 'salad',

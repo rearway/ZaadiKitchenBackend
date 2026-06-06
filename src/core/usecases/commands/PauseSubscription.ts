@@ -32,6 +32,7 @@ export function makeUC(deps: Deps) {
       subscriptionPersistor,
       deliveryDayLoader,
       deliveryDayPersistor,
+      auditLogPersistor,
     } = deps
     try {
       const { userId, startDate, endDate } = input
@@ -84,6 +85,13 @@ export function makeUC(deps: Deps) {
         pausedUntil: endDate,
         pauseCeilingDate: endDate,
         pauseDaysUsed: newPauseDaysUsed,
+      })
+
+      await auditLogPersistor.createAuditLog({
+        userId,
+        subscriptionId: subscription.id,
+        action: 'pause_subscription',
+        metadata: { paused_from: startDate, paused_until: endDate },
       })
 
       return {

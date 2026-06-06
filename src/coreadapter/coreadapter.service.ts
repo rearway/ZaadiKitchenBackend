@@ -20,6 +20,8 @@ import {
   PaymentGatewayS,
   MealPersistenceS,
   MenuWeekPersistenceS,
+  StorageS,
+  AuditLogPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -37,8 +39,10 @@ import { WalletPersistenceService } from '../infrastructure/SequelizePersistence
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
 import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
 import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
-import { OtpStubService } from '../infrastructure/OtpService/index.js'
+import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
+import { S3StorageService } from '../infrastructure/S3Storage/index.js'
+import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -48,7 +52,7 @@ export const coreAdapterService: FactoryProvider = {
     otpSessionPersistence: OtpSessionPersistenceService,
     refreshTokenPersistence: RefreshTokenPersistenceService,
     deliveryPersistence: DeliveryPersistenceService,
-    otpService: OtpStubService,
+    otpService: OtpService,
     configService: ConfigService,
     planPersistence: PlanPersistenceService,
     checkoutSessionPersistence: CheckoutSessionPersistenceService,
@@ -60,7 +64,9 @@ export const coreAdapterService: FactoryProvider = {
     referralPersistence: ReferralPersistenceService,
     paymentGateway: MockPaymentGatewayService,
     mealPersistence: MealPersistenceService,
-    menuWeekPersistence: MenuWeekPersistenceService
+    menuWeekPersistence: MenuWeekPersistenceService,
+    storageGateway: S3StorageService,
+    auditLogPersistence: AuditLogPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -71,6 +77,7 @@ export const coreAdapterService: FactoryProvider = {
       refreshTokenLoader: refreshTokenPersistence,
       refreshTokenPersistor: refreshTokenPersistence,
       otpService: otpService,
+      skipOtp: configService.get<string>('SKIP_OTP', 'true') === 'true',
       jwtSecret: configService.get<string>('JWT_SECRET', 'default-secret'),
       jwtAccessExpiration: configService.get<string>(
         'JWT_ACCESS_EXPIRATION',
@@ -89,6 +96,7 @@ export const coreAdapterService: FactoryProvider = {
       buildingLoader: deliveryPersistence,
       buildingPersistor: deliveryPersistence,
       outOfZoneInterestPersistor: deliveryPersistence,
+      outOfZoneInterestLoader: deliveryPersistence,
       deliveryLocationPersistor: deliveryPersistence,
       deliveryLocationLoader: deliveryPersistence,
       planLoader: planPersistence,
@@ -116,6 +124,9 @@ export const coreAdapterService: FactoryProvider = {
       mealPersistor: mealPersistence,
       menuWeekLoader: menuWeekPersistence,
       menuWeekPersistor: menuWeekPersistence,
+      storageGateway,
+      auditLogPersistor: auditLogPersistence,
+      auditLogLoader: auditLogPersistence,
     }),
   inject: [
     LoggerS,
@@ -136,5 +147,7 @@ export const coreAdapterService: FactoryProvider = {
     PaymentGatewayS,
     MealPersistenceS,
     MenuWeekPersistenceS,
+    StorageS,
+    AuditLogPersistenceS,
   ],
 }

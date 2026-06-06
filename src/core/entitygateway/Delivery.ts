@@ -10,10 +10,15 @@ export interface DeliveryAreaLoader {
   getAllAreas(status?: string): Promise<DeliveryArea[]>
   searchActiveAreas(query: string): Promise<DeliveryArea[]>
   getAreaById(areaId: string): Promise<DeliveryArea | null>
+  getAreaByName(name: string, excludeId?: string): Promise<DeliveryArea | null>
 }
 
 export interface DeliveryAreaPersistor {
   createDeliveryArea(request: Partial<DeliveryArea>): Promise<DeliveryArea>
+  updateDeliveryArea(
+    id: string,
+    data: Partial<DeliveryArea>
+  ): Promise<DeliveryArea>
 }
 
 export interface BuildingLoader {
@@ -24,11 +29,31 @@ export interface BuildingLoader {
 
 export interface BuildingPersistor {
   createBuilding(request: Partial<Building>): Promise<Building>
+  updateBuilding(id: string, data: { name: string }): Promise<Building>
+  deleteBuilding(id: string): Promise<void>
 }
 
 export interface OutOfZoneInterestPersistor {
   createInterest(userId: string, areaName: string): Promise<OutOfZoneInterest>
   getUserInterestCount(userId: string): Promise<number>
+}
+
+export interface AggregatedOutOfZoneRequest {
+  area_name: string
+  request_count: number
+  first_requested: string
+  last_requested: string
+}
+
+export interface OutOfZoneInterestLoader {
+  getAggregatedRequests(
+    page: number,
+    perPage: number
+  ): Promise<{
+    areas: AggregatedOutOfZoneRequest[]
+    total: number
+    totalRequests: number
+  }>
 }
 
 export interface DeliveryLocationPersistor {

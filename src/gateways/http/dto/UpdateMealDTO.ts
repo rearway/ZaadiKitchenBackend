@@ -55,5 +55,10 @@ export class UpdateMealDTO {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  photo_url?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
   confirm_published_edit?: boolean
 }

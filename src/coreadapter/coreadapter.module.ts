@@ -19,6 +19,8 @@ import {
   PaymentGatewayS,
   MealPersistenceS,
   MenuWeekPersistenceS,
+  StorageS,
+  AuditLogPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -35,8 +37,11 @@ import { WalletPersistenceService } from '../infrastructure/SequelizePersistence
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
 import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
 import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
-import { OtpStubService } from '../infrastructure/OtpService/index.js'
+import { OtpStubService, SnsOtpService } from '../infrastructure/OtpService/index.js'
+import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
+import { S3StorageService } from '../infrastructure/S3Storage/index.js'
+import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -77,8 +82,16 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
 
     // External services
-    { provide: OtpServiceS, useClass: OtpStubService },
+    {
+      provide: OtpServiceS,
+      useFactory: (): OtpService => {
+        const skipOtp = process.env.SKIP_OTP === 'true'
+        return skipOtp ? new OtpStubService() : new SnsOtpService()
+      },
+    },
     { provide: PaymentGatewayS, useClass: MockPaymentGatewayService },
+    { provide: StorageS, useClass: S3StorageService },
+    { provide: AuditLogPersistenceS, useClass: AuditLogPersistenceService },
 
     // Core adapter — maps infra → Deps → initUseCases()
     coreAdapterService,

@@ -13,4 +13,5 @@ export interface SubscriptionPersistor {
     id: string,
     updates: Partial<Subscription>
   ): Promise<Subscription>
+  expireActiveSubscriptions(beforeDate: string): Promise<number>
 }

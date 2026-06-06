@@ -16,7 +16,7 @@ export function makeUC(deps: Deps) {
   return async function createDeliveryArea(
     input: CreateDeliveryAreaInput
   ): Promise<CreateDeliveryAreaOutput> {
-    const { logger, deliveryAreaPersistor } = deps
+    const { logger, deliveryAreaLoader, deliveryAreaPersistor } = deps
     try {
       const { name, description, status } = input
 
@@ -26,6 +26,13 @@ export function makeUC(deps: Deps) {
         throw new ValidationError('AREA_NAME_REQUIRED', {
           message: 'Area name is required',
         })
+      }
+
+      const existing = await deliveryAreaLoader.getAreaByName(name.trim())
+      if (existing) {
+        const { ResourceAlreadyExistsError } =
+          await import('../../../shared/errors/index.js')
+        throw new ResourceAlreadyExistsError('Delivery area', name.trim())
       }
 
       const area = await deliveryAreaPersistor.createDeliveryArea({

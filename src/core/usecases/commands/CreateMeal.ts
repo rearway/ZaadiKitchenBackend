@@ -20,17 +20,34 @@ export interface CreateMealOutput {
 }
 
 export function makeUC(deps: Deps) {
-  return async function createMeal(input: CreateMealInput): Promise<CreateMealOutput> {
-    const { logger, mealPersistor } = deps
+  return async function createMeal(
+    input: CreateMealInput
+  ): Promise<CreateMealOutput> {
+    const { logger, mealLoader, mealPersistor } = deps
 
     try {
+      const existing = await mealLoader.getMealByName(input.nameEn)
+      if (existing) {
+        const { ResourceAlreadyExistsError } =
+          await import('../../../shared/errors/index.js')
+        throw new ResourceAlreadyExistsError('Meal', input.nameEn)
+      }
+
       const meal = await mealPersistor.createMeal(input)
       return {
         message: 'Meal created successfully',
-        data: { id: meal.id, nameEn: meal.nameEn, status: meal.status, createdAt: meal.createdAt },
+        data: {
+          id: meal.id,
+          nameEn: meal.nameEn,
+          status: meal.status,
+          createdAt: meal.createdAt,
+        },
       }
     } catch (error) {
-      logger.error('CreateMeal failed', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'CreateMeal failed',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }

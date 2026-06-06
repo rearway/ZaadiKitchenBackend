@@ -2,9 +2,7 @@ import type { Deps } from '../../entitygateway/index.js'
 import {
   ResourceNotFoundError,
   WeekAlreadyPublishedError,
-  WeekNotCompleteError,
 } from '../../../shared/errors/domain.errors.js'
-import { getDayLabel } from '../services/weekUtils.js'
 
 export interface PublishMenuWeekInput {
   weekId: string
@@ -20,8 +18,16 @@ export interface PublishMenuWeekOutput {
 }
 
 export function makeUC(deps: Deps) {
-  return async function publishMenuWeek(input: PublishMenuWeekInput): Promise<PublishMenuWeekOutput> {
-    const { logger, menuWeekLoader, menuWeekPersistor, mealPersistor, userLoader } = deps
+  return async function publishMenuWeek(
+    input: PublishMenuWeekInput
+  ): Promise<PublishMenuWeekOutput> {
+    const {
+      logger,
+      menuWeekLoader,
+      menuWeekPersistor,
+      mealPersistor,
+      userLoader,
+    } = deps
 
     try {
       const week = await menuWeekLoader.getWeekById(input.weekId)
@@ -30,20 +36,16 @@ export function makeUC(deps: Deps) {
       if (week.status === 'published') throw new WeekAlreadyPublishedError()
 
       const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-      const unfilledSlots = allSlots
-        .filter(s => !s.mealId)
-        .map(s => ({
-          slot_id: s.id,
-          day: `${getDayLabel(s.deliveryDate)} ${s.deliveryDate.slice(5)}`,
-          meal_type: s.mealType,
-        }))
 
-      if (unfilledSlots.length > 0) throw new WeekNotCompleteError(unfilledSlots)
+      const publishedWeek = await menuWeekPersistor.publishWeek(
+        input.weekId,
+        input.publishedByUserId
+      )
 
-      const publishedWeek = await menuWeekPersistor.publishWeek(input.weekId, input.publishedByUserId)
-
-      // Update last_served and times_served on all assigned meals
-      const mealIds = allSlots.map(s => s.mealId as string)
+      // Update last_served and times_served only for slots that have a meal
+      const mealIds = allSlots
+        .filter(s => s.mealId)
+        .map(s => s.mealId as string)
       await mealPersistor.updateLastServed(mealIds, week.dateFrom)
       await mealPersistor.incrementTimesServed(mealIds)
 
@@ -57,7 +59,10 @@ export function makeUC(deps: Deps) {
         customer_visible_from: week.dateFrom,
       }
     } catch (error) {
-      logger.error('PublishMenuWeek failed', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'PublishMenuWeek failed',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }

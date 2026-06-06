@@ -196,3 +196,14 @@ export class MealInPublishedWeekError extends BaseError {
     )
   }
 }
+
+export class ActivationRequiresConfirmationError extends BaseError {
+  constructor(areaName: string) {
+    super(
+      'ACTIVATION_REQUIRES_CONFIRMATION',
+      409,
+      `Activating ${areaName} will make it immediately selectable by customers in the Area Search screen. Pass confirm_activation: true to proceed.`,
+      { warning: `${areaName} will become immediately selectable by new customers on activation.` }
+    )
+  }
+}

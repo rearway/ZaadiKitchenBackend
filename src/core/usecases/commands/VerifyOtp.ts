@@ -36,6 +36,7 @@ export function makeUC(deps: Deps) {
       userLoader,
       userPersistor,
       refreshTokenPersistor,
+      deliveryLocationLoader,
       jwtSecret,
       jwtRefreshExpirationMobile,
     } = deps
@@ -127,10 +128,9 @@ export function makeUC(deps: Deps) {
       // Strip password from user response
       const { password: _, ...userWithoutPassword } = user
 
-      // Determine onboarding complete logic
-      // For now, if it's a new user, onboarding is not complete.
-      // Real logic checks if they have a saved delivery location.
-      const onboardingComplete = !isNewUser
+      // Onboarding is complete once the user has a saved delivery location
+      const primaryLocation = await deliveryLocationLoader.getPrimaryLocationByUserId(user.id)
+      const onboardingComplete = primaryLocation !== null
 
       return {
         message: isNewUser

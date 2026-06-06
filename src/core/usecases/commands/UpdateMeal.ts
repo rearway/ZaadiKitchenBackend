@@ -13,6 +13,7 @@ export interface UpdateMealInput {
   chefNote?: string
   keyIngredients?: string[]
   emoji?: string
+  photoUrl?: string
   confirmPublishedEdit?: boolean
 }
 
@@ -28,6 +29,14 @@ export function makeUC(deps: Deps) {
     try {
       const meal = await mealLoader.getMealById(input.mealId)
       if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
+
+      if (input.nameEn && input.nameEn.toLowerCase() !== meal.nameEn.toLowerCase()) {
+        const duplicate = await mealLoader.getMealByName(input.nameEn, input.mealId)
+        if (duplicate) {
+          const { ResourceAlreadyExistsError } = await import('../../../shared/errors/index.js')
+          throw new ResourceAlreadyExistsError('Meal', input.nameEn)
+        }
+      }
 
       // Check if meal is in a published week — require confirmation
       const publishedSlots = await menuWeekLoader.getMealsInWeek('__check_published__').catch(() => [])

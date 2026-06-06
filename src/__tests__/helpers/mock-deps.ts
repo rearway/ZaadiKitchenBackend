@@ -227,6 +227,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       debug: jest.fn(),
     } as unknown as Deps['logger'],
 
+    skipOtp: true,
     jwtSecret: 'test-jwt-secret-key-at-least-32-chars-long',
     jwtAccessExpiration: '15m',
     jwtRefreshExpirationMobile: '30d',
@@ -272,6 +273,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     deliveryAreaLoader: {
       getAreaById: jest.fn().mockResolvedValue(null),
+      getAreaByName: jest.fn().mockResolvedValue(null),
       getActiveAreas: jest.fn().mockResolvedValue([]),
       searchAreas: jest.fn().mockResolvedValue([]),
       getAllAreas: jest.fn().mockResolvedValue([]),
@@ -294,6 +296,10 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     outOfZoneInterestPersistor: {
       createInterest: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['outOfZoneInterestPersistor'],
+
+    outOfZoneInterestLoader: {
+      getAggregatedRequests: jest.fn().mockResolvedValue({ areas: [], total: 0, totalRequests: 0 }),
+    } as unknown as Deps['outOfZoneInterestLoader'],
 
     deliveryLocationLoader: {
       getPrimaryLocationByUserId: jest.fn().mockResolvedValue(null),
@@ -362,6 +368,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     subscriptionPersistor: {
       createSubscription: jest.fn().mockResolvedValue(makeSubscription()),
       updateSubscription: jest.fn().mockResolvedValue(undefined),
+      expireActiveSubscriptions: jest.fn().mockResolvedValue(0),
     } as unknown as Deps['subscriptionPersistor'],
 
     deliveryDayLoader: {
@@ -372,6 +379,8 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     deliveryDayPersistor: {
       bulkCreateDeliveryDays: jest.fn().mockResolvedValue([makeDeliveryDay()]),
       updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
+      bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
+      updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryDayPersistor'],
 
     publicHolidayLoader: {
@@ -410,6 +419,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     mealLoader: {
       getMealById: jest.fn().mockResolvedValue(null),
+      getMealByName: jest.fn().mockResolvedValue(null),
       getMeals: jest.fn().mockResolvedValue({ meals: [], total: 0 }),
       getMealsByIds: jest.fn().mockResolvedValue([]),
       getMealsInWeek: jest.fn().mockResolvedValue([]),
@@ -417,6 +427,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     mealPersistor: {
       createMeal: jest.fn().mockResolvedValue(null),
+      deleteMeal: jest.fn().mockResolvedValue(undefined),
       updateMeal: jest.fn().mockResolvedValue(null),
       updateMealStatus: jest.fn().mockResolvedValue(null),
       bulkCreateMeals: jest.fn().mockResolvedValue({ created: [], skipped: 0, errors: [] }),
@@ -440,6 +451,20 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       publishWeek: jest.fn().mockResolvedValue(null),
       transitionPastWeeks: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['menuWeekPersistor'],
+
+    storageGateway: {
+      getPresignedUploadUrl: jest.fn().mockResolvedValue('https://s3.example.com/upload'),
+      getPublicUrl: jest.fn().mockReturnValue('https://s3.example.com/meals/test/photo.jpeg'),
+    } as unknown as Deps['storageGateway'],
+
+    auditLogPersistor: {
+      createAuditLog: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['auditLogPersistor'],
+
+    auditLogLoader: {
+      getAuditLogsBySubscription: jest.fn().mockResolvedValue([]),
+      getAuditLogsByUser: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['auditLogLoader'],
   }
 
   return { ...base, ...overrides }

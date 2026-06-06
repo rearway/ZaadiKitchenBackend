@@ -58,7 +58,7 @@ export function makeUC(deps: Deps) {
         (promo.maxUses !== null && promo.timesUsed >= promo.maxUses)
       ) {
         const newAttempts = session.promoAttemptCount + 1
-        const locked = newAttempts >= 10
+        const locked = newAttempts >= 5
         await checkoutSessionPersistor.updateSession(sessionId, {
           promoAttemptCount: newAttempts,
           promoLocked: locked,
@@ -84,7 +84,7 @@ export function makeUC(deps: Deps) {
         promo.validForPlanSlug !== plan.slug
       ) {
         const newAttempts = session.promoAttemptCount + 1
-        const locked = newAttempts >= 10
+        const locked = newAttempts >= 5
         await checkoutSessionPersistor.updateSession(sessionId, {
           promoAttemptCount: newAttempts,
           promoLocked: locked,

@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { Op } from 'sequelize'
-import type { MealLoader, MealPersistor, CreateMealInput, ImportError, MealWithUsage } from '../../core/entitygateway/Meal.js'
+import type {
+  MealLoader,
+  MealPersistor,
+  CreateMealInput,
+  ImportError,
+  MealWithUsage,
+} from '../../core/entitygateway/Meal.js'
 import type { Meal } from '../../core/entities/Meal.js'
 import { MealModel, MenuSlotModel } from './models/index.js'
 
@@ -40,13 +46,16 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
 
     const { rows, count } = await MealModel.findAndCountAll({
       where,
-      order: [['activatedAt', 'DESC NULLS LAST'], ['createdAt', 'DESC']],
+      order: [
+        ['activatedAt', 'DESC NULLS LAST'],
+        ['createdAt', 'DESC'],
+      ],
       limit: perPage,
       offset,
     })
 
     // Determine already_used status for each meal in excludeWeekId
-    let usedMealMap = new Map<string, string>()
+    const usedMealMap = new Map<string, string>()
     if (filters.excludeWeekId) {
       const slots = await MenuSlotModel.findAll({
         where: { weekId: filters.excludeWeekId },
@@ -64,10 +73,22 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     const meals: MealWithUsage[] = rows.map(m => ({
       ...this.toEntity(m),
       alreadyUsed: filters.excludeWeekId ? usedMealMap.has(m.id) : undefined,
-      usedOnDay: filters.excludeWeekId ? (usedMealMap.get(m.id) ?? null) : undefined,
+      usedOnDay: filters.excludeWeekId
+        ? (usedMealMap.get(m.id) ?? null)
+        : undefined,
     }))
 
     return { meals, total: count }
+  }
+
+  async getMealByName(
+    nameEn: string,
+    excludeId?: string
+  ): Promise<Meal | null> {
+    const where: Record<string, unknown> = { nameEn: { [Op.iLike]: nameEn } }
+    if (excludeId) where['id'] = { [Op.ne]: excludeId }
+    const model = await MealModel.findOne({ where })
+    return model ? this.toEntity(model) : null
   }
 
   async getMealsByIds(ids: string[]): Promise<Meal[]> {
@@ -76,7 +97,9 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     return models.map(m => this.toEntity(m))
   }
 
-  async getMealsInWeek(weekId: string): Promise<{ mealId: string; dayLabel: string }[]> {
+  async getMealsInWeek(
+    weekId: string
+  ): Promise<{ mealId: string; dayLabel: string }[]> {
     const slots = await MenuSlotModel.findAll({
       where: { weekId },
       attributes: ['mealId', 'deliveryDate'],
@@ -107,36 +130,50 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     return this.toEntity(model)
   }
 
-  async updateMeal(id: string, updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Meal> {
+  async updateMeal(
+    id: string,
+    updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Meal> {
     const model = await MealModel.findByPk(id)
     if (!model) throw new Error(`Meal ${id} not found`)
 
     const fieldsToUpdate: Record<string, unknown> = {}
     if (updates.nameEn !== undefined) fieldsToUpdate['nameEn'] = updates.nameEn
     if (updates.nameAr !== undefined) fieldsToUpdate['nameAr'] = updates.nameAr
-    if (updates.mealType !== undefined) fieldsToUpdate['mealType'] = updates.mealType
+    if (updates.mealType !== undefined)
+      fieldsToUpdate['mealType'] = updates.mealType
     if (updates.kcal !== undefined) fieldsToUpdate['kcal'] = updates.kcal
-    if (updates.proteinG !== undefined) fieldsToUpdate['proteinG'] = updates.proteinG
+    if (updates.proteinG !== undefined)
+      fieldsToUpdate['proteinG'] = updates.proteinG
     if (updates.carbsG !== undefined) fieldsToUpdate['carbsG'] = updates.carbsG
     if (updates.fatG !== undefined) fieldsToUpdate['fatG'] = updates.fatG
-    if (updates.chefNote !== undefined) fieldsToUpdate['chefNote'] = updates.chefNote
-    if (updates.keyIngredients !== undefined) fieldsToUpdate['keyIngredients'] = updates.keyIngredients
+    if (updates.chefNote !== undefined)
+      fieldsToUpdate['chefNote'] = updates.chefNote
+    if (updates.keyIngredients !== undefined)
+      fieldsToUpdate['keyIngredients'] = updates.keyIngredients
     if (updates.emoji !== undefined) fieldsToUpdate['emoji'] = updates.emoji
-    if (updates.photoUrl !== undefined) fieldsToUpdate['photoUrl'] = updates.photoUrl
+    if (updates.photoUrl !== undefined)
+      fieldsToUpdate['photoUrl'] = updates.photoUrl
 
     await model.update(fieldsToUpdate)
     return this.toEntity(model)
   }
 
-  async updateMealStatus(id: string, status: 'active' | 'draft'): Promise<Meal> {
+  async updateMealStatus(
+    id: string,
+    status: 'active' | 'draft'
+  ): Promise<Meal> {
     const model = await MealModel.findByPk(id)
     if (!model) throw new Error(`Meal ${id} not found`)
-    const activatedAt = status === 'active' && !model.activatedAt ? new Date() : model.activatedAt
+    const activatedAt =
+      status === 'active' && !model.activatedAt ? new Date() : model.activatedAt
     await model.update({ status, activatedAt })
     return this.toEntity(model)
   }
 
-  async bulkCreateMeals(meals: CreateMealInput[]): Promise<{ created: Meal[]; skipped: number; errors: ImportError[] }> {
+  async bulkCreateMeals(
+    meals: CreateMealInput[]
+  ): Promise<{ created: Meal[]; skipped: number; errors: ImportError[] }> {
     const created: Meal[] = []
     const errors: ImportError[] = []
     let skipped = 0
@@ -156,6 +193,10 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     }
 
     return { created, skipped, errors }
+  }
+
+  async deleteMeal(id: string): Promise<void> {
+    await MealModel.destroy({ where: { id } })
   }
 
   async incrementTimesServed(mealIds: string[]): Promise<void> {

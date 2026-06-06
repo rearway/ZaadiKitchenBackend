@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Zaadi Kitchen — Admin · Ops · Rider UI Screens v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E4281D;--redl:rgba(228,40,29,.07);--redd:#B52016;--redm:rgba(228,40,29,.15);
+  --blk:#000000;--blk2:#111111;--blk3:#1A1A1A;
+  --mid:#6B7280;--soft:#9CA3AF;--border:#E5E7EB;--bg:#F9FAFB;--white:#fff;
+  --err:#DC2626;--errl:#FEF2F2;
+  --grn:#16A34A;--grnl:#DCFCE7;
+  --ops:#374151;--opsl:rgba(55,65,81,.08);
+  --sw:272px;--fw:480px;--fh:320px;--pw:220px;--ph:440px;--fr:24px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Montserrat",sans-serif;background:var(--bg);color:var(--blk);line-height:1.5;font-size:14px}
+.layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:var(--blk);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+.sb-brand{padding:22px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-logo{font-size:17px;font-weight:900;color:var(--red)}
+.sb-logo span{display:block;font-size:8px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:1px}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.25);margin-top:5px;line-height:1.5}
+.sb-nav{padding:6px 0 24px}
+.sb-divider{height:1px;background:rgba(255,255,255,.06);margin:8px 18px}
+.sb-role-hdr{padding:10px 18px 3px;font-size:7.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+.sb-section{margin-bottom:1px}
+.sb-section-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 18px 4px;cursor:pointer;user-select:none}
+.sb-section-label{font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.sb-section-count{font-size:8px;font-weight:700;color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:10px}
+.sb-section-links{overflow:hidden;max-height:0;transition:max-height .25s ease}
+.sb-section-links.open{max-height:600px}
+.sb-link{display:flex;align-items:center;gap:6px;padding:5px 18px 5px 22px;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.38);text-decoration:none;border-left:2px solid transparent;line-height:1.4;transition:color .12s}
+.sb-link:hover{color:rgba(255,255,255,.7)}
+.sb-link.on{color:#fff;border-left-color:var(--red);background:rgba(228,40,29,.08);font-weight:700}
+.sb-link .role-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sb-link .rd-admin{background:var(--red)}
+.sb-link .rd-ops{background:var(--ops)}
+.sb-link .rd-driver{background:#fff}
+.sb-link .rd-shared{background:linear-gradient(135deg,var(--red) 50%,var(--ops) 50%)}
+
+/* MAIN */
+.main{margin-left:var(--sw);flex:1;min-width:0}
+
+/* PAGE HEADER */
+.ph{background:var(--blk);padding:48px 56px 40px;position:relative;overflow:hidden}
+.ph::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.015) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.ph-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(228,40,29,.14);border:1px solid rgba(228,40,29,.28);border-radius:20px;padding:4px 12px;margin-bottom:16px;position:relative;z-index:1}
+.ph-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ph-eyebrow-txt{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.ph-title{font-size:34px;font-weight:900;color:#fff;line-height:1.08;margin-bottom:8px;position:relative;z-index:1}
+.ph-title em{color:var(--red);font-style:normal}
+.ph-desc{font-size:13px;color:rgba(255,255,255,.4);line-height:1.65;max-width:580px;position:relative;z-index:1}
+.ph-meta{display:flex;gap:0;margin-top:24px;background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.07);position:relative;z-index:1;width:fit-content}
+.ph-meta-item{padding:10px 18px;border-right:1px solid rgba(255,255,255,.07)}
+.ph-meta-item:last-child{border-right:none}
+.ph-meta-label{font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:2px}
+.ph-meta-value{font-size:12px;font-weight:700;color:#fff}
+
+/* ROLE LEGEND */
+.role-legend{display:flex;gap:16px;margin-top:16px;position:relative;z-index:1}
+.rl-item{display:flex;align-items:center;gap:6px}
+.rl-dot{width:8px;height:8px;border-radius:50%}
+.rl-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.5)}
+
+/* FEATURE SECTION */
+.fsec{padding:44px 56px 0;scroll-margin-top:16px}
+.fsec-header{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.fsec-module{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:5px}
+.fsec-title{font-size:21px;font-weight:800;color:var(--blk);margin-bottom:5px;line-height:1.2}
+.fsec-desc{font-size:13px;color:var(--mid);line-height:1.6;max-width:680px}
+.fsec-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px;padding:8px 12px;background:rgba(0,0,0,.03);border-radius:9px;border:1px solid var(--border)}
+.fsec-flow-label{font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-right:4px;flex-shrink:0}
+.fsec-flow-text{font-size:11px;color:var(--mid);line-height:1.5}
+.fsec-flow-text strong{color:var(--blk);font-weight:700}
+.fsec-roles{display:flex;gap:5px;margin-top:8px}
+.role-badge{font-size:8px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase}
+.rb-admin{background:var(--red);color:#fff}
+.rb-ops{background:var(--ops);color:#fff}
+.rb-driver{background:var(--blk);color:#fff}
+.rb-shared{background:var(--border);color:var(--blk)}
+
+/* FRAMES ROW */
+.frames-row{display:flex;gap:32px;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.frame-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.frame-label{font-size:10px;font-weight:700;color:var(--blk2);text-align:center;line-height:1.3;max-width:500px}
+
+/* BROWSER FRAME — Admin/Ops */
+.browser{width:var(--fw);background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.08);overflow:hidden;border:1px solid rgba(0,0,0,.08)}
+.browser-chrome{height:36px;background:#F1F3F4;border-bottom:1px solid #DDE1E7;display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0}
+.browser-dots{display:flex;gap:4px}
+.browser-dot{width:10px;height:10px;border-radius:50%}
+.bd-red{background:#FF5F57}
+.bd-yel{background:#FEBC2E}
+.bd-grn{background:#28C840}
+.browser-bar{flex:1;background:#fff;border-radius:4px;height:22px;display:flex;align-items:center;padding:0 8px;gap:5px;border:1px solid #DDE1E7;margin:0 8px}
+.browser-bar-ico{font-size:9px;color:#9AA0A6}
+.browser-bar-url{font-size:9px;color:#3C4043;font-family:"Montserrat",sans-serif;font-weight:500}
+.browser-content{overflow:hidden}
+
+/* PHONE FRAME — Rider */
+.phone{width:var(--pw);height:var(--ph);background:var(--blk);border-radius:var(--fr);position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.14),inset 0 0 0 1px rgba(255,255,255,.07);flex-shrink:0;display:flex;flex-direction:column}
+.phone-lt{background:var(--white)}
+.p-status{height:22px;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0}
+.p-status-lt{background:rgba(0,0,0,.05)}
+.p-time{font-size:8px;font-weight:700;color:#fff;letter-spacing:.03em}
+.p-time-dk{color:var(--blk)}
+.p-ico{display:flex;gap:4px;align-items:center}
+.p-ico span{font-size:7px;color:#fff;opacity:.8}
+.p-ico-dk span{color:var(--blk)}
+.p-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.p-home{height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.p-bar{width:52px;height:3px;border-radius:3px;background:rgba(255,255,255,.2)}
+.p-bar-dk{background:rgba(0,0,0,.15)}
+.p-scroll{flex:1;overflow:hidden;display:flex;flex-direction:column;font-size:9px}
+
+/* ADMIN UI COMPONENTS */
+.a-header{background:var(--blk);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.a-nav{background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;height:40px;gap:0}
+.a-nav-item{font-size:10px;font-weight:600;color:var(--mid);padding:0 12px;height:40px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.a-nav-item.on{color:var(--red);border-bottom-color:var(--red);font-weight:700}
+.a-body{background:var(--bg);padding:14px 16px;min-height:200px}
+.a-section-title{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);margin-bottom:8px}
+.a-card{background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px 12px;margin-bottom:8px}
+.a-btn{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:"Montserrat",sans-serif;border:none}
+.a-btn-red{background:var(--red);color:#fff}
+.a-btn-blk{background:var(--blk);color:#fff}
+.a-btn-ghost{background:#fff;color:var(--blk);border:1px solid var(--border)}
+.a-btn-err{background:var(--err);color:#fff}
+.a-btn-grn{background:var(--grn);color:#fff}
+.a-btn-sm{font-size:8px;padding:3px 8px}
+.a-pill{display:inline-block;font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.03em}
+.ap-red{background:var(--redm);color:var(--redd)}
+.ap-grn{background:var(--grnl);color:var(--grn)}
+.ap-blk{background:rgba(0,0,0,.08);color:var(--blk)}
+.ap-grey{background:var(--bg);color:var(--mid);border:1px solid var(--border)}
+.ap-ops{background:var(--opsl);color:var(--ops)}
+.a-table{width:100%;border-collapse:collapse;font-size:9px}
+.a-table th{font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);padding:5px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.a-table td{padding:6px 8px;border-bottom:1px solid rgba(229,231,235,.5);color:var(--blk);vertical-align:middle}
+.a-table tr:last-child td{border-bottom:none}
+.a-table tr:hover td{background:rgba(0,0,0,.015)}
+
+/* PIPELINE STAGES */
+.pipeline{display:flex;align-items:center;gap:0;margin-bottom:10px}
+.p-stage{flex:1;text-align:center;padding:7px 4px;font-size:8.5px;font-weight:700;background:#fff;border:1px solid var(--border);border-right:none;position:relative}
+.p-stage:first-child{border-radius:7px 0 0 7px}
+.p-stage:last-child{border-radius:0 7px 7px 0;border-right:1px solid var(--border)}
+.p-stage.done{background:var(--grnl);color:var(--grn);border-color:rgba(22,163,74,.2)}
+.p-stage.active{background:var(--red);color:#fff;border-color:var(--red)}
+.p-stage-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);z-index:1;font-size:8px;color:var(--soft)}
+
+/* GRID TILES */
+.tile-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tile{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 12px;cursor:pointer;transition:box-shadow .15s;position:relative}
+.tile:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.tile-icon{font-size:20px;margin-bottom:6px}
+.tile-name{font-size:10px;font-weight:800;color:var(--blk);margin-bottom:3px}
+.tile-sub{font-size:8.5px;color:var(--mid);line-height:1.4}
+.tile-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:8px;font-weight:800;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+
+/* WEEK PLANNER */
+.week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.day-col{background:#fff;border-radius:6px;border:1px solid var(--border);overflow:hidden}
+.day-header{background:var(--blk);padding:4px 6px;text-align:center}
+.day-header-txt{font-size:8px;font-weight:700;color:#fff}
+.day-header-date{font-size:7px;color:rgba(255,255,255,.45)}
+.slot{padding:5px 6px;border-bottom:1px solid var(--border);min-height:42px;position:relative}
+.slot:last-child{border-bottom:none}
+.slot-type{font-size:6.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-bottom:2px}
+.slot-filled{font-size:7.5px;font-weight:700;color:var(--blk);line-height:1.2;margin-bottom:2px}
+.slot-kcal{font-size:6.5px;color:var(--mid)}
+.slot-empty{font-size:8px;color:var(--soft);display:flex;align-items:center;justify-content:center;height:100%;cursor:pointer}
+.slot-add{font-size:7.5px;font-weight:700;color:var(--red);text-align:center;margin-top:2px}
+.slot-read{opacity:.45}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:60px;padding:0 4px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bar{width:100%;border-radius:3px 3px 0 0;min-height:4px}
+.bar-label{font-size:7px;color:var(--mid);font-weight:600}
+.bar-val{font-size:7.5px;font-weight:800;color:var(--blk)}
+
+/* ANNOTATION */
+.ann{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#fff;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:"Montserrat",sans-serif}
+
+/* AC LEGEND */
+.ac-legend{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:16px}
+.ac-legend-title{font-size:8.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-bottom:10px}
+.ac-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start}
+.ac-row:last-child{margin-bottom:0}
+.ac-num{width:16px;height:16px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.ac-text{font-size:11px;color:var(--blk2);line-height:1.5;flex:1}
+.ac-ref{font-size:9px;font-weight:700;color:var(--red);margin-left:5px;white-space:nowrap}
+
+/* SEPARATOR */
+.sec-sep{height:1px;background:var(--border);margin:44px 56px 0}
+
+/* CONTENT */
+.content{padding:0 56px 80px;max-width:1100px}
+
+/* FOOTER */
+.footer{background:var(--blk);padding:32px 56px;margin-top:56px}
+.ft-logo{font-size:18px;font-weight:900;color:var(--red);margin-bottom:4px}
+.ft-logo span{display:block;font-size:8px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:1px}
+.ft-sub{font-size:11px;color:rgba(255,255,255,.28);line-height:1.6;margin-top:6px}
+
+@media(max-width:768px){
+  :root{--sw:0px;--fw:340px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s ease;width:280px}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .ph{padding:28px 20px 32px}.ph-title{font-size:24px}
+  .fsec{padding:32px 20px 0}.sec-sep{margin:32px 20px 0}
+  .content{padding:0 20px 60px}
+  .mob-top{display:flex;align-items:center;justify-content:space-between;background:var(--blk);padding:12px 18px;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.07)}
+  .mob-logo{font-size:16px;font-weight:900;color:var(--red)}
+  .mob-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:0}
+  .mob-btn span{display:block;width:16px;height:2px;background:#fff;border-radius:1px}
+  .mob-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s}
+  .mob-ov.show{opacity:1;pointer-events:all}
+}
+@media(min-width:769px){.mob-top,.mob-btn,.mob-ov{display:none}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">zaadi<span>KITCHEN</span></div>
+    <div class="sb-sub">Admin · Ops · Rider UI Screens · v1<br>Brand-compliant: Red / Black / White · Montserrat</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-role-hdr">All Roles</div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Authentication</span><span class="sb-section-count">2</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-login"><div class="role-dot rd-shared"></div>Role Selection</a>
+        <a class="sb-link" href="#f-otp"><div class="role-dot rd-shared"></div>OTP Verify</a>
+      </div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-role-hdr">Administrator</div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Dashboard Home</span><span class="sb-section-count">1</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-dash"><div class="role-dot rd-admin"></div>6-Tile Dashboard</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Daily Ops — Admin</span><span class="sb-section-count">3</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-ops-admin"><div class="role-dot rd-admin"></div>Daily Ops Dashboard</a>
+        <a class="sb-link" href="#f-issue-credit"><div class="role-dot rd-admin"></div>Issue — Credit Wallet</a>
+        <a class="sb-link" href="#f-issue-reject"><div class="role-dot rd-admin"></div>Issue — Reject</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Label Printing</span><span class="sb-section-count">2</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-labels"><div class="role-dot rd-shared"></div>Label List</a>
+        <a class="sb-link" href="#f-sticker"><div class="role-dot rd-shared"></div>Sticker Preview</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Revenue Dashboard</span><span class="sb-section-count">1</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-revenue"><div class="role-dot rd-admin"></div>Revenue Dashboard</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Menu Manager</span><span class="sb-section-count">3</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-menu-planner"><div class="role-dot rd-admin"></div>2-Week Planner</a>
+        <a class="sb-link" href="#f-menu-assign"><div class="role-dot rd-admin"></div>Assign / Edit Dish</a>
+        <a class="sb-link" href="#f-meal-library"><div class="role-dot rd-admin"></div>Meal Library &amp; Add Dish</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Customer Management</span><span class="sb-section-count">2</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-customers"><div class="role-dot rd-admin"></div>Customer List</a>
+        <a class="sb-link" href="#f-customer-detail"><div class="role-dot rd-admin"></div>Customer Detail &amp; History</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Comms &amp; Automations</span><span class="sb-section-count">2</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-automations"><div class="role-dot rd-admin"></div>Automation Toggles</a>
+        <a class="sb-link" href="#f-broadcast"><div class="role-dot rd-admin"></div>Broadcast</a>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Areas &amp; Buildings</span><span class="sb-section-count">3</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-areas"><div class="role-dot rd-admin"></div>Area List</a>
+        <a class="sb-link" href="#f-area-edit"><div class="role-dot rd-admin"></div>Add / Edit Area</a>
+        <a class="sb-link" href="#f-buildings"><div class="role-dot rd-admin"></div>Building Management</a>
+      </div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-role-hdr">Ops / Kitchen</div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Daily Ops — Ops View</span><span class="sb-section-count">1</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-ops-ops"><div class="role-dot rd-ops"></div>Daily Ops (Limited)</a>
+      </div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-role-hdr">Driver / Rider</div>
+    <div class="sb-section">
+      <div class="sb-section-hdr" onclick="tog(this)"><span class="sb-section-label">Rider App</span><span class="sb-section-count">3</span></div>
+      <div class="sb-section-links open">
+        <a class="sb-link" href="#f-rider-deliveries"><div class="role-dot rd-driver"></div>My Deliveries</a>
+        <a class="sb-link" href="#f-rider-delivered"><div class="role-dot rd-driver"></div>Mark as Delivered</a>
+        <a class="sb-link" href="#f-rider-issue"><div class="role-dot rd-driver"></div>Issue Report</a>
+      </div>
+    </div>
+  </nav>
+</aside>
+<div class="mob-top">
+  <div class="mob-logo">zaadi<span style="font-size:7px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);display:block">KITCHEN</span></div>
+  <button class="mob-btn" onclick="toggleSB()" aria-label="Menu"><span></span><span></span><span></span></button>
+</div>
+<div class="mob-ov" id="ov" onclick="toggleSB()"></div>
+<main class="main">
+<div class="ph">
+  <div class="ph-eyebrow"><div class="ph-eyebrow-dot"></div><div class="ph-eyebrow-txt">Admin · Ops · Rider · UI Screens · v1</div></div>
+  <div class="ph-title">Zaadi Kitchen<br><em>Operations Portal Screens</em></div>
+  <div class="ph-desc">All admin, ops/kitchen, and rider app screens with annotated UI and acceptance criteria references. Admin and Ops use browser-chrome desktop frames. Rider uses mobile phone frames.</div>
+  <div class="ph-meta">
+    <div class="ph-meta-item"><div class="ph-meta-label">Screens</div><div class="ph-meta-value">23 screens</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Roles</div><div class="ph-meta-value">Admin · Ops · Driver</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Brand</div><div class="ph-meta-value">Red · Black · White</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Version</div><div class="ph-meta-value">v1 — Brand Compliant</div></div>
+  </div>
+  <div class="role-legend">
+    <div class="rl-item"><div class="rl-dot" style="background:var(--red)"></div><div class="rl-label">Administrator</div></div>
+    <div class="rl-item"><div class="rl-dot" style="background:var(--ops)"></div><div class="rl-label">Ops / Kitchen</div></div>
+    <div class="rl-item"><div class="rl-dot" style="background:#fff;border:1px solid rgba(255,255,255,.3)"></div><div class="rl-label">Driver</div></div>
+    <div class="rl-item"><div class="rl-dot" style="background:linear-gradient(135deg,var(--red) 50%,var(--ops) 50%)"></div><div class="rl-label">Shared</div></div>
+  </div>
+</div>
+<div class="content">
+
+<!-- ══════════════════════════════════════════════════════════
+     AUTHENTICATION
+     ══════════════════════════════════════════════════════════ -->
+<div class="fsec" id="f-login">
+  <div class="fsec-header">
+    <div class="fsec-module">Authentication · F1–F3</div>
+    <div class="fsec-title">Role Selection — Login</div>
+    <div class="fsec-desc">Single shared login screen for all three roles. Three role cards displayed together. Selecting a card highlights it and updates the CTA button. Phone number input below cards. OTP sent on submit.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin</span><span class="role-badge rb-ops">Ops</span><span class="role-badge rb-driver">Driver</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Open portal</strong> → <strong>Role Selection</strong> → (select role + phone) → <strong>OTP Verify</strong> → Admin: <strong>Dashboard Home</strong> · Ops: <strong>Daily Ops</strong> · Driver: <strong>My Deliveries</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Role Selection — Administrator selected</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/login</span></div></div>
+        <div class="browser-content">
+          <div style="background:var(--blk);padding:24px 28px;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <svg width="36" height="30" viewBox="0 0 26 22" fill="none" style="margin-bottom:10px"><path d="M8.5 8.5 C8.5 3.5 17.5 3.5 17.5 8.5" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/><rect x="3" y="8" width="20" height="13" rx="2.5" fill="white"/></svg>
+            <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:2px">zaadi <span style="color:var(--red)">ops</span></div>
+            <div style="font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px">Select your role to sign in</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-bottom:16px">
+              <!-- Admin card selected -->
+              <div style="background:var(--redl);border:2px solid var(--red);border-radius:10px;padding:12px 8px;text-align:center;position:relative">
+                <div style="font-size:18px;margin-bottom:4px">⚙️</div>
+                <div style="font-size:9px;font-weight:800;color:var(--red);margin-bottom:2px">Administrator</div>
+                <div style="font-size:7px;color:var(--redd);line-height:1.4">Full access to all sections</div>
+                <div class="ann" style="top:-6px;right:-6px">1</div>
+              </div>
+              <!-- Ops card -->
+              <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 8px;text-align:center">
+                <div style="font-size:18px;margin-bottom:4px">🍳</div>
+                <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:2px">Ops / Kitchen</div>
+                <div style="font-size:7px;color:rgba(255,255,255,.35);line-height:1.4">Daily ops, production, labels</div>
+              </div>
+              <!-- Driver card -->
+              <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 8px;text-align:center">
+                <div style="font-size:18px;margin-bottom:4px">🚴</div>
+                <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:2px">Driver</div>
+                <div style="font-size:7px;color:rgba(255,255,255,.35);line-height:1.4">Deliveries and issue reports</div>
+              </div>
+            </div>
+            <div style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px;position:relative">+966 5__ ___ ____<div class="ann" style="top:-6px;right:-6px">2</div></div>
+            <div style="width:100%;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:10px;text-align:center;border-radius:8px;position:relative">Sign in as Administrator →<div class="ann" style="top:-6px;right:-6px">3</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col">
+      <div class="frame-label">Ops/Kitchen card selected</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/login</span></div></div>
+        <div class="browser-content">
+          <div style="background:var(--blk);padding:24px 28px;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <svg width="36" height="30" viewBox="0 0 26 22" fill="none" style="margin-bottom:10px"><path d="M8.5 8.5 C8.5 3.5 17.5 3.5 17.5 8.5" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/><rect x="3" y="8" width="20" height="13" rx="2.5" fill="white"/></svg>
+            <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:2px">zaadi <span style="color:var(--red)">ops</span></div>
+            <div style="font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px">Select your role to sign in</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-bottom:16px">
+              <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 8px;text-align:center"><div style="font-size:18px;margin-bottom:4px">⚙️</div><div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:2px">Administrator</div><div style="font-size:7px;color:rgba(255,255,255,.35);line-height:1.4">Full access to all sections</div></div>
+              <div style="background:rgba(55,65,81,.2);border:2px solid var(--ops);border-radius:10px;padding:12px 8px;text-align:center;position:relative"><div style="font-size:18px;margin-bottom:4px">🍳</div><div style="font-size:9px;font-weight:800;color:#fff;margin-bottom:2px">Ops / Kitchen</div><div style="font-size:7px;color:rgba(255,255,255,.6);line-height:1.4">Daily ops, production, labels</div><div class="ann" style="top:-6px;right:-6px;background:var(--ops)">4</div></div>
+              <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 8px;text-align:center"><div style="font-size:18px;margin-bottom:4px">🚴</div><div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:2px">Driver</div><div style="font-size:7px;color:rgba(255,255,255,.35);line-height:1.4">Deliveries and issue reports</div></div>
+            </div>
+            <div style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px">+966 5__ ___ ____</div>
+            <div style="width:100%;background:var(--ops);color:#fff;font-size:10px;font-weight:800;padding:10px;text-align:center;border-radius:8px">Sign in as Ops / Kitchen →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Selected card: red border + red tint background. Unselected cards: subtle white tint, no border highlight. Only one card can be selected at a time.<span class="ac-ref">F1–F3</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Phone number field — same OTP pattern as customer app. Max 3 requests per 10-min window, 30-min lock on limit.<span class="ac-ref">F1</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">CTA button text updates to match selected role: "Sign in as Administrator →" / "Sign in as Ops / Kitchen →" / "Sign in as Driver →".<span class="ac-ref">F1–F3</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Ops/Kitchen card selected: dark grey border. CTA becomes dark grey. On success → Daily Ops (limited view). Never sees Dashboard Home.<span class="ac-ref">F2, F4</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<div class="fsec" id="f-otp">
+  <div class="fsec-header">
+    <div class="fsec-module">Authentication · F1–F3</div>
+    <div class="fsec-title">OTP Verification</div>
+    <div class="fsec-desc">Shared across all three roles. Same 4-box pattern as customer app. Shows the selected role in the header so the user knows they're signing in with the right role. Routing on success is role-dependent.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin</span><span class="role-badge rb-ops">Ops</span><span class="role-badge rb-driver">Driver</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Role Selection</strong> → <strong>OTP Verify</strong> → Admin: <strong>Dashboard Home</strong> · Ops: <strong>Daily Ops</strong> · Driver: <strong>My Deliveries</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">OTP Verify — Administrator</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/login/otp</span></div></div>
+        <div class="browser-content">
+          <div style="background:var(--blk);padding:32px 28px;display:flex;flex-direction:column;align-items:center">
+            <div style="background:var(--redl);border:1px solid rgba(228,40,29,.2);border-radius:8px;padding:5px 14px;font-size:9px;font-weight:700;color:var(--red);margin-bottom:18px;letter-spacing:.05em">SIGNING IN AS ADMINISTRATOR</div>
+            <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:3px">Enter your code</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:18px">Sent via WhatsApp to +966 5__ ____</div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;position:relative">
+              <div style="width:44px;height:50px;border-radius:8px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff"></div>
+              <div style="width:44px;height:50px;border-radius:8px;border:2px solid var(--red);background:var(--redl);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff"></div>
+              <div style="width:44px;height:50px;border-radius:8px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff"></div>
+              <div style="width:44px;height:50px;border-radius:8px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff"></div>
+              <div class="ann" style="top:-8px;right:-8px">1</div>
+            </div>
+            <div style="width:100%;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:10px;text-align:center;border-radius:8px;margin-bottom:10px">Verify →</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.3)">Resend in <span style="color:var(--red);font-weight:700">0:47</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Role tag shown in header — confirms which role the user is authenticating as. Prevents wrong-role sign-in confusion on shared devices.<span class="ac-ref">F1–F3</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">On success: Admin → Dashboard Home 6-tile grid. Ops → Daily Ops (limited, no Dashboard Home). Driver → My Deliveries screen in Rider App.<span class="ac-ref">F1–F3, F4</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- DASHBOARD HOME -->
+<div class="fsec" id="f-dash">
+  <div class="fsec-header">
+    <div class="fsec-module">Admin Dashboard · F5–F6</div>
+    <div class="fsec-title">Dashboard Home — 6-Tile Grid</div>
+    <div class="fsec-desc">Administrator landing screen after login. Six tiles provide one-tap access to all sections. Each tile shows a live sub-label. Daily Ops tile shows a live red badge for open issues. Ops/Kitchen never sees this screen.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>OTP Verify</strong> (Admin) → <strong>Dashboard Home</strong> → (tap tile) → relevant section</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Dashboard Home — 3 open issues</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/dashboard</span></div></div>
+        <div class="browser-content">
+          <div class="a-header">
+            <div style="display:flex;align-items:center;gap:10px">
+              <svg width="22" height="18" viewBox="0 0 26 22" fill="none"><path d="M8.5 8.5 C8.5 3.5 17.5 3.5 17.5 8.5" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/><rect x="3" y="8" width="20" height="13" rx="2.5" fill="white"/></svg>
+              <div style="font-size:13px;font-weight:900;color:#fff">zaadi <span style="color:var(--red)">admin</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:9px;color:rgba(255,255,255,.4)">Admin · Mohammed Al-Qahtani</div>
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff">M</div>
+            </div>
+          </div>
+          <div class="a-body">
+            <div style="font-size:11px;font-weight:700;color:var(--mid);margin-bottom:12px">Sunday, 5 May 2025 · Good morning 👋</div>
+            <div class="tile-grid">
+              <div class="tile" style="position:relative">
+                <div class="tile-badge">3</div>
+                <div class="tile-icon">📋</div>
+                <div class="tile-name">Daily Ops</div>
+                <div class="tile-sub">63 meals today · Locked ✓</div>
+                <div class="ann" style="bottom:-6px;right:-6px">1</div>
+              </div>
+              <div class="tile">
+                <div class="tile-icon">💰</div>
+                <div class="tile-name">Revenue</div>
+                <div class="tile-sub">MRR: SAR 18,400</div>
+              </div>
+              <div class="tile">
+                <div class="tile-icon">🍽</div>
+                <div class="tile-name">Menu Manager</div>
+                <div class="tile-sub">W23 · 4 of 5 days filled</div>
+              </div>
+              <div class="tile">
+                <div class="tile-icon">👥</div>
+                <div class="tile-name">Customers</div>
+                <div class="tile-sub">142 active subscribers</div>
+              </div>
+              <div class="tile">
+                <div class="tile-icon">📢</div>
+                <div class="tile-name">Comms</div>
+                <div class="tile-sub">5 automations active</div>
+              </div>
+              <div class="tile">
+                <div class="tile-icon">📍</div>
+                <div class="tile-name">Areas &amp; Buildings</div>
+                <div class="tile-sub">3 active · 1 coming soon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Live red badge on Daily Ops tile — shows count of open unresolved customer issues. Updates in real time. Hidden when count = 0. Only this tile has a live badge; all others show static sub-labels.<span class="ac-ref">F5, F6</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Sub-labels are live data: Daily Ops shows meal count + stage; Revenue shows MRR; Menu shows current week fill status; Customers shows active count; Comms shows active automation count; Areas shows zone summary.<span class="ac-ref">F5</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Ops/Kitchen role is routed to Daily Ops directly on login — this screen is never shown to them.<span class="ac-ref">F4</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- DAILY OPS ADMIN -->
+<div class="fsec" id="f-ops-admin">
+  <div class="fsec-header">
+    <div class="fsec-module">Daily Operations · F7–F11, F13</div>
+    <div class="fsec-title">Daily Ops Dashboard — Admin View</div>
+    <div class="fsec-desc">Full admin view with three zones: production pipeline, meal breakdown table with export, and open issues queue with resolution actions. Issues queue is Admin-only — Ops never sees it.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Dashboard Home</strong> → <strong>Daily Ops</strong> → (Credit →) → <strong>Credit Modal</strong> · (Reject →) → <strong>Reject Modal</strong> · (Print Labels) → <strong>Label List</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Daily Ops — Admin · Locked stage · 3 open issues</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/daily-ops</span></div></div>
+        <div class="browser-content">
+          <div class="a-header">
+            <div style="font-size:12px;font-weight:800;color:#fff">Daily Operations</div>
+            <div style="display:flex;gap:6px">
+              <div class="a-btn a-btn-ghost a-btn-sm">📥 Export Sheet</div>
+              <div class="a-btn a-btn-blk a-btn-sm">🖨 Print Labels</div>
+            </div>
+          </div>
+          <div class="a-nav">
+            <div class="a-nav-item on">Today — Sun 5 May</div>
+            <div class="a-nav-item">Yesterday</div>
+          </div>
+          <div class="a-body" style="padding:12px 14px">
+            <!-- Zone A: Pipeline -->
+            <div style="margin-bottom:12px;position:relative">
+              <div class="a-section-title">Production Pipeline</div>
+              <div class="pipeline">
+                <div class="p-stage done">✓ Locked<div class="p-stage-arrow">›</div></div>
+                <div class="p-stage active">→ Dispatch<div class="p-stage-arrow">›</div></div>
+                <div class="p-stage">Delivered</div>
+              </div>
+              <div style="font-size:8.5px;color:var(--mid);margin-top:4px">Cutoff passed at 6:00 PM · Meal count frozen at 63 deliveries</div>
+              <div class="ann" style="top:-6px;right:-6px">1</div>
+            </div>
+            <!-- Zone B: Meal Breakdown -->
+            <div style="margin-bottom:12px;position:relative">
+              <div class="a-section-title">Meal Breakdown</div>
+              <table class="a-table">
+                <thead><tr><th>Meal Type</th><th>Count</th><th>% of Total</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="a-pill ap-red">Executive</span></td><td style="font-weight:800">41</td><td style="color:var(--mid)">65%</td></tr>
+                  <tr><td><span class="a-pill" style="background:#DCFCE7;color:#16A34A">Salad</span></td><td style="font-weight:800">22</td><td style="color:var(--mid)">35%</td></tr>
+                  <tr style="background:rgba(0,0,0,.02)"><td style="font-weight:800">Total</td><td style="font-weight:900;color:var(--red)">63</td><td style="color:var(--mid)">—</td></tr>
+                </tbody>
+              </table>
+              <div class="ann" style="top:-6px;right:-6px">2</div>
+            </div>
+            <!-- Zone C: Issues Queue -->
+            <div style="position:relative">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div class="a-section-title" style="margin-bottom:0">Open Issues <span style="background:var(--red);color:#fff;font-size:7px;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px">3</span></div>
+              </div>
+              <div class="a-card" style="padding:8px 10px;margin-bottom:5px;position:relative">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                  <div style="display:flex;gap:7px;align-items:flex-start">
+                    <div style="width:26px;height:26px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">A</div>
+                    <div>
+                      <div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Ahmed Al-Rashidi</div>
+                      <div style="display:flex;gap:4px;margin-bottom:2px"><span class="a-pill ap-red" style="font-size:7px">🔀 Wrong order</span><span style="font-size:7.5px;color:var(--mid)">Today · 14 min ago</span></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:4px;flex-shrink:0">
+                    <div class="a-btn a-btn-red a-btn-sm">Credit →</div>
+                    <div class="a-btn a-btn-ghost a-btn-sm" style="color:var(--err);border-color:rgba(220,38,38,.25)">Reject</div>
+                  </div>
+                </div>
+                <div class="ann" style="top:-6px;right:-6px">3</div>
+              </div>
+              <div class="a-card" style="padding:8px 10px;margin-bottom:5px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                  <div style="display:flex;gap:7px;align-items:flex-start">
+                    <div style="width:26px;height:26px;border-radius:50%;background:var(--ops);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">S</div>
+                    <div>
+                      <div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Sara Al-Mutairi</div>
+                      <div style="display:flex;gap:4px;margin-bottom:2px"><span class="a-pill" style="background:#FFFBEB;color:#92400E;font-size:7px">⭐ Quality issue</span><span style="font-size:7.5px;color:var(--mid)">Today · 41 min ago</span></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:4px;flex-shrink:0">
+                    <div class="a-btn a-btn-red a-btn-sm">Credit →</div>
+                    <div class="a-btn a-btn-ghost a-btn-sm" style="color:var(--err);border-color:rgba(220,38,38,.25)">Reject</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ann" style="top:-6px;right:2px">4</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Pipeline: 3 stages in fixed order — Locked → Dispatch → Delivered. Active stage in red. Completed stages show ✓. Sequential only — no skipping. Post-6 PM: Locked stage freezes meal count.<span class="ac-ref">F7</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Meal Breakdown table: Executive / Salad / Total. Counts frozen at Locked stage. No Salad Add-On column in v1. Export Sheet downloads full delivery list as spreadsheet immediately.<span class="ac-ref">F8, F9</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Issue row: customer avatar + name · issue type chip · time since submitted. Two actions: "Credit →" (opens Credit Modal) and "Reject" (opens Reject Modal). Admin only — Ops never sees this zone.<span class="ac-ref">F10</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Resolved issues (credited or rejected) are removed from the queue immediately and archived. Cannot be re-actioned.<span class="ac-ref">F10, F11, F13</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- ISSUE RESOLUTION MODALS -->
+<div class="fsec" id="f-issue-credit">
+  <div class="fsec-header">
+    <div class="fsec-module">Daily Operations · F11</div>
+    <div class="fsec-title">Issue Resolution — Credit Wallet</div>
+    <div class="fsec-desc">Admin credits the customer's wallet with a SAR amount up to SAR 30. Four quick presets plus manual entry. Confirm button disabled until valid amount entered. Credit applied immediately on confirm. Push notification sent to customer.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Issues Queue</strong> → (Credit →) → <strong>Credit Modal</strong> → (Confirm) → credit applied · issue archived · push notification sent</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Credit Wallet modal — SAR 28 selected</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/daily-ops</span></div></div>
+        <div class="browser-content" style="position:relative">
+          <div style="background:rgba(0,0,0,.5);padding:20px 16px;display:flex;align-items:flex-end;min-height:280px">
+            <div style="background:#fff;border-radius:12px;padding:16px;width:100%">
+              <div style="font-size:11px;font-weight:800;color:var(--blk);margin-bottom:2px">Credit Wallet</div>
+              <div style="font-size:9px;color:var(--mid);margin-bottom:12px">Ahmed Al-Rashidi · Wrong order · Today</div>
+              <div style="font-size:8.5px;font-weight:700;color:var(--blk);margin-bottom:6px">Select amount (max SAR 30)</div>
+              <div style="display:flex;gap:5px;margin-bottom:8px;position:relative">
+                <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;font-size:9px;font-weight:600">SAR 10</div>
+                <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;font-size:9px;font-weight:600">SAR 20</div>
+                <div style="flex:1;background:var(--redl);border:2px solid var(--red);border-radius:6px;padding:6px;text-align:center;font-size:9px;font-weight:800;color:var(--red)">SAR 28</div>
+                <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;font-size:9px;font-weight:600">SAR 30</div>
+                <div class="ann" style="top:-6px;right:-6px">1</div>
+              </div>
+              <div style="display:flex;gap:5px;align-items:center;margin-bottom:10px">
+                <div style="background:var(--redl);border:1.5px solid var(--red);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:900;color:var(--red);flex:1;text-align:center">28</div>
+                <div style="font-size:10px;font-weight:700;color:var(--mid)">SAR</div>
+              </div>
+              <div style="background:var(--redl);border:1px solid rgba(228,40,29,.15);border-radius:6px;padding:6px 8px;font-size:8.5px;color:var(--redd);margin-bottom:10px;line-height:1.4">
+                💳 SAR 28 will be added to Ahmed's wallet immediately. A push notification will be sent confirming the amount.
+              </div>
+              <div style="display:flex;gap:6px">
+                <div class="a-btn a-btn-red" style="flex:1;justify-content:center;padding:8px;font-size:10px;position:relative">✓ Confirm Credit<div class="ann" style="top:-6px;right:-6px">2</div></div>
+                <div class="a-btn a-btn-ghost" style="padding:8px 14px;font-size:10px">Cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col" id="f-issue-reject">
+      <div class="frame-label">Reject modal — reason selected</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/daily-ops</span></div></div>
+        <div class="browser-content" style="position:relative">
+          <div style="background:rgba(0,0,0,.5);padding:20px 16px;display:flex;align-items:flex-end;min-height:280px">
+            <div style="background:#fff;border-radius:12px;padding:16px;width:100%">
+              <div style="font-size:11px;font-weight:800;color:var(--err);margin-bottom:2px">Reject Issue</div>
+              <div style="font-size:9px;color:var(--mid);margin-bottom:12px">Sara Al-Mutairi · Quality issue · Today</div>
+              <div style="font-size:8.5px;font-weight:700;color:var(--blk);margin-bottom:6px">Select reason (required)</div>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;position:relative">
+                <div style="background:var(--errl);border:1.5px solid rgba(220,38,38,.3);border-radius:6px;padding:7px 10px;font-size:9px;font-weight:700;color:var(--err)">✓ Not a valid issue</div>
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:9px;color:var(--mid)">Duplicate report</div>
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:9px;color:var(--mid)">Outside policy</div>
+                <div class="ann" style="top:-6px;right:-6px">3</div>
+              </div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:8.5px;color:var(--soft);margin-bottom:10px;min-height:28px">Optional notes... (max 200 chars)</div>
+              <div style="display:flex;gap:6px">
+                <div class="a-btn a-btn-err" style="flex:1;justify-content:center;padding:8px;font-size:10px;position:relative">Confirm Reject<div class="ann" style="top:-6px;right:-6px">4</div></div>
+                <div class="a-btn a-btn-ghost" style="padding:8px 14px;font-size:10px">Cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Four preset amounts: SAR 10 / 20 / 28 / 30. Selected preset highlighted in red. Manual entry field enforces max SAR 30 — input above limit keeps Confirm button disabled.<span class="ac-ref">F11</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Confirm Credit — disabled until valid amount entered (≤ SAR 30). On confirm: credit applied immediately to wallet, push notification sent to customer, issue removed from queue and archived.<span class="ac-ref">F11</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Reject: three reasons (single-select, required): Not a valid issue / Duplicate report / Outside policy. Confirm button disabled until reason selected. Optional free-text notes max 200 chars.<span class="ac-ref">F13</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Confirm Reject — no notification sent to customer. Issue removed from queue and archived with reason recorded. Cannot be reopened.<span class="ac-ref">F13</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- LABEL PRINTING -->
+<div class="fsec" id="f-labels">
+  <div class="fsec-header">
+    <div class="fsec-module">Label Printing · F14–F17</div>
+    <div class="fsec-title">Label List</div>
+    <div class="fsec-desc">Accessible by both Admin and Ops. Filter by meal type and area. Bulk download, individual download, and area-level download. Counts reflect the frozen Locked stage — do not change after 6 PM cutoff.</div>
+    <div class="fsec-roles"><span class="role-badge rb-shared">Admin + Ops</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Daily Ops</strong> → Print Labels → <strong>Label List</strong> → (Preview) → <strong>Sticker Preview</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Label List — All labels · Al Nakheel area</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/labels</span></div></div>
+        <div class="browser-content">
+          <div class="a-header">
+            <div style="font-size:12px;font-weight:800;color:#fff">Label Printing</div>
+            <div class="a-btn a-btn-red a-btn-sm" style="position:relative">📥 Download All Labels (63)<div class="ann" style="top:-6px;right:-6px">2</div></div>
+          </div>
+          <div style="background:#fff;border-bottom:1px solid var(--border);padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap">
+            <div style="background:var(--blk);color:#fff;border-radius:6px;padding:3px 10px;font-size:9px;font-weight:700">All</div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:9px;color:var(--mid)">Executive</div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:9px;color:var(--mid)">Salad</div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:9px;color:var(--mid)">▼ Area: Al Nakheel</div>
+          </div>
+          <div class="a-body" style="padding:0">
+            <div style="padding:8px 14px 4px;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);display:flex;justify-content:space-between;align-items:center">
+              <span>Al Nakheel · 28 labels</span>
+              <div class="a-btn a-btn-ghost a-btn-sm" style="font-size:7.5px">📥 Download area</div>
+            </div>
+            <table class="a-table" style="font-size:9px">
+              <thead><tr><th>Customer</th><th>Location</th><th>Meal</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:700">Ahmed Al-Rashidi</td>
+                  <td><div style="font-size:8.5px">Al Nakheel Tower</div><div style="font-size:8px;color:var(--mid)">Floor 7 · Desk B12</div></td>
+                  <td><span class="a-pill ap-red">Executive</span></td>
+                  <td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">📥</div><div class="a-btn a-btn-ghost a-btn-sm">👁 Preview</div></div></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">Sara Al-Mutairi</td>
+                  <td><div style="font-size:8.5px">Olaya Tower B</div><div style="font-size:8px;color:var(--mid)">Floor 3 · Reception</div></td>
+                  <td><span class="a-pill" style="background:#DCFCE7;color:#16A34A">Salad</span></td>
+                  <td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">📥</div><div class="a-btn a-btn-ghost a-btn-sm">👁 Preview</div></div></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">Khalid Al-Dossari</td>
+                  <td><div style="font-size:8.5px">KAFD Tower 3</div><div style="font-size:8px;color:var(--mid)">Floor 12 · Desk A4</div></td>
+                  <td><span class="a-pill ap-red">Executive</span></td>
+                  <td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">📥</div><div class="a-btn a-btn-ghost a-btn-sm">👁 Preview</div></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col" id="f-sticker">
+      <div class="frame-label">Sticker Preview — 100×60mm label</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/labels/preview</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Sticker Preview</div></div>
+          <div class="a-body" style="display:flex;flex-direction:column;align-items:center;padding:16px">
+            <!-- Label representation -->
+            <div style="width:260px;height:156px;border-radius:8px;border:2px solid var(--border);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);margin-bottom:14px;position:relative">
+              <div style="background:var(--red);height:36px;display:flex;align-items:center;padding:0 10px;gap:6px">
+                <svg width="18" height="14" viewBox="0 0 26 22" fill="none"><path d="M8.5 8.5 C8.5 3.5 17.5 3.5 17.5 8.5" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/><rect x="3" y="8" width="20" height="13" rx="2.5" fill="white"/></svg>
+                <div style="font-size:11px;font-weight:900;color:#fff">zaadi KITCHEN</div>
+                <div style="margin-left:auto;background:#fff;color:var(--red);font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px">EXECUTIVE</div>
+              </div>
+              <div style="background:#fff;padding:8px 10px;flex:1">
+                <div style="font-size:12px;font-weight:900;color:var(--blk);margin-bottom:4px">Ahmed Al-Rashidi</div>
+                <div style="font-size:8.5px;color:var(--blk);margin-bottom:1px">📍 Al Nakheel Tower · Floor 7 · Desk B12</div>
+                <div style="font-size:8.5px;color:var(--mid);margin-bottom:6px">🚪 Main entrance · Hand to me</div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div style="font-size:8px;color:var(--mid)">📅 Sun 5 May 2025</div>
+                  <div style="font-size:7.5px;color:var(--soft);font-family:monospace">#ZK-2025-05-05-0041</div>
+                </div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">3</div>
+            </div>
+            <div class="a-btn a-btn-red" style="margin-bottom:8px;width:100%;justify-content:center;padding:8px">📥 Download this label</div>
+            <div style="display:flex;gap:5px;width:100%">
+              <div class="a-btn a-btn-ghost a-btn-sm" style="flex:1;justify-content:center">All (63)</div>
+              <div class="a-btn a-btn-ghost a-btn-sm" style="flex:1;justify-content:center">Exec (41)</div>
+              <div class="a-btn a-btn-ghost a-btn-sm" style="flex:1;justify-content:center">Salad (22)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Filter row 1: Meal type chips (All / Executive / Salad). Filter row 2: Area dropdown (multi-select). Active filter updates bulk download button text and count.<span class="ac-ref">F14</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Bulk download: single PDF, all labels sorted by area. When filter active: "Download Exec Labels (41)". Downloads immediately on tap.<span class="ac-ref">F15</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Label contains: logo, customer name, building/floor/desk, gate, meal type colour band, delivery date, order reference. "Download this label" for individual. Print options at bottom: All / Exec only / Salad only.<span class="ac-ref">F18</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Area-level download button per area group: downloads PDF of that area's labels only. Respects active meal type filter.<span class="ac-ref">F17</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- REVENUE DASHBOARD -->
+<div class="fsec" id="f-revenue">
+  <div class="fsec-header">
+    <div class="fsec-module">Revenue Dashboard · F19–F24</div>
+    <div class="fsec-title">Revenue Dashboard</div>
+    <div class="fsec-desc">Admin-only. MRR with month-over-month change. Subscriber stats (tappable drilldowns). Daily revenue bar chart with period selector. Plan breakdown horizontal bars. Avg skip rate KPI.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Dashboard Home</strong> → Revenue → <strong>Revenue Dashboard</strong> → (stat card / plan bar) → <strong>Customer List (pre-filtered)</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Revenue Dashboard</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/revenue</span></div></div>
+        <div class="browser-content">
+          <div class="a-header">
+            <div style="font-size:12px;font-weight:800;color:#fff">Revenue Dashboard</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.4)">May 2025</div>
+          </div>
+          <div class="a-body">
+            <!-- Zone A: MRR -->
+            <div style="background:#fff;border-radius:8px;border:1px solid var(--border);padding:12px 14px;margin-bottom:10px;position:relative">
+              <div style="font-size:8.5px;font-weight:700;color:var(--mid);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Monthly Recurring Revenue</div>
+              <div style="display:flex;align-items:baseline;gap:10px">
+                <div style="font-size:28px;font-weight:900;color:var(--blk)">SAR 18,400</div>
+                <div style="background:#DCFCE7;color:#16A34A;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px">↑ +12.4% vs Apr</div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">1</div>
+            </div>
+            <!-- Zone B: Stats -->
+            <div style="display:flex;gap:6px;margin-bottom:10px;position:relative">
+              <div style="flex:1;background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px;text-align:center;cursor:pointer">
+                <div style="font-size:18px;font-weight:900;color:var(--red)">142</div>
+                <div style="font-size:8px;font-weight:700;color:var(--mid)">Active</div>
+              </div>
+              <div style="flex:1;background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px;text-align:center;cursor:pointer">
+                <div style="font-size:18px;font-weight:900;color:var(--grn)">7</div>
+                <div style="font-size:8px;font-weight:700;color:var(--mid)">New Today</div>
+              </div>
+              <div style="flex:1;background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px;text-align:center;cursor:pointer">
+                <div style="font-size:18px;font-weight:900;color:var(--err)">3</div>
+                <div style="font-size:8px;font-weight:700;color:var(--mid)">Churned</div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">2</div>
+            </div>
+            <!-- Zone C: Bar chart -->
+            <div style="background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px 12px;margin-bottom:10px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:8.5px;font-weight:700;color:var(--blk)">Daily Revenue</div>
+                <select style="font-size:8px;border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-family:Montserrat,sans-serif;color:var(--mid)"><option>This week</option></select>
+              </div>
+              <div class="bar-chart">
+                <div class="bar-wrap"><div class="bar" style="height:40px;background:var(--grnl)"></div><div class="bar-label">Sun</div><div class="bar-val" style="font-size:7px;color:var(--mid)">3,100</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:50px;background:var(--grnl)"></div><div class="bar-label">Mon</div><div class="bar-val" style="font-size:7px;color:var(--mid)">3,900</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:55px;background:var(--red)"></div><div class="bar-label" style="color:var(--red);font-weight:800">Tue</div><div class="bar-val" style="font-size:7px;color:var(--red);font-weight:800">4,200</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:30px;background:rgba(228,40,29,.2)"></div><div class="bar-label" style="color:var(--soft)">Wed</div><div class="bar-val" style="font-size:7px;color:var(--soft)">~3,600</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:28px;background:rgba(228,40,29,.2)"></div><div class="bar-label" style="color:var(--soft)">Thu</div><div class="bar-val" style="font-size:7px;color:var(--soft)">~3,400</div></div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">3</div>
+            </div>
+            <!-- Zone D: Plan breakdown -->
+            <div style="background:#fff;border-radius:8px;border:1px solid var(--border);padding:10px 12px;position:relative">
+              <div style="font-size:8.5px;font-weight:700;color:var(--blk);margin-bottom:8px">Subscribers by Plan</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:6px"><div style="font-size:8.5px;font-weight:600;color:var(--blk);width:55px;flex-shrink:0">Month</div><div style="flex:1;background:var(--red);border-radius:4px;height:10px;width:75%"></div><div style="font-size:8.5px;font-weight:700;color:var(--blk);width:24px;text-align:right">107</div></div>
+                <div style="display:flex;align-items:center;gap:6px"><div style="font-size:8.5px;font-weight:600;color:var(--blk);width:55px;flex-shrink:0">Quarterly</div><div style="flex:1;background:var(--redm);border-radius:4px;height:10px;width:15%"></div><div style="font-size:8.5px;font-weight:700;color:var(--blk);width:24px;text-align:right">21</div></div>
+                <div style="display:flex;align-items:center;gap:6px"><div style="font-size:8.5px;font-weight:600;color:var(--blk);width:55px;flex-shrink:0">Week</div><div style="flex:1;background:rgba(228,40,29,.12);border-radius:4px;height:10px;width:8%"></div><div style="font-size:8.5px;font-weight:700;color:var(--blk);width:24px;text-align:right">11</div></div>
+                <div style="display:flex;align-items:center;gap:6px"><div style="font-size:8.5px;font-weight:600;color:var(--blk);width:55px;flex-shrink:0">Try It</div><div style="flex:1;background:rgba(228,40,29,.08);border-radius:4px;height:10px;width:3%"></div><div style="font-size:8.5px;font-weight:700;color:var(--blk);width:24px;text-align:right">3</div></div>
+              </div>
+              <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:8.5px;font-weight:700;color:var(--blk)">Avg Skip Rate</div>
+                <div style="display:flex;align-items:center;gap:5px"><div style="font-size:14px;font-weight:900;color:var(--blk)">2.3</div><div style="font-size:8px;color:var(--mid)">skips/subscriber</div><div style="font-size:8px;font-weight:700;color:var(--grn)">↓ -0.4 vs last week</div></div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">4</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">MRR % change vs prior full month — not month-to-date. Green badge = positive. Red badge = negative.<span class="ac-ref">F19</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Three tappable stat cards. Active → Customer List filtered Active. Churned → filtered Churned. Churn definition: expired + no renewal within 3 days.<span class="ac-ref">F20</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Bar chart: today's bar in full red, bold label. Future days shown as faded projections. Period selector: This week / This month / Prior periods.<span class="ac-ref">F21</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Plan bars tappable → Customer List pre-filtered by plan. Avg Skip Rate: trend vs prior week. Salad Attach Rate not present in v1.<span class="ac-ref">F22, F23, F24</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- MENU MANAGER -->
+<div class="fsec" id="f-menu-planner">
+  <div class="fsec-header">
+    <div class="fsec-module">Menu Manager · F25–F29</div>
+    <div class="fsec-title">2-Week Planner</div>
+    <div class="fsec-desc">Admin plans two weeks simultaneously — Week N (current, read-only) and Week N+1 (editable). Each week has 5 days × 2 slots (Executive + Salad) = 10 slots per week. Publish per week or both together. Current week is always read-only.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Menu Manager</strong> → <strong>2-Week Planner</strong> → (+ Add meal) → <strong>Assign Dish Modal</strong> → (Publish) → menu live in customer app</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">2-Week Planner — W23 published (read-only) · W24 in progress</div>
+      <div class="browser" style="width:560px">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/menu</span></div></div>
+        <div class="browser-content">
+          <div class="a-header">
+            <div style="font-size:12px;font-weight:800;color:#fff">Menu Manager</div>
+            <div style="display:flex;gap:5px">
+              <div class="a-btn a-btn-ghost a-btn-sm">‹ W22</div>
+              <div class="a-btn a-btn-ghost a-btn-sm">W25 ›</div>
+            </div>
+          </div>
+          <div class="a-nav">
+            <div class="a-nav-item on">Week Planner</div>
+            <div class="a-nav-item">Meal Library</div>
+          </div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <!-- WEEK N — Read only -->
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <div>
+                    <div style="font-size:10px;font-weight:800;color:var(--blk)">Week 23 — Current</div>
+                    <div style="font-size:8px;color:var(--mid)">Sun 5 – Thu 9 May · Published ✓</div>
+                  </div>
+                  <span class="a-pill ap-grn" style="font-size:7.5px">Published</span>
+                </div>
+                <div class="week-grid" style="grid-template-columns:repeat(5,1fr)">
+                  <!-- Sun -->
+                  <div class="day-col slot-read">
+                    <div class="day-header"><div class="day-header-txt">Sun</div><div class="day-header-date">5 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Lamb Kabsa</div><div class="slot-kcal">550 kcal</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Ch. Fattoush</div><div class="slot-kcal">380 kcal</div></div>
+                  </div>
+                  <!-- Mon -->
+                  <div class="day-col slot-read">
+                    <div class="day-header"><div class="day-header-txt">Mon</div><div class="day-header-date">6 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Ch. Mandi</div><div class="slot-kcal">490 kcal</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Salmon Bowl</div><div class="slot-kcal">360 kcal</div></div>
+                  </div>
+                  <!-- Tue -->
+                  <div class="day-col slot-read">
+                    <div class="day-header"><div class="day-header-txt">Tue</div><div class="day-header-date">7 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Kofta Platter</div><div class="slot-kcal">520 kcal</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Greek Bowl</div><div class="slot-kcal">340 kcal</div></div>
+                  </div>
+                  <!-- Wed -->
+                  <div class="day-col slot-read">
+                    <div class="day-header"><div class="day-header-txt">Wed</div><div class="day-header-date">8 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Beef Ouzi</div><div class="slot-kcal">580 kcal</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Tuna Nicoise</div><div class="slot-kcal">310 kcal</div></div>
+                  </div>
+                  <!-- Thu -->
+                  <div class="day-col slot-read">
+                    <div class="day-header"><div class="day-header-txt">Thu</div><div class="day-header-date">9 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Machboos</div><div class="slot-kcal">560 kcal</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Caesar Wrap</div><div class="slot-kcal">390 kcal</div></div>
+                  </div>
+                </div>
+                <div style="margin-top:6px;padding:6px 8px;background:var(--grnl);border:1px solid rgba(22,163,74,.2);border-radius:6px;font-size:8px;font-weight:700;color:var(--grn);text-align:center">✓ Published — locked for editing</div>
+              </div>
+              <!-- WEEK N+1 — Editable -->
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <div>
+                    <div style="font-size:10px;font-weight:800;color:var(--blk)">Week 24 — Next</div>
+                    <div style="font-size:8px;color:var(--mid)">Sun 12 – Thu 16 May · 4 of 10 filled</div>
+                  </div>
+                  <div class="a-btn a-btn-red a-btn-sm" style="opacity:.5;cursor:not-allowed;position:relative">Publish W24<div class="ann" style="top:-6px;right:-6px">2</div></div>
+                </div>
+                <div class="week-grid" style="grid-template-columns:repeat(5,1fr)">
+                  <!-- Sun filled -->
+                  <div class="day-col">
+                    <div class="day-header"><div class="day-header-txt">Sun</div><div class="day-header-date">12 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Saleeg Rice</div><div class="slot-kcal">510 kcal</div><div class="slot-add" style="font-size:7px;color:var(--mid)">Edit ✎</div></div>
+                    <div class="slot"><div class="slot-type">Salad</div><div class="slot-filled">Quinoa Bowl</div><div class="slot-kcal">350 kcal</div><div class="slot-add" style="font-size:7px;color:var(--mid)">Edit ✎</div></div>
+                  </div>
+                  <!-- Mon filled -->
+                  <div class="day-col">
+                    <div class="day-header"><div class="day-header-txt">Mon</div><div class="day-header-date">13 May</div></div>
+                    <div class="slot"><div class="slot-type">Exec</div><div class="slot-filled">Stuffed Grape</div><div class="slot-kcal">480 kcal</div><div class="slot-add" style="font-size:7px;color:var(--mid)">Edit ✎</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Salad</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                  </div>
+                  <!-- Tue empty -->
+                  <div class="day-col">
+                    <div class="day-header"><div class="day-header-txt">Tue</div><div class="day-header-date">14 May</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Exec</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Salad</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                  </div>
+                  <!-- Wed empty -->
+                  <div class="day-col">
+                    <div class="day-header"><div class="day-header-txt">Wed</div><div class="day-header-date">15 May</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Exec</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Salad</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                  </div>
+                  <!-- Thu empty -->
+                  <div class="day-col">
+                    <div class="day-header"><div class="day-header-txt">Thu</div><div class="day-header-date">16 May</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Exec</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                    <div class="slot" style="cursor:pointer"><div class="slot-type">Salad</div><div class="slot-empty" style="font-size:8px;color:var(--red);font-weight:700">+ Add meal</div></div>
+                  </div>
+                </div>
+                <div style="margin-top:6px;padding:6px 8px;background:var(--redl);border:1px solid rgba(228,40,29,.15);border-radius:6px;font-size:8px;color:var(--redd);text-align:center">Fill all 10 slots to enable Publish</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Week N (left column): always read-only when published. Edit and slot actions greyed at 45% opacity. Shows confirmation "Published — locked for editing".<span class="ac-ref">F25, F29</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Publish W24 button: disabled (greyed) until all 10 slots filled (5 days × Executive + Salad). Once published: week locks immediately and becomes visible in customer app Menu tab. Cannot be unpublished.<span class="ac-ref">F29</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Empty slot: "+ Add meal" in red → opens Assign Dish Picker. Filled slot: shows dish name + kcal + Edit button (W+1 only). Week navigation arrows allow planning up to W+4.<span class="ac-ref">F25, F26, F27</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">Sunday–Thursday layout reflects Saudi working week. No Friday/Saturday columns.<span class="ac-ref">F25</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- ASSIGN DISH + MEAL LIBRARY -->
+<div class="fsec" id="f-menu-assign">
+  <div class="fsec-header">
+    <div class="fsec-module">Menu Manager · F26–F27, F30–F33</div>
+    <div class="fsec-title">Assign / Edit Dish Modal &amp; Meal Library</div>
+    <div class="fsec-desc">Assign Dish Picker opens from any empty or edit slot. Only Active dishes from the library are shown. Already-used dishes in the current week are greyed. Meal Library manages Active/Draft status and Add Dish (manual + XLSX import).</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>2-Week Planner</strong> → (+ Add meal) → <strong>Assign Dish Modal</strong> → (confirm) → slot filled · <strong>Meal Library tab</strong> → (Add Dish) → saves as Draft</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Assign Dish Picker — W24 · Tue · Exec</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/menu</span></div></div>
+        <div class="browser-content" style="position:relative">
+          <div style="background:rgba(0,0,0,.45);padding:16px;display:flex;align-items:flex-start;justify-content:center;min-height:280px">
+            <div style="background:#fff;border-radius:10px;padding:14px;width:320px">
+              <div style="font-size:8.5px;font-weight:800;color:var(--red);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px">W24 · Tuesday 14 May · Executive</div>
+              <div style="font-size:11px;font-weight:800;color:var(--blk);margin-bottom:10px">Assign a dish</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:9px;color:var(--soft);margin-bottom:8px;display:flex;align-items:center;gap:5px">🔍 Search meal library...</div>
+              <div style="display:flex;flex-direction:column;gap:3px;max-height:140px;overflow:hidden">
+                <div style="padding:7px 8px;border-radius:6px;border:1.5px solid var(--red);background:var(--redl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;position:relative">
+                  <div><div style="font-size:9px;font-weight:700;color:var(--blk)">Saleeg Rice</div><div style="font-size:7.5px;color:var(--mid)">510 kcal · 32g protein</div></div>
+                  <span class="a-pill ap-red">✓ Selected</span>
+                  <div class="ann" style="top:-6px;right:-6px">1</div>
+                </div>
+                <div style="padding:7px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+                  <div><div style="font-size:9px;font-weight:700;color:var(--blk)">Lamb Kabsa</div><div style="font-size:7.5px;color:var(--mid)">550 kcal · 38g protein</div></div>
+                  <span class="a-pill ap-grey" style="font-size:7.5px">Used — Sun</span>
+                </div>
+                <div style="padding:7px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center;position:relative">
+                  <div><div style="font-size:9px;font-weight:700;color:var(--blk)">Beef Ouzi</div><div style="font-size:7.5px;color:var(--mid)">580 kcal · 44g protein</div></div>
+                  <div class="ann" style="top:-6px;right:-6px">2</div>
+                </div>
+                <div style="padding:7px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+                  <div><div style="font-size:9px;font-weight:700;color:var(--blk)">Stuffed Grape Leaves</div><div style="font-size:7.5px;color:var(--mid)">480 kcal · 28g protein</div></div>
+                  <span class="a-pill ap-grey" style="font-size:7.5px">Used — Mon</span>
+                </div>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:6px">
+                <div class="a-btn a-btn-red" style="flex:1;justify-content:center;padding:8px;font-size:9.5px">✓ Assign Saleeg Rice</div>
+                <div class="a-btn a-btn-ghost" style="padding:8px 12px">Cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col" id="f-meal-library">
+      <div class="frame-label">Meal Library + Add Dish</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/menu/library</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Meal Library</div><div class="a-btn a-btn-red a-btn-sm">+ Add Dish</div></div>
+          <div class="a-nav">
+            <div class="a-nav-item on">Library</div>
+            <div class="a-nav-item">Add Dish</div>
+          </div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="display:flex;gap:5px;margin-bottom:8px">
+              <div style="background:var(--blk);color:#fff;border-radius:5px;padding:3px 8px;font-size:8.5px;font-weight:700">All</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:8.5px;color:var(--mid)">Executive</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:8.5px;color:var(--mid)">Salad</div>
+            </div>
+            <table class="a-table">
+              <thead><tr><th>Dish</th><th>Type</th><th>Kcal</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:700">Lamb Kabsa</td>
+                  <td><span class="a-pill ap-red">Exec</span></td>
+                  <td style="color:var(--mid)">550</td>
+                  <td><span class="a-pill ap-grn">Active</span></td>
+                  <td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="font-size:7.5px;color:var(--mid)">→ Draft</div></div></td>
+                </tr>
+                <tr style="opacity:.5">
+                  <td style="font-weight:700">Harira Soup</td>
+                  <td><span class="a-pill ap-ops">Exec</span></td>
+                  <td style="color:var(--mid)">320</td>
+                  <td><span class="a-pill ap-grey">Draft</span></td>
+                  <td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="font-size:7.5px;color:var(--grn)">Activate</div></div></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">Salmon Bowl</td>
+                  <td><span class="a-pill" style="background:#DCFCE7;color:#16A34A">Salad</span></td>
+                  <td style="color:var(--mid)">360</td>
+                  <td><span class="a-pill ap-grn">Active</span></td>
+                  <td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="font-size:7.5px;color:var(--mid)">→ Draft</div></div></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:10px;padding:8px 10px;background:var(--redl);border:1px solid rgba(228,40,29,.15);border-radius:7px;font-size:8px;color:var(--redd)">
+              <strong>Add Dish tab:</strong> Meal type toggle · Name (required) · Kcal/Protein/Carbs/Fat · Chef's Note · Arabic name · Photo upload (manual) · XLSX import. All new dishes save as Draft automatically.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Selected dish: red border + red tint. Slot header shows week + day + meal type context. Confirm button label includes dish name: "✓ Assign [Dish Name]".<span class="ac-ref">F26</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Already-used dishes in current week greyed with "Used — [Day]" label — cannot be selected. Only Active dishes shown — Drafts excluded from picker entirely.<span class="ac-ref">F26, F30</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Draft dishes in library shown at 50% opacity. Cannot be assigned to any week slot. Toggle Active ↔ Draft; if toggling a published week's dish, confirmation required.<span class="ac-ref">F30</span></div></div>
+    <div class="ac-row"><div class="ac-num">4</div><div class="ac-text">XLSX import populates all fields except photo. Photo always manual. New dishes always save as Draft regardless of import method.<span class="ac-ref">F31, F32, F33</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- CUSTOMER MANAGEMENT -->
+<div class="fsec" id="f-customers">
+  <div class="fsec-header">
+    <div class="fsec-module">Customer Management · F34–F37</div>
+    <div class="fsec-title">Customer List &amp; Detail</div>
+    <div class="fsec-desc">Searchable, filterable customer list. Tapping a row expands inline detail — no navigation to new screen. Expanded row has red left border. View History opens full subscription and issue history.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Dashboard / Revenue drilldown</strong> → <strong>Customer List</strong> → (tap row) → inline expand · (View History) → full history panel</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Customer List — Active filter · one row expanded</div>
+      <div class="browser" style="width:520px">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/customers</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Customer Management</div><div style="font-size:9px;color:rgba(255,255,255,.4)">142 customers</div></div>
+          <div style="background:#fff;border-bottom:1px solid var(--border);padding:8px 14px">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:9px;color:var(--soft);margin-bottom:7px;display:flex;gap:5px">🔍 Search by name or phone...</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <div style="background:var(--blk);color:#fff;border-radius:5px;padding:3px 9px;font-size:8.5px;font-weight:700">Active</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">All</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Paused</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Expired</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Month</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Quarterly</div>
+            </div>
+          </div>
+          <div class="a-body" style="padding:0">
+            <!-- Normal row -->
+            <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--ops);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">S</div>
+              <div style="flex:1"><div style="font-size:9px;font-weight:700;color:var(--blk)">Sara Al-Mutairi</div><div style="font-size:8px;color:var(--mid)">+966 50 234 5678</div></div>
+              <span class="a-pill ap-red">Month</span>
+              <span class="a-pill ap-grn">Active</span>
+              <div style="font-size:8px;color:var(--mid)">14 days left</div>
+            </div>
+            <!-- Expanded row -->
+            <div style="border-left:3px solid var(--red);background:rgba(228,40,29,.02)">
+              <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--redl)">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">A</div>
+                <div style="flex:1"><div style="font-size:9px;font-weight:700;color:var(--blk)">Ahmed Al-Rashidi</div><div style="font-size:8px;color:var(--mid)">+966 55 123 4567</div></div>
+                <span class="a-pill ap-red">Month</span>
+                <span class="a-pill ap-grn">Active</span>
+                <div style="font-size:8px;color:var(--mid)">17 days left</div>
+                <span style="font-size:9px;color:var(--red)">▲</span>
+              </div>
+              <!-- Inline expanded detail -->
+              <div style="padding:10px 14px 12px;background:#fff;border-bottom:1px solid var(--border)">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;position:relative">
+                  <div><div style="font-size:7.5px;font-weight:700;color:var(--soft);text-transform:uppercase;margin-bottom:2px">Current Plan</div><div style="font-size:9px;font-weight:700;color:var(--blk)">Month Plan</div><div style="font-size:8px;color:var(--mid)">Ends 3 Jun 2025</div></div>
+                  <div><div style="font-size:7.5px;font-weight:700;color:var(--soft);text-transform:uppercase;margin-bottom:2px">Wallet Balance</div><div style="font-size:9px;font-weight:700;color:var(--redd)">SAR 50.00</div></div>
+                  <div><div style="font-size:7.5px;font-weight:700;color:var(--soft);text-transform:uppercase;margin-bottom:2px">Issues</div><div style="font-size:9px;font-weight:700;color:var(--blk)">1 resolved</div><div style="font-size:8px;color:var(--mid)">Credited SAR 28</div></div>
+                  <div class="ann" style="top:-6px;right:-6px">1</div>
+                </div>
+                <div style="font-size:8px;color:var(--mid);margin-bottom:8px">📍 Al Nakheel Tower · Floor 7 · Desk B12</div>
+                <div class="a-btn a-btn-blk a-btn-sm" style="position:relative">View History →<div class="ann" style="top:-6px;right:-6px">2</div></div>
+              </div>
+            </div>
+            <!-- Churned row (60% opacity) -->
+            <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;opacity:.6;cursor:pointer">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">K</div>
+              <div style="flex:1"><div style="font-size:9px;font-weight:700;color:var(--blk)">Khalid Al-Dossari</div><div style="font-size:8px;color:var(--mid)">+966 54 987 6543</div></div>
+              <span class="a-pill ap-grey">Week</span>
+              <span class="a-pill ap-grey">Churned</span>
+              <div style="font-size:8px;color:var(--mid)">Expired 28 Apr</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Expanded row: red left border + light red tint. Shows plan + end date, wallet balance, delivery address, issue count with resolution summary. Tapping the row again collapses it.<span class="ac-ref">F35</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">"View History →" opens full panel: all subscription periods, delivery records, skipped days, resolved issues with resolution details.<span class="ac-ref">F37</span></div></div>
+    <div class="ac-row"><div class="ac-num">3</div><div class="ac-text">Churned rows at 60% opacity to distinguish from active. Churn = expired + no renewal within 3 days. Pre-filtered chip when arriving from Revenue drilldown.<span class="ac-ref">F34</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- COMMS & AUTOMATIONS -->
+<div class="fsec" id="f-automations">
+  <div class="fsec-header">
+    <div class="fsec-module">Comms &amp; Automations · F39–F41</div>
+    <div class="fsec-title">Automations &amp; Broadcast</div>
+    <div class="fsec-desc">Five automation toggles — all push notification only, no WhatsApp or SMS. Broadcast tab: segment selection with live count, message composer, send confirmation. Push only.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Dashboard</strong> → Comms → <strong>Automations tab</strong> · <strong>Broadcast tab</strong> → (Send) → push delivered to segment</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Automations — all active</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/comms</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Comms &amp; Automations</div></div>
+          <div class="a-nav">
+            <div class="a-nav-item on">Automations</div>
+            <div class="a-nav-item">Broadcast</div>
+          </div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="font-size:8px;color:var(--mid);margin-bottom:8px">All automations deliver push notifications only — no WhatsApp or SMS.</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="a-card" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px">
+                <div><div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Delivery Confirmed</div><div style="font-size:7.5px;color:var(--mid)">Trigger: Driver taps Mark as Delivered</div></div>
+                <div style="width:32px;height:18px;border-radius:9px;background:var(--grn);position:relative;flex-shrink:0"><div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)"></div></div>
+              </div>
+              <div class="a-card" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px">
+                <div><div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">End-of-Day Feedback</div><div style="font-size:7.5px;color:var(--mid)">Trigger: 3:00 PM daily to meal recipients</div></div>
+                <div style="width:32px;height:18px;border-radius:9px;background:var(--grn);position:relative;flex-shrink:0"><div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)"></div></div>
+              </div>
+              <div class="a-card" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px">
+                <div><div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Renewal Reminder</div><div style="font-size:7.5px;color:var(--mid)">Trigger: 48 hrs before plan end date</div></div>
+                <div style="width:32px;height:18px;border-radius:9px;background:var(--grn);position:relative;flex-shrink:0"><div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)"></div></div>
+              </div>
+              <div class="a-card" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px">
+                <div><div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Referral Reward</div><div style="font-size:7.5px;color:var(--mid)">Trigger: Referred friend's plan activates</div></div>
+                <div style="width:32px;height:18px;border-radius:9px;background:var(--grn);position:relative;flex-shrink:0"><div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)"></div></div>
+              </div>
+              <div class="a-card" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px">
+                <div><div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:1px">Lapsed Reactivation</div><div style="font-size:7.5px;color:var(--mid)">Trigger: Expired + no renewal in 3 days</div></div>
+                <div style="width:32px;height:18px;border-radius:9px;background:var(--grn);position:relative;flex-shrink:0"><div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col" id="f-broadcast">
+      <div class="frame-label">Broadcast — Delivering Today segment</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/comms/broadcast</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Comms &amp; Automations</div></div>
+          <div class="a-nav">
+            <div class="a-nav-item">Automations</div>
+            <div class="a-nav-item on">Broadcast</div>
+          </div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="font-size:8.5px;font-weight:700;color:var(--blk);margin-bottom:6px">Select audience</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;position:relative">
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-size:8.5px;color:var(--mid)">All subscribers</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-size:8.5px;color:var(--mid)">Active</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-size:8.5px;color:var(--mid)">Paused</div>
+              <div style="background:var(--blk);color:#fff;border-radius:5px;padding:4px 9px;font-size:8.5px;font-weight:700">Delivering Today</div>
+              <div class="ann" style="top:-6px;right:-6px">1</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--blk);margin-bottom:8px">To: <span style="color:var(--red);font-size:11px;font-weight:900">63</span> subscribers</div>
+            <div style="font-size:8.5px;font-weight:700;color:var(--blk);margin-bottom:4px">Message</div>
+            <div style="background:var(--bg);border:1.5px solid var(--red);border-radius:7px;padding:8px 10px;font-size:9px;color:var(--blk);min-height:60px;margin-bottom:4px;line-height:1.5">Your lunch is on the way! Expected delivery between 12:00–1:00 PM. 🍱</div>
+            <div style="font-size:8px;color:var(--soft);text-align:right;margin-bottom:8px">58 / 200 characters</div>
+            <div class="a-btn a-btn-red" style="width:100%;justify-content:center;padding:9px;font-size:10px;position:relative">📢 Send to 63 subscribers<div class="ann" style="top:-6px;right:-6px">2</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Five toggles — each independently controlled. All default On. "Delivering Today" segment targets customers with a meal being delivered on the current day — useful for same-day operational messages.<span class="ac-ref">F39, F40</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Send button label shows live recipient count. Disabled when count = 0. Delivered as push notification only — no WhatsApp or SMS for broadcasts.<span class="ac-ref">F41</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- AREAS & BUILDINGS -->
+<div class="fsec" id="f-areas">
+  <div class="fsec-header">
+    <div class="fsec-module">Delivery Areas &amp; Buildings · F42–F45</div>
+    <div class="fsec-title">Area List &amp; Status Management</div>
+    <div class="fsec-desc">All delivery areas with status summary counts at top. Filter by status. Area status changes: Active requires confirmation warning. Coming Soon / Paused changes require no confirmation. Admin only.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Dashboard</strong> → Areas → <strong>Area List</strong> → (Edit) → <strong>Edit Area</strong> · (Buildings) → <strong>Building List</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Area List</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/areas</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Areas &amp; Buildings</div><div class="a-btn a-btn-red a-btn-sm">+ Add Area</div></div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
+              <div style="background:#fff;border-radius:7px;border:1px solid var(--border);padding:8px;text-align:center"><div style="font-size:16px;font-weight:900;color:var(--grn)">3</div><div style="font-size:7.5px;color:var(--mid)">Active</div></div>
+              <div style="background:#fff;border-radius:7px;border:1px solid var(--border);padding:8px;text-align:center"><div style="font-size:16px;font-weight:900;color:var(--ops)">1</div><div style="font-size:7.5px;color:var(--mid)">Coming Soon</div></div>
+              <div style="background:#fff;border-radius:7px;border:1px solid var(--border);padding:8px;text-align:center"><div style="font-size:16px;font-weight:900;color:var(--soft)">0</div><div style="font-size:7.5px;color:var(--mid)">Paused</div></div>
+            </div>
+            <div style="display:flex;gap:4px;margin-bottom:8px">
+              <div style="background:var(--blk);color:#fff;border-radius:5px;padding:3px 9px;font-size:8.5px;font-weight:700">All</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Active</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Coming Soon</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:8.5px;color:var(--mid)">Paused</div>
+            </div>
+            <table class="a-table">
+              <thead><tr><th>Area</th><th>Customers</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:700;font-size:9px">Al Nakheel</div><div style="font-size:8px;color:var(--mid)">Offices &amp; towers</div></td><td style="font-weight:700">28</td><td><span class="a-pill ap-grn">Active</span></td><td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm">🏢 Buildings</div></div></td></tr>
+                <tr><td><div style="font-weight:700;font-size:9px">Olaya Business District</div><div style="font-size:8px;color:var(--mid)">Offices &amp; towers</div></td><td style="font-weight:700">41</td><td><span class="a-pill ap-grn">Active</span></td><td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm">🏢 Buildings</div></div></td></tr>
+                <tr><td><div style="font-weight:700;font-size:9px">Al Zahra</div><div style="font-size:8px;color:var(--mid)">Residential &amp; offices</div></td><td style="font-weight:700">0</td><td><span class="a-pill ap-ops">Coming Soon</span></td><td><div style="display:flex;gap:3px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm">🏢 Buildings</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-col" id="f-area-edit">
+      <div class="frame-label">Edit Area — Activating Al Zahra</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/areas/edit</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Edit Area — Al Zahra</div></div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div><div style="font-size:8px;font-weight:700;color:var(--blk);margin-bottom:2px">Area Name</div><div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-size:9px;color:var(--blk)">Al Zahra</div></div>
+              <div><div style="font-size:8px;font-weight:700;color:var(--blk);margin-bottom:2px">Coverage</div><div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-size:9px;color:var(--blk)">Residential & offices</div></div>
+              <div><div style="font-size:8px;font-weight:700;color:var(--blk);margin-bottom:3px">Status</div>
+                <div style="display:flex;gap:4px">
+                  <div style="background:var(--redl);border:2px solid var(--red);border-radius:5px;padding:5px 10px;font-size:8.5px;font-weight:700;color:var(--red)">✓ Active</div>
+                  <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:8.5px;color:var(--mid)">Coming Soon</div>
+                  <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:8.5px;color:var(--mid)">Paused</div>
+                </div>
+              </div>
+            </div>
+            <!-- Status change warning -->
+            <div style="background:var(--redl);border:1.5px solid rgba(228,40,29,.25);border-radius:8px;padding:9px 10px;margin-bottom:8px;position:relative">
+              <div style="font-size:8.5px;font-weight:800;color:var(--redd);margin-bottom:2px">⚠️ Activating this area</div>
+              <div style="font-size:8px;color:var(--redd);line-height:1.5">Al Zahra will become immediately selectable by new customers in the Area Search screen on activation.</div>
+              <div class="ann" style="top:-6px;right:-6px">2</div>
+            </div>
+            <div style="display:flex;gap:5px">
+              <div class="a-btn a-btn-red" style="flex:1;justify-content:center;padding:8px;font-size:9px">✓ Activate Area</div>
+              <div class="a-btn a-btn-ghost" style="padding:8px 10px;font-size:9px">Save other changes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Summary count cards at top: Active / Coming Soon / Paused. Filter chips narrow the list. Each row: area name + coverage + customer count + status + Edit + Buildings buttons.<span class="ac-ref">F42</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Status change to Active: red warning block appears. CTA splits: "✓ Activate Area" applies status change + saves all · "Save other changes" saves fields only without activating. Downgrade (Active → Coming Soon/Paused): no warning required.<span class="ac-ref">F45</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<div class="fsec" id="f-buildings">
+  <div class="fsec-header">
+    <div class="fsec-module">Delivery Areas &amp; Buildings · F46–F49</div>
+    <div class="fsec-title">Building Management</div>
+    <div class="fsec-desc">Building list scoped to one area. These populate the customer onboarding auto-suggest. Add, edit, delete with confirmation. Customer free-text entries are never stored here — admin-added only.</div>
+    <div class="fsec-roles"><span class="role-badge rb-admin">Admin only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>Area List</strong> → 🏢 Buildings → <strong>Building List</strong> → (Add / Edit / Delete)</span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Building List — Al Nakheel</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/areas/al-nakheel/buildings</span></div></div>
+        <div class="browser-content">
+          <div class="a-header"><div style="font-size:12px;font-weight:800;color:#fff">Buildings — Al Nakheel</div><div class="a-btn a-btn-red a-btn-sm">+ Add Building</div></div>
+          <div class="a-body" style="padding:10px 12px">
+            <div style="background:var(--redl);border:1px solid rgba(228,40,29,.15);border-radius:7px;padding:7px 9px;font-size:8px;color:var(--redd);margin-bottom:8px;line-height:1.5">
+              ℹ️ Only admin-added buildings appear in the customer auto-suggest. Customer free-text entries are not stored here and are never added automatically.
+            </div>
+            <table class="a-table">
+              <thead><tr><th>Building Name</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:700;font-size:9px">Al Nakheel Tower, King Fahad Rd</td><td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="color:var(--err);border-color:rgba(220,38,38,.25)">Delete</div></div></td></tr>
+                <tr><td style="font-weight:700;font-size:9px">Nakheel Business Park Tower A</td><td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="color:var(--err);border-color:rgba(220,38,38,.25)">Delete</div></div></td></tr>
+                <tr><td style="font-weight:700;font-size:9px">Al Nakheel Plaza, Office Tower</td><td><div style="display:flex;gap:4px"><div class="a-btn a-btn-ghost a-btn-sm">Edit</div><div class="a-btn a-btn-ghost a-btn-sm" style="color:var(--err);border-color:rgba(220,38,38,.25)">Delete</div></div></td></tr>
+              </tbody>
+            </table>
+            <!-- Delete confirmation inline -->
+            <div style="margin-top:8px;background:var(--errl);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:9px 10px;position:relative">
+              <div style="font-size:8.5px;font-weight:800;color:var(--err);margin-bottom:2px">Remove building?</div>
+              <div style="font-size:8px;color:var(--err);margin-bottom:7px;line-height:1.4">Existing customer addresses referencing this building are not affected.</div>
+              <div style="display:flex;gap:5px">
+                <div class="a-btn a-btn-err a-btn-sm">Confirm delete</div>
+                <div class="a-btn a-btn-ghost a-btn-sm">Cancel</div>
+              </div>
+              <div class="ann" style="top:-6px;right:-6px">1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ac-legend">
+    <div class="ac-legend-title">Annotations</div>
+    <div class="ac-row"><div class="ac-num">1</div><div class="ac-text">Delete confirmation: inline below the row. States explicitly that existing customer addresses are not affected — building name continues on labels and address records. Delete removes from auto-suggest only.<span class="ac-ref">F49</span></div></div>
+    <div class="ac-row"><div class="ac-num">2</div><div class="ac-text">Add/Edit Building: single name field. Changes reflect in customer onboarding auto-suggest immediately. Edited name does not retroactively update existing customer addresses.<span class="ac-ref">F47, F48</span></div></div>
+  </div>
+</div>
+<div class="sec-sep"></div>
+
+<!-- OPS VIEW -->
+<div class="fsec" id="f-ops-ops">
+  <div class="fsec-header">
+    <div class="fsec-module">Daily Operations — Ops View · F7–F9</div>
+    <div class="fsec-title">Daily Ops — Ops/Kitchen View</div>
+    <div class="fsec-desc">Ops/Kitchen lands here directly after login — never sees Dashboard Home. Same production pipeline and meal breakdown as admin view. Export sheet button present. Issues queue completely absent — not greyed, not locked, simply not rendered. No navigation to any other section.</div>
+    <div class="fsec-roles"><span class="role-badge rb-ops">Ops / Kitchen only</span></div>
+    <div class="fsec-flow"><span class="fsec-flow-label">Flow</span><span class="fsec-flow-text"><strong>OTP Verify</strong> (Ops) → <strong>Daily Ops (Ops view)</strong> · (Print Labels) → <strong>Label List</strong></span></div>
+  </div>
+  <div class="frames-row">
+    <div class="frame-col">
+      <div class="frame-label">Daily Ops — Ops/Kitchen · Dispatch stage</div>
+      <div class="browser">
+        <div class="browser-chrome"><div class="browser-dots"><div class="browser-dot bd-red"></div><div class="browser-dot bd-yel"></div><div class="browser-dot bd-grn"></div></div><div class="browser-bar"><span class="browser-bar-ico">🔒</span><span class="browser-bar-url">admin.zaadikitchen.com/daily-ops</span></div></div>
+        <div class="browser-content">
+          <div class="a-header" style="background:#1A1A1A">
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="18" height="14" viewBox="0 0 26 22" fill="none"><path d="M8.5 8.5 C8.5 3.5 17.5 3.5 17.5 8.5" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/><rect x="3" y="8" width="20" height="13" rx="2.5" fill="white"/></svg>
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#fff">Daily Operations</div>
+                <div style="font-size:7.5px;color:rgba(255,255,255,.35);background:rgba(55,65,81,.5);padding:1px 7px;border-radius:6px;display:inline-block;margin-top:1px">Ops / Kitchen View</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:5px">
+              <div class="a-btn a-btn-ghost a-btn-sm">📥 Export Sheet</div>
+              <div class="a-btn a-btn-blk a-btn-sm" style="background:var(--red)">🖨 Print Labels</div>
+            </div>
+          </div>
+          <div class="a-nav">
+            <div class="a-nav-item on">Today — Sun 5 May</div>
+          </div>
+          <div class="a-body" style="padding:12px 14px">
+            <!-- Pipeline -->
+            <div style="margin-bottom:12px;position:relative">
+              <div class="a-section-title">Production Pipeline</div>
+              <div class="pipeline">
+                <div class="p-stage done">✓ Locked<div class="p-stage-arrow">›</div></div>
+                <div class="p-stage active">→ Dispatch<div class="p-stage-arrow">›</div></div>
+                <div class="p-stage">Delivered</div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <div class="a-btn a-btn-red" style="font-size:9px;padding:6px 14px;position:relative">Mark as Dispatched →<div class="ann" style="top:-6px;right:-6px">1</div></div>
+              </div>
+            </div>
+            <!-- Meal Breakdown -->
+            <div style="position:relative">
+              <div class="a-section-title">Meal Breakdown</div>
+              <table class="a-table">
+                <thead><tr><th>Meal Type</th><th>Count</th><th>% of Total</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="a-pill ap-red">Executive</span></td><td style="font-weight:800">41</td><td style="color:var(--mid)">65%</td></tr>
+                  <tr><td><span class="a-pill" style="background:#DCFCE7;color:#16A34A">Salad</span></td><td style="font-weight:800">22</td><td style="color:var(--mid)">35%</td></tr>
+                  <tr style="background:rgba(0,0,0,.02)"><td style="font-weight:800">Total</td><td s                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

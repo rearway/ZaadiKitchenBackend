@@ -54,6 +54,19 @@ export class SubscriptionPersistenceService
     return this.toSubscriptionEntity(model!)
   }
 
+  async expireActiveSubscriptions(beforeDate: string): Promise<number> {
+    const [count] = await SubscriptionModel.update(
+      { status: 'expired' },
+      {
+        where: {
+          status: ['active', 'paused'],
+          endDate: { [Op.lt]: beforeDate },
+        },
+      }
+    )
+    return count
+  }
+
   async getDeliveryDaysBySubscription(
     subscriptionId: string,
     filters?: { from?: string; to?: string }
@@ -96,6 +109,26 @@ export class SubscriptionPersistenceService
     await DeliveryDayModel.update({ status }, { where: { id } })
     const model = await DeliveryDayModel.findByPk(id)
     return this.toDeliveryDayEntity(model!)
+  }
+
+  async bulkUpdateDeliveryDayStatus(
+    subscriptionId: string,
+    fromDate: string,
+    toDate: string,
+    fromStatus: DeliveryDayStatus,
+    toStatus: DeliveryDayStatus
+  ): Promise<number> {
+    const [count] = await DeliveryDayModel.update(
+      { status: toStatus },
+      {
+        where: {
+          subscriptionId,
+          status: fromStatus,
+          date: { [Op.between]: [fromDate, toDate] },
+        },
+      }
+    )
+    return count
   }
 
   async updateMealTypeForSubscription(

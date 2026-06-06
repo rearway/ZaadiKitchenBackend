@@ -28,6 +28,7 @@ import {
   PauseSubscriptionDTO,
   ResumeSubscriptionDTO,
   SwitchMealTypeDTO,
+  ToggleSaladDTO,
 } from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -91,6 +92,23 @@ export class SubscriptionsController {
     return this.useCases.commands.undoSkipDelivery({
       userId: user.id,
       deliveryDate,
+    })
+  }
+
+  @Patch('me/deliveries/:delivery_date/salad')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Toggle salad add-on for a specific delivery day' })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('toggle-salad-for-day')
+  async toggleSalad(
+    @Param('delivery_date') deliveryDate: string,
+    @Body() dto: ToggleSaladDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.toggleSaladForDay({
+      userId: user.id,
+      date: deliveryDate,
+      enabled: dto.enabled,
     })
   }
 

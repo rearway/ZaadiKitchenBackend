@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { Op } from 'sequelize'
+import { Op, QueryTypes } from 'sequelize'
 import {
   DeliveryAreaLoader,
   BuildingLoader,
   BuildingPersistor,
   OutOfZoneInterestPersistor,
+  OutOfZoneInterestLoader,
+  AggregatedOutOfZoneRequest,
   DeliveryLocationPersistor,
   DeliveryAreaPersistor,
   DeliveryLocationLoader,
@@ -26,11 +28,12 @@ import {
 export class DeliveryPersistenceService
   implements
     DeliveryAreaLoader,
+    DeliveryAreaPersistor,
     BuildingLoader,
     BuildingPersistor,
     OutOfZoneInterestPersistor,
+    OutOfZoneInterestLoader,
     DeliveryLocationPersistor,
-    DeliveryAreaPersistor,
     DeliveryLocationLoader
 {
   async getActiveAreas(): Promise<DeliveryArea[]> {
@@ -69,6 +72,16 @@ export class DeliveryPersistenceService
     return model ? this.toDeliveryAreaEntity(model) : null
   }
 
+  async getAreaByName(
+    name: string,
+    excludeId?: string
+  ): Promise<DeliveryArea | null> {
+    const where: Record<string, unknown> = { name: { [Op.iLike]: name } }
+    if (excludeId) where['id'] = { [Op.ne]: excludeId }
+    const model = await DeliveryAreaModel.findOne({ where })
+    return model ? this.toDeliveryAreaEntity(model) : null
+  }
+
   async createDeliveryArea(
     request: Partial<DeliveryArea>
   ): Promise<DeliveryArea> {
@@ -77,6 +90,16 @@ export class DeliveryPersistenceService
       description: request.description,
       status: request.status || 'active',
     })
+    return this.toDeliveryAreaEntity(model)
+  }
+
+  async updateDeliveryArea(
+    id: string,
+    data: Partial<DeliveryArea>
+  ): Promise<DeliveryArea> {
+    const model = await DeliveryAreaModel.findByPk(id)
+    if (!model) throw new Error(`DeliveryArea ${id} not found`)
+    await model.update(data)
     return this.toDeliveryAreaEntity(model)
   }
 
@@ -114,6 +137,17 @@ export class DeliveryPersistenceService
       floorsCount: request.floorsCount,
     })
     return this.toBuildingEntity(model)
+  }
+
+  async updateBuilding(id: string, data: { name: string }): Promise<Building> {
+    const model = await BuildingModel.findByPk(id)
+    if (!model) throw new Error(`Building ${id} not found`)
+    await model.update({ name: data.name })
+    return this.toBuildingEntity(model)
+  }
+
+  async deleteBuilding(id: string): Promise<void> {
+    await BuildingModel.destroy({ where: { id } })
   }
 
   async createInterest(
@@ -158,9 +192,61 @@ export class DeliveryPersistenceService
   async getLocationsByUserId(userId: string): Promise<DeliveryLocation[]> {
     const models = await DeliveryLocationModel.findAll({
       where: { userId },
-      order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']],
+      order: [
+        ['isPrimary', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
     })
     return models.map(m => this.toDeliveryLocationEntity(m))
+  }
+
+  async getAggregatedRequests(
+    page: number,
+    perPage: number
+  ): Promise<{
+    areas: AggregatedOutOfZoneRequest[]
+    total: number
+    totalRequests: number
+  }> {
+    const sequelize = OutOfZoneInterestModel.sequelize!
+    const offset = (page - 1) * perPage
+
+    const [countRow] = await sequelize.query<{ count: string }>(
+      `SELECT COUNT(DISTINCT area_name) as count FROM out_of_zone_interests`,
+      { type: QueryTypes.SELECT }
+    )
+    const total = parseInt(countRow.count, 10)
+
+    const totalRequests = await OutOfZoneInterestModel.count()
+
+    const rows = await sequelize.query<{
+      area_name: string
+      request_count: string
+      first_requested: string
+      last_requested: string
+    }>(
+      `SELECT area_name,
+              COUNT(*) as request_count,
+              MIN(created_at) as first_requested,
+              MAX(created_at) as last_requested
+       FROM out_of_zone_interests
+       GROUP BY area_name
+       ORDER BY request_count DESC
+       LIMIT :limit OFFSET :offset`,
+      {
+        replacements: { limit: perPage, offset },
+        type: QueryTypes.SELECT,
+      }
+    )
+
+    const areas: AggregatedOutOfZoneRequest[] = rows.map(r => ({
+      area_name: r.area_name,
+      request_count: parseInt(r.request_count as any, 10),
+      first_requested: String(r.first_requested).split('T')[0],
+      last_requested: String(r.last_requested).split('T')[0],
+    }))
+
+    return { areas, total, totalRequests }
   }
 
   private toDeliveryAreaEntity(model: DeliveryAreaModel): DeliveryArea {

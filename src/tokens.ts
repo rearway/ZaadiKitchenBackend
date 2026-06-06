@@ -29,3 +29,5 @@ export const MenuWeekPersistenceS = Symbol('menu-week-persistence')
 // External Services
 export const OtpServiceS = Symbol('otp-service')
 export const PaymentGatewayS = Symbol('payment-gateway')
+export const StorageS = Symbol('storage')
+export const AuditLogPersistenceS = Symbol('audit-log-persistence')

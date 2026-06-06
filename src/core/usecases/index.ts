@@ -12,7 +12,10 @@ import * as UpdateLanguagePreference from './commands/UpdateLanguagePreference.j
 import * as SubmitOutOfZoneInterest from './commands/SubmitOutOfZoneInterest.js'
 import * as SaveDeliveryLocation from './commands/SaveDeliveryLocation.js'
 import * as CreateDeliveryArea from './commands/CreateDeliveryArea.js'
+import * as UpdateDeliveryArea from './commands/UpdateDeliveryArea.js'
 import * as AddBuilding from './commands/AddBuilding.js'
+import * as UpdateBuilding from './commands/UpdateBuilding.js'
+import * as DeleteBuilding from './commands/DeleteBuilding.js'
 import * as CreateCheckoutSession from './commands/CreateCheckoutSession.js'
 import * as ApplyPromoCode from './commands/ApplyPromoCode.js'
 import * as RemovePromoCode from './commands/RemovePromoCode.js'
@@ -24,9 +27,12 @@ import * as UndoSkipDelivery from './commands/UndoSkipDelivery.js'
 import * as PauseSubscription from './commands/PauseSubscription.js'
 import * as ResumeSubscription from './commands/ResumeSubscription.js'
 import * as CancelSubscription from './commands/CancelSubscription.js'
+import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
+import * as ToggleSaladForDay from './commands/ToggleSaladForDay.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
 import * as ValidateReferral from './commands/ValidateReferral.js'
 import * as CreateMeal from './commands/CreateMeal.js'
+import * as DeleteMeal from './commands/DeleteMeal.js'
 import * as UpdateMeal from './commands/UpdateMeal.js'
 import * as UpdateMealStatus from './commands/UpdateMealStatus.js'
 import * as ImportMeals from './commands/ImportMeals.js'
@@ -40,6 +46,8 @@ import * as SearchDeliveryAreas from './queries/SearchDeliveryAreas.js'
 import * as GetBuildingsForArea from './queries/GetBuildingsForArea.js'
 import * as GetSavedDeliveryLocation from './queries/GetSavedDeliveryLocation.js'
 import * as GetAdminDeliveryAreas from './queries/GetAdminDeliveryAreas.js'
+import * as GetAdminBuildingsForArea from './queries/GetAdminBuildingsForArea.js'
+import * as GetOutOfZoneRequests from './queries/GetOutOfZoneRequests.js'
 import * as GetPlans from './queries/GetPlans.js'
 import * as GetActivePlans from './queries/GetActivePlans.js'
 import * as GetCheckoutSession from './queries/GetCheckoutSession.js'
@@ -61,6 +69,7 @@ import * as GetHomeThisWeek from './queries/GetHomeThisWeek.js'
 import * as GetMenuMeta from './queries/GetMenuMeta.js'
 import * as GetCustomerMenuWeek from './queries/GetCustomerMenuWeek.js'
 import * as GetMealDetail from './queries/GetMealDetail.js'
+import * as GetMealPhotoUploadUrl from './queries/GetMealPhotoUploadUrl.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -138,6 +147,24 @@ export function initUseCases(deps: Deps) {
     AddBuilding.name,
     ...defaultWrappers
   )
+  const updateBuilding = wrapUC(
+    deps,
+    UpdateBuilding.makeUC(deps),
+    UpdateBuilding.name,
+    ...defaultWrappers
+  )
+  const deleteBuilding = wrapUC(
+    deps,
+    DeleteBuilding.makeUC(deps),
+    DeleteBuilding.name,
+    ...defaultWrappers
+  )
+  const updateDeliveryArea = wrapUC(
+    deps,
+    UpdateDeliveryArea.makeUC(deps),
+    UpdateDeliveryArea.name,
+    ...defaultWrappers
+  )
 
   // Checkout commands
   const createCheckoutSession = wrapUC(
@@ -212,6 +239,18 @@ export function initUseCases(deps: Deps) {
     CancelSubscription.name,
     ...defaultWrappers
   )
+  const expireSubscriptions = wrapUC(
+    deps,
+    ExpireSubscriptions.makeUC(deps),
+    ExpireSubscriptions.name,
+    ...defaultWrappers
+  )
+  const toggleSaladForDay = wrapUC(
+    deps,
+    ToggleSaladForDay.makeUC(deps),
+    ToggleSaladForDay.name,
+    ...defaultWrappers
+  )
   const switchMealType = wrapUC(
     deps,
     SwitchMealType.makeUC(deps),
@@ -244,6 +283,12 @@ export function initUseCases(deps: Deps) {
     deps,
     UpdateMealStatus.makeUC(deps),
     UpdateMealStatus.name,
+    ...defaultWrappers
+  )
+  const deleteMeal = wrapUC(
+    deps,
+    DeleteMeal.makeUC(deps),
+    DeleteMeal.name,
     ...defaultWrappers
   )
   const importMeals = wrapUC(
@@ -306,6 +351,18 @@ export function initUseCases(deps: Deps) {
     deps,
     GetAdminDeliveryAreas.makeUC(deps),
     GetAdminDeliveryAreas.name,
+    ...defaultWrappers
+  )
+  const getAdminBuildingsForArea = wrapUC(
+    deps,
+    GetAdminBuildingsForArea.makeUC(deps),
+    GetAdminBuildingsForArea.name,
+    ...defaultWrappers
+  )
+  const getOutOfZoneRequests = wrapUC(
+    deps,
+    GetOutOfZoneRequests.makeUC(deps),
+    GetOutOfZoneRequests.name,
     ...defaultWrappers
   )
   const getPlans = wrapUC(
@@ -436,6 +493,12 @@ export function initUseCases(deps: Deps) {
     GetMealDetail.name,
     ...defaultWrappers
   )
+  const getMealPhotoUploadUrl = wrapUC(
+    deps,
+    GetMealPhotoUploadUrl.makeUC(deps),
+    GetMealPhotoUploadUrl.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -445,6 +508,8 @@ export function initUseCases(deps: Deps) {
       getBuildingsForArea,
       getSavedDeliveryLocation,
       getAdminDeliveryAreas,
+      getAdminBuildingsForArea,
+      getOutOfZoneRequests,
       getPlans,
       getActivePlans,
       getCheckoutSession,
@@ -466,6 +531,7 @@ export function initUseCases(deps: Deps) {
       getMenuMeta,
       getCustomerMenuWeek,
       getMealDetail,
+      getMealPhotoUploadUrl,
     },
     commands: {
       sendOtp,
@@ -479,7 +545,10 @@ export function initUseCases(deps: Deps) {
       submitOutOfZoneInterest,
       saveDeliveryLocation,
       createDeliveryArea,
+      updateDeliveryArea,
       addBuilding,
+      updateBuilding,
+      deleteBuilding,
       createCheckoutSession,
       applyPromoCode,
       removePromoCode,
@@ -491,9 +560,12 @@ export function initUseCases(deps: Deps) {
       pauseSubscription,
       resumeSubscription,
       cancelSubscription,
+      expireSubscriptions,
+      toggleSaladForDay,
       switchMealType,
       validateReferral,
       createMeal,
+      deleteMeal,
       updateMeal,
       updateMealStatus,
       importMeals,

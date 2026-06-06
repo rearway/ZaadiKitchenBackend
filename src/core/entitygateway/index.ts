@@ -28,6 +28,8 @@ export * from './Referral.js'
 export * from './PaymentGateway.js'
 export * from './Meal.js'
 export * from './MenuWeek.js'
+export * from './Storage.js'
+export * from './AuditLog.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -43,6 +45,7 @@ import type {
   BuildingLoader,
   BuildingPersistor,
   OutOfZoneInterestPersistor,
+  OutOfZoneInterestLoader,
   DeliveryLocationPersistor,
   DeliveryLocationLoader,
 } from './Delivery.js'
@@ -71,6 +74,8 @@ import type { ReferralLoader, ReferralPersistor } from './Referral.js'
 import type { PaymentGateway } from './PaymentGateway.js'
 import type { MealLoader, MealPersistor } from './Meal.js'
 import type { MenuWeekLoader, MenuWeekPersistor } from './MenuWeek.js'
+import type { StorageGateway } from './Storage.js'
+import type { AuditLogPersistor, AuditLogLoader } from './AuditLog.js'
 
 export type Deps = {
   logger: Logger
@@ -81,6 +86,7 @@ export type Deps = {
   refreshTokenLoader: RefreshTokenLoader
   refreshTokenPersistor: RefreshTokenPersistor
   otpService: OtpService
+  skipOtp: boolean
   jwtSecret: string
   jwtAccessExpiration: string
   jwtRefreshExpirationMobile: string
@@ -90,6 +96,7 @@ export type Deps = {
   buildingLoader: BuildingLoader
   buildingPersistor: BuildingPersistor
   outOfZoneInterestPersistor: OutOfZoneInterestPersistor
+  outOfZoneInterestLoader: OutOfZoneInterestLoader
   deliveryLocationPersistor: DeliveryLocationPersistor
   deliveryLocationLoader: DeliveryLocationLoader
   planLoader: PlanLoader
@@ -117,4 +124,7 @@ export type Deps = {
   mealPersistor: MealPersistor
   menuWeekLoader: MenuWeekLoader
   menuWeekPersistor: MenuWeekPersistor
+  storageGateway: StorageGateway
+  auditLogPersistor: AuditLogPersistor
+  auditLogLoader: AuditLogLoader
 }

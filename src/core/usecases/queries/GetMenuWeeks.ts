@@ -74,9 +74,7 @@ export function makeUC(deps: Deps) {
           } else if (week.status === 'past') {
             fillLabel = 'Archived'
           } else {
-            fillLabel = filledDays === totalDays
-              ? 'All days filled — ready to publish'
-              : `${filledDays} of ${totalDays} days filled`
+            fillLabel = `${filledDays} of ${totalDays} days filled`
           }
 
           return {
