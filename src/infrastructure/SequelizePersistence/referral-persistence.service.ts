@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { fn, col, literal } from 'sequelize'
+import { fn, col, literal, Op } from 'sequelize'
 import {
   ReferralLoader,
   ReferralPersistor,
+  ReferralHistoryEntry,
 } from '../../core/entitygateway/Referral.js'
 import { UserReferral } from '../../core/entities/UserReferral.js'
-import { UserReferralModel, UserModel } from './models/index.js'
+import { UserReferralModel, UserModel, OrderModel, PlanModel } from './models/index.js'
 
 @Injectable()
 export class ReferralPersistenceService
@@ -44,6 +45,57 @@ export class ReferralPersistenceService
       friendsJoined: Number(raw?.friendsJoined ?? 0),
       totalEarnedSar: Number(raw?.totalEarnedSar ?? 0),
     }
+  }
+
+  async getReferralHistory(userId: string): Promise<ReferralHistoryEntry[]> {
+    const referrals = await UserReferralModel.findAll({
+      where: { referrerUserId: userId },
+      order: [['createdAt', 'DESC']],
+    })
+
+    if (referrals.length === 0) return []
+
+    const referredUserIds = referrals.map(r => r.referredUserId)
+    const referralCodes = referrals.map(r => r.referralCode)
+
+    const [users, orders] = await Promise.all([
+      UserModel.findAll({
+        where: { id: { [Op.in]: referredUserIds } },
+        attributes: ['id', 'fullName'],
+      }),
+      OrderModel.findAll({
+        where: {
+          userId: { [Op.in]: referredUserIds },
+          promoCode: { [Op.in]: referralCodes },
+          status: 'confirmed',
+        },
+        attributes: ['userId', 'promoCode', 'planId'],
+      }),
+    ])
+
+    const planIds = [...new Set(orders.map(o => o.planId).filter(Boolean))]
+    const plans = planIds.length
+      ? await PlanModel.findAll({
+          where: { id: { [Op.in]: planIds } },
+          attributes: ['id', 'name'],
+        })
+      : []
+
+    const userMap = new Map(users.map(u => [u.id, u.fullName ?? 'Unknown']))
+    const planMap = new Map(plans.map(p => [p.id, p.name]))
+    const orderMap = new Map(
+      orders.map(o => [`${o.userId}:${o.promoCode}`, o.planId])
+    )
+
+    return referrals.map(r => {
+      const planId = orderMap.get(`${r.referredUserId}:${r.referralCode}`) ?? null
+      return {
+        referredUserName: userMap.get(r.referredUserId) ?? 'Unknown',
+        joinedAt: r.createdAt,
+        planName: planId ? (planMap.get(planId) ?? null) : null,
+        rewardCreditedSar: Number(r.rewardCreditedSar),
+      }
+    })
   }
 
   async getReferralByCode(code: string): Promise<UserReferral | null> {

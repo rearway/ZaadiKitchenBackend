@@ -16,7 +16,7 @@ export function makeUC(deps: Deps) {
   return async function updateProfile(
     input: UpdateProfileInput
   ): Promise<UpdateProfileOutput> {
-    const { logger, userPersistor } = deps
+    const { logger, userPersistor, referralPersistor } = deps
     try {
       const { userId, fullName, email } = input
 
@@ -44,6 +44,12 @@ export function makeUC(deps: Deps) {
         fullName,
         email,
       })
+
+      // Eagerly generate the referral code when the user sets a real name so
+      // it's ready before they ever visit the referral screen.
+      if (updatedUser.fullName && updatedUser.fullName !== 'New User') {
+        await referralPersistor.ensureReferralCode(userId, updatedUser.fullName)
+      }
 
       const { password: _, ...userWithoutPassword } = updatedUser
 

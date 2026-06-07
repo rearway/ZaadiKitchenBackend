@@ -104,14 +104,22 @@ export function makeUC(deps: Deps) {
         }
       }
 
+      // For referral codes the discount is 20% of the plan price, computed
+      // dynamically so the correct amount applies regardless of which plan
+      // the user selected. For promo codes, use the fixed SAR from the record.
+      const discountSar =
+        promo.type === 'referral' && plan
+          ? Math.round(plan.priceSar * 0.2)
+          : promo.discountSar
+
       const newTotal = Math.max(
         0,
-        session.basePriceSar - session.walletCreditSar - promo.discountSar
+        session.basePriceSar - session.walletCreditSar - discountSar
       )
 
       const updated = await checkoutSessionPersistor.updateSession(sessionId, {
         promoCode: code,
-        promoDiscountSar: promo.discountSar,
+        promoDiscountSar: discountSar,
         totalDueSar: newTotal,
       })
 
@@ -119,7 +127,7 @@ export function makeUC(deps: Deps) {
         session_id: sessionId,
         promo_code: code,
         discount_type: promo.type,
-        promo_discount_sar: promo.discountSar,
+        promo_discount_sar: discountSar,
         total_due_sar: updated.totalDueSar,
         promo_attempt_count: updated.promoAttemptCount,
         promo_locked: updated.promoLocked,

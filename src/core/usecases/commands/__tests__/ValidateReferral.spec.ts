@@ -7,9 +7,17 @@ import {
 } from '../../../../__tests__/helpers/mock-deps'
 
 describe('ValidateReferral', () => {
-  const validInput = { userId: 'user-uuid-1', code: 'TESTREF10', planId: 'month' }
+  const validInput = {
+    userId: 'user-uuid-1',
+    code: 'TESTREF10',
+    planId: 'month',
+  }
 
-  function makeValidDeps(promoOverrides = {}, hasOrder = false) {
+  function makeValidDeps(
+    promoOverrides = {},
+    hasOrder = false,
+    alreadyUsed = false
+  ) {
     const promo = makePromoCode(promoOverrides)
     const plan = makePlan({ slug: 'month' })
     return buildDeps({
@@ -22,7 +30,10 @@ describe('ValidateReferral', () => {
       },
       orderLoader: {
         ...buildDeps().orderLoader,
-        getLastOrderByUserId: jest.fn().mockResolvedValue(hasOrder ? makeOrder() : null),
+        getLastOrderByUserId: jest
+          .fn()
+          .mockResolvedValue(hasOrder ? makeOrder() : null),
+        hasUserUsedPromoCode: jest.fn().mockResolvedValue(alreadyUsed),
       },
     })
   }
@@ -37,8 +48,22 @@ describe('ValidateReferral', () => {
     if (result.valid) {
       expect(result.code).toBe('TESTREF10')
       expect(result.discount_type).toBe('referral')
+      // 20% of plan priceSar=500
       expect(result.discount_sar).toBe(100)
+      expect(result.discount_pct).toBe(20)
       expect(result.description).toBe('Referral discount')
+    }
+  })
+
+  it('returns CODE_ALREADY_USED when the user has already used this code', async () => {
+    const deps = makeValidDeps({ type: 'referral' }, false, true)
+    const validateReferral = makeUC(deps)
+
+    const result = await validateReferral(validInput)
+
+    expect(result.valid).toBe(false)
+    if (!result.valid) {
+      expect(result.error_code).toBe('CODE_ALREADY_USED')
     }
   })
 
@@ -62,7 +87,11 @@ describe('ValidateReferral', () => {
         ...buildDeps().planLoader,
         getPlanBySlug: jest.fn().mockResolvedValue(makePlan()),
       },
-      orderLoader: { ...buildDeps().orderLoader, getLastOrderByUserId: jest.fn().mockResolvedValue(null) },
+      orderLoader: {
+        ...buildDeps().orderLoader,
+        getLastOrderByUserId: jest.fn().mockResolvedValue(null),
+        hasUserUsedPromoCode: jest.fn().mockResolvedValue(false),
+      },
     })
     const validateReferral = makeUC(deps)
 
@@ -108,7 +137,11 @@ describe('ValidateReferral', () => {
   })
 
   it('returns valid=true when maxUses is null (unlimited)', async () => {
-    const deps = makeValidDeps({ maxUses: null, timesUsed: 9999, type: 'promo' })
+    const deps = makeValidDeps({
+      maxUses: null,
+      timesUsed: 9999,
+      type: 'promo',
+    })
     const validateReferral = makeUC(deps)
 
     const result = await validateReferral(validInput)
@@ -117,15 +150,24 @@ describe('ValidateReferral', () => {
   })
 
   it('returns PLAN_MISMATCH when code is scoped to a different plan', async () => {
-    const scopedPromo = makePromoCode({ validForPlanSlug: 'week', type: 'promo' })
+    const scopedPromo = makePromoCode({
+      validForPlanSlug: 'week',
+      type: 'promo',
+    })
     const plan = makePlan({ slug: 'month' })
     const deps = buildDeps({
-      promoCodeLoader: { getPromoByCode: jest.fn().mockResolvedValue(scopedPromo) },
+      promoCodeLoader: {
+        getPromoByCode: jest.fn().mockResolvedValue(scopedPromo),
+      },
       planLoader: {
         ...buildDeps().planLoader,
         getPlanBySlug: jest.fn().mockResolvedValue(plan),
       },
-      orderLoader: { ...buildDeps().orderLoader, getLastOrderByUserId: jest.fn().mockResolvedValue(null) },
+      orderLoader: {
+        ...buildDeps().orderLoader,
+        getLastOrderByUserId: jest.fn().mockResolvedValue(null),
+        hasUserUsedPromoCode: jest.fn().mockResolvedValue(false),
+      },
     })
     const validateReferral = makeUC(deps)
 

@@ -18,6 +18,13 @@ export class OrderPersistenceService implements OrderLoader, OrderPersistor {
     return model ? this.toEntity(model) : null
   }
 
+  async hasUserUsedPromoCode(userId: string, code: string): Promise<boolean> {
+    const count = await OrderModel.count({
+      where: { userId, promoCode: code, status: 'confirmed' },
+    })
+    return count > 0
+  }
+
   async createOrder(
     input: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Order> {
