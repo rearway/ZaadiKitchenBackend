@@ -24,6 +24,7 @@ import {
   AuditLogPersistenceS,
   DeliveryIssuePersistenceS,
   MealRatingPersistenceS,
+  AdminCustomerPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -47,6 +48,7 @@ import { S3StorageService } from '../infrastructure/S3Storage/index.js'
 import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
 import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
+import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -72,7 +74,8 @@ export const coreAdapterService: FactoryProvider = {
     storageGateway: S3StorageService,
     auditLogPersistence: AuditLogPersistenceService,
     deliveryIssuePersistence: DeliveryIssuePersistenceService,
-    mealRatingPersistence: MealRatingPersistenceService
+    mealRatingPersistence: MealRatingPersistenceService,
+    adminCustomerPersistence: AdminCustomerPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -137,6 +140,8 @@ export const coreAdapterService: FactoryProvider = {
       deliveryIssueLoader: deliveryIssuePersistence,
       mealRatingPersistor: mealRatingPersistence,
       mealRatingLoader: mealRatingPersistence,
+      adminCustomerLoader: adminCustomerPersistence,
+      adminCustomerPersistor: adminCustomerPersistence,
     }),
   inject: [
     LoggerS,
@@ -161,5 +166,6 @@ export const coreAdapterService: FactoryProvider = {
     AuditLogPersistenceS,
     DeliveryIssuePersistenceS,
     MealRatingPersistenceS,
+    AdminCustomerPersistenceS,
   ],
 }

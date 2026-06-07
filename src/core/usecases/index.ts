@@ -44,6 +44,8 @@ import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
 import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
+import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
+import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -79,6 +81,9 @@ import * as GetMenuMeta from './queries/GetMenuMeta.js'
 import * as GetCustomerMenuWeek from './queries/GetCustomerMenuWeek.js'
 import * as GetMealDetail from './queries/GetMealDetail.js'
 import * as GetMealPhotoUploadUrl from './queries/GetMealPhotoUploadUrl.js'
+import * as GetAdminCustomers from './queries/GetAdminCustomers.js'
+import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
+import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -354,6 +359,18 @@ export function initUseCases(deps: Deps) {
     SubmitMealRating.name,
     ...defaultWrappers
   )
+  const deactivateCustomer = wrapUC(
+    deps,
+    DeactivateCustomer.makeUC(deps),
+    DeactivateCustomer.name,
+    ...defaultWrappers
+  )
+  const adminCreditWallet = wrapUC(
+    deps,
+    AdminCreditWallet.makeUC(deps),
+    AdminCreditWallet.name,
+    ...defaultWrappers
+  )
   const getPendingRatings = wrapUC(
     deps,
     GetPendingRatings.makeUC(deps),
@@ -556,6 +573,24 @@ export function initUseCases(deps: Deps) {
     GetMealPhotoUploadUrl.name,
     ...defaultWrappers
   )
+  const getAdminCustomers = wrapUC(
+    deps,
+    GetAdminCustomers.makeUC(deps),
+    GetAdminCustomers.name,
+    ...defaultWrappers
+  )
+  const getAdminCustomer = wrapUC(
+    deps,
+    GetAdminCustomer.makeUC(deps),
+    GetAdminCustomer.name,
+    ...defaultWrappers
+  )
+  const getAdminCustomerHistory = wrapUC(
+    deps,
+    GetAdminCustomerHistory.makeUC(deps),
+    GetAdminCustomerHistory.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -592,6 +627,9 @@ export function initUseCases(deps: Deps) {
       getPendingRatings,
       getSubmittedRatings,
       getMealHistory,
+      getAdminCustomers,
+      getAdminCustomer,
+      getAdminCustomerHistory,
     },
     commands: {
       sendOtp,
@@ -637,6 +675,8 @@ export function initUseCases(deps: Deps) {
       publishMenuWeek,
       submitDeliveryIssue,
       submitMealRating,
+      deactivateCustomer,
+      adminCreditWallet,
     },
   }
 }

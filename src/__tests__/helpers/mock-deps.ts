@@ -490,6 +490,16 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getPendingRatingDays: jest.fn().mockResolvedValue([]),
       getRatingsByUser: jest.fn().mockResolvedValue({ ratings: [], total: 0 }),
     } as unknown as Deps['mealRatingLoader'],
+
+    adminCustomerLoader: {
+      listCustomers: jest.fn().mockResolvedValue({ customers: [], total: 0 }),
+      getCustomerDetail: jest.fn().mockResolvedValue(null),
+      getCustomerHistory: jest.fn().mockResolvedValue({ subscriptions: [], deliveries: [], issues: [] }),
+    } as unknown as Deps['adminCustomerLoader'],
+
+    adminCustomerPersistor: {
+      deactivateCustomer: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['adminCustomerPersistor'],
   }
 
   return { ...base, ...overrides }

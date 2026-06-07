@@ -317,6 +317,50 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Update Delivery Location",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"floor\": \"Floor 9\",\n    \"deskArea\": \"Desk C3\",\n    \"deliveryPreference\": \"reception\",\n    \"riderNotes\": \"Leave at reception desk\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/delivery-location/{{location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "delivery-location", "{{location_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Delivery Location",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/delivery-location/{{location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "delivery-location", "{{location_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Primary Delivery Location",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/delivery-location/{{location_id}}/primary",
+              "host": ["{{base_url}}"],
+              "path": ["users", "delivery-location", "{{location_id}}", "primary"]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -470,7 +514,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"planId\": \"plan-uuid\",\n    \"mealType\": \"executive\",\n    \"startDate\": \"2025-06-02\"\n}",
+              "raw": "{\n    \"plan_id\": \"try_it\",\n    \"meal_type\": \"executive\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -696,13 +740,32 @@
           "response": []
         },
         {
+          "name": "Toggle Salad for Day",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/deliveries/2025-06-05/salad",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "deliveries", "2025-06-05", "salad"],
+              "description": "true = switch to salad for this day, false = switch back to executive"
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Pause Subscription",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"pauseFrom\": \"2025-06-10\",\n    \"pauseUntil\": \"2025-06-20\"\n}",
+              "raw": "{\n    \"start_date\": \"2025-06-10\",\n    \"end_date\": \"2025-06-20\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -756,13 +819,79 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"mealType\": \"standard\"\n}",
+              "raw": "{\n    \"meal_type\": \"salad\",\n    \"apply_to\": \"all\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/subscriptions/me/meal-type",
               "host": ["{{base_url}}"],
               "path": ["subscriptions", "me", "meal-type"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/history?page=1&per_page=20&period=last_30_days",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "period", "value": "last_30_days", "description": "last_30_days | last_90_days" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Ratings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/pending-ratings",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "pending-ratings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submitted Ratings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/ratings?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "ratings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Delivery Issue",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deliveryDate\": \"2026-06-08\",\n    \"issueType\": \"wrong_order\",\n    \"description\": \"I received the salad instead of the executive meal.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/issues",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "issues"]
             }
           },
           "response": []
@@ -877,6 +1006,24 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Submit Meal Rating",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deliveryDayId\": \"{{delivery_day_id}}\",\n    \"stars\": 4,\n    \"tags\": [\"Great portion\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/meals/{{meal_id}}/rating",
+              "host": ["{{base_url}}"],
+              "path": ["meals", "{{meal_id}}", "rating"]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -909,6 +1056,8 @@
     { "key": "session_id", "value": "", "type": "string" },
     { "key": "payment_method_id", "value": "", "type": "string" },
     { "key": "order_id", "value": "", "type": "string" },
-    { "key": "meal_id", "value": "", "type": "string" }
+    { "key": "meal_id", "value": "", "type": "string" },
+    { "key": "location_id", "value": "", "type": "string" },
+    { "key": "delivery_day_id", "value": "", "type": "string" }
   ]
 }

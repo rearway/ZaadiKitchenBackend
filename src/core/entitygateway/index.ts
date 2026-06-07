@@ -32,6 +32,7 @@ export * from './Storage.js'
 export * from './AuditLog.js'
 export * from './DeliveryIssue.js'
 export * from './MealRating.js'
+export * from './AdminCustomer.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -80,6 +81,7 @@ import type { StorageGateway } from './Storage.js'
 import type { AuditLogPersistor, AuditLogLoader } from './AuditLog.js'
 import type { DeliveryIssuePersistor, DeliveryIssueLoader } from './DeliveryIssue.js'
 import type { MealRatingPersistor, MealRatingLoader } from './MealRating.js'
+import type { AdminCustomerLoader, AdminCustomerPersistor } from './AdminCustomer.js'
 
 export type Deps = {
   logger: Logger
@@ -135,4 +137,6 @@ export type Deps = {
   deliveryIssueLoader: DeliveryIssueLoader
   mealRatingPersistor: MealRatingPersistor
   mealRatingLoader: MealRatingLoader
+  adminCustomerLoader: AdminCustomerLoader
+  adminCustomerPersistor: AdminCustomerPersistor
 }

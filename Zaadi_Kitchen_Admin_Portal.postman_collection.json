@@ -164,19 +164,116 @@
           "response": []
         },
         {
+          "name": "Update Area",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Area Name\",\n    \"status\": \"active\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/areas/{{area_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "{{area_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Area (Activate — requires confirmation)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"active\",\n    \"confirm_activation\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/areas/{{area_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "{{area_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Buildings for Area (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/areas/{{area_id}}/buildings",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "{{area_id}}", "buildings"]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Add Building to Area",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Al Nakheel Gate Tower\",\n    \"floorsCount\": 22\n}",
+              "raw": "{\n    \"name\": \"Al Nakheel Gate Tower\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/admin/areas/{{area_id}}/buildings",
               "host": ["{{base_url}}"],
               "path": ["admin", "areas", "{{area_id}}", "buildings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rename Building",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Building Name\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/areas/{{area_id}}/buildings/{{building_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "{{area_id}}", "buildings", "{{building_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Building",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/areas/{{area_id}}/buildings/{{building_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "{{area_id}}", "buildings", "{{building_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Out-of-Zone Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/areas/out-of-zone-requests?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "areas", "out-of-zone-requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
             }
           },
           "response": []
@@ -217,6 +314,26 @@
               "raw": "{{base_url}}/admin/meals/{{meal_id}}",
               "host": ["{{base_url}}"],
               "path": ["admin", "meals", "{{meal_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal Photo Upload URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/meals/{{meal_id}}/photo-upload-url?content_type=image%2Fjpeg",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "meals", "{{meal_id}}", "photo-upload-url"],
+              "query": [
+                {
+                  "key": "content_type",
+                  "value": "image%2Fjpeg",
+                  "description": "MIME type of the photo: image/jpeg | image/png | image/webp"
+                }
+              ]
             }
           },
           "response": []
@@ -432,6 +549,117 @@
       ]
     },
     {
+      "name": "Customer Management",
+      "item": [
+        {
+          "name": "List Customers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.customers && res.data.customers.length > 0) {",
+                  "    pm.collectionVariables.set('customer_id', res.data.customers[0].id);",
+                  "    console.log('✅ customer_id saved:', res.data.customers[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                {
+                  "key": "q",
+                  "value": "Ahmed",
+                  "description": "Search by name, phone, or email",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "Filter by subscription status: active | paused | cancelled | expired",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers/{{customer_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers", "{{customer_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers/{{customer_id}}/history",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers", "{{customer_id}}", "history"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Customer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/customers/{{customer_id}}/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers", "{{customer_id}}", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Credit Customer Wallet",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amountSar\": 28,\n    \"note\": \"Compensation for missed delivery on 2026-06-07\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/customers/{{customer_id}}/wallet/credit",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers", "{{customer_id}}", "wallet", "credit"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Health",
       "item": [
         {
@@ -456,8 +684,10 @@
     { "key": "admin_access_token", "value": "", "type": "string" },
     { "key": "admin_refresh_token", "value": "", "type": "string" },
     { "key": "area_id", "value": "", "type": "string" },
+    { "key": "building_id", "value": "", "type": "string" },
     { "key": "meal_id", "value": "", "type": "string" },
     { "key": "week_id", "value": "w2025-23", "type": "string" },
-    { "key": "slot_id", "value": "slot_w2025-23_sun_exec", "type": "string" }
+    { "key": "slot_id", "value": "slot_w2025-23_sun_exec", "type": "string" },
+    { "key": "customer_id", "value": "", "type": "string" }
   ]
 }

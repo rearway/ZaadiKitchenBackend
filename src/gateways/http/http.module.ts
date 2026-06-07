@@ -17,6 +17,7 @@ import { AdminMenuController } from './admin-menu.controller.js'
 import { HomeController } from './home.controller.js'
 import { MenuController } from './menu.controller.js'
 import { InternalJobsController } from './internal-jobs.controller.js'
+import { AdminCustomersController } from './admin-customers.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
@@ -39,6 +40,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     HomeController,
     MenuController,
     InternalJobsController,
+    AdminCustomersController,
   ],
 })
 export class HttpModule {}
