@@ -22,7 +22,10 @@ import { CoreS } from '../../tokens.js'
 import type { UseCases } from '../../core/usecases/index.js'
 import { JwtAuthGuard, CurrentUser } from '../../infrastructure/Auth/index.js'
 import { HandleErrors } from '../../shared/decorators/index.js'
-import { GetCustomerMenuWeekQueryDTO, SubmitMealRatingDTO } from './dto/index.js'
+import {
+  GetCustomerMenuWeekQueryDTO,
+  SubmitMealRatingDTO,
+} from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
 @ApiTags('Menu')
@@ -33,7 +36,9 @@ export class MenuController {
   constructor(@Inject(CoreS) private readonly useCases: UseCases) {}
 
   @Get('menu')
-  @ApiOperation({ summary: 'Menu tab header metadata (week labels, filter chips)' })
+  @ApiOperation({
+    summary: 'Menu tab header metadata (week labels, filter chips)',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-menu-meta')
   async getMenuMeta(@CurrentUser() user: UserWithoutPassword) {
@@ -41,7 +46,9 @@ export class MenuController {
   }
 
   @Get('menu/week')
-  @ApiOperation({ summary: 'Full 10-day meal schedule (this week + next week)' })
+  @ApiOperation({
+    summary: 'Full 10-day meal schedule (this week + next week)',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-customer-menu-week')
   async getMenuWeek(

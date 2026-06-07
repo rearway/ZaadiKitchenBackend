@@ -21,12 +21,14 @@ import {
 
 import { CoreS } from '../../tokens.js'
 import type { UseCases } from '../../core/usecases/index.js'
-import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '../../infrastructure/Auth/index.js'
-import { HandleErrors } from '../../shared/decorators/index.js'
 import {
-  GetMenuWeeksQueryDTO,
-  AssignMealToSlotDTO,
-} from './dto/index.js'
+  JwtAuthGuard,
+  RolesGuard,
+  Roles,
+  CurrentUser,
+} from '../../infrastructure/Auth/index.js'
+import { HandleErrors } from '../../shared/decorators/index.js'
+import { GetMenuWeeksQueryDTO, AssignMealToSlotDTO } from './dto/index.js'
 import { UserRole } from '../../codecs/enums.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -39,7 +41,9 @@ export class AdminMenuController {
   constructor(@Inject(CoreS) private readonly useCases: UseCases) {}
 
   @Get('weeks')
-  @ApiOperation({ summary: 'List week planner weeks (auto-creates current + next)' })
+  @ApiOperation({
+    summary: 'List week planner weeks (auto-creates current + next)',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-menu-weeks')
   async getWeeks(@Query(ValidationPipe) query: GetMenuWeeksQueryDTO) {
