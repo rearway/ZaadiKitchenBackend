@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { Deps } from '../../entitygateway/index.js'
+import { findHardcodedMethod } from '../../constants/hardcoded-payment-methods.js'
 
 export interface CreateOrderInput {
   userId: string
@@ -159,13 +160,20 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      // Load and validate payment method
-      const paymentMethod =
-        await paymentMethodLoader.getMethodById(paymentMethodId)
-      if (!paymentMethod || paymentMethod.userId !== userId) {
-        const { ResourceNotFoundError } =
-          await import('../../../shared/errors/index.js')
-        throw new ResourceNotFoundError('Payment method', paymentMethodId)
+      // Resolve payment method — hardcoded methods take priority over DB
+      const hardcoded = findHardcodedMethod(paymentMethodId)
+      let resolvedMethod: { id: string; type: string; label: string; token: string }
+
+      if (hardcoded) {
+        resolvedMethod = { id: hardcoded.id, type: hardcoded.type, label: hardcoded.label, token: 'mock_token' }
+      } else {
+        const dbMethod = await paymentMethodLoader.getMethodById(paymentMethodId)
+        if (!dbMethod || dbMethod.userId !== userId) {
+          const { ResourceNotFoundError } =
+            await import('../../../shared/errors/index.js')
+          throw new ResourceNotFoundError('Payment method', paymentMethodId)
+        }
+        resolvedMethod = { id: dbMethod.id, type: dbMethod.type, label: dbMethod.label, token: dbMethod.token }
       }
 
       const plan = await planLoader.getPlanById(session.planId)
@@ -190,7 +198,7 @@ export function makeUC(deps: Deps) {
       // Charge payment method
       const chargeResult = await paymentGateway.charge({
         amountSar: session.totalDueSar,
-        paymentToken: paymentMethod.token,
+        paymentToken: resolvedMethod.token,
         orderId: crypto.randomUUID(), // placeholder until order ID exists
         description: `${plan.name} · ${startDate}`,
       })
@@ -207,7 +215,7 @@ export function makeUC(deps: Deps) {
         userId,
         subscriptionId: null,
         planId: plan.id,
-        paymentMethodId,
+        paymentMethodId: hardcoded ? null : paymentMethodId,
         mealType: session.mealType,
         mealCount: plan.mealCount,
         startDate,
@@ -217,8 +225,8 @@ export function makeUC(deps: Deps) {
         promoCode: session.promoCode ?? null,
         discountLabel,
         totalPaidSar: session.totalDueSar,
-        paymentMethodType: paymentMethod.type,
-        paymentMethodLabel: paymentMethod.label,
+        paymentMethodType: resolvedMethod.type,
+        paymentMethodLabel: resolvedMethod.label,
         gatewayPaymentId: chargeResult.gatewayPaymentId,
         status: 'confirmed',
         isNewUser,
@@ -281,8 +289,10 @@ export function makeUC(deps: Deps) {
         status: 'confirmed',
       })
 
-      // Mark payment method as last used
-      await paymentMethodPersistor.markAsLastUsed(paymentMethodId, userId)
+      // Mark payment method as last used (only for user-saved methods)
+      if (!hardcoded) {
+        await paymentMethodPersistor.markAsLastUsed(paymentMethodId, userId)
+      }
 
       // Debit wallet if used
       if (session.walletCreditSar > 0) {

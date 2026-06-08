@@ -6,7 +6,12 @@ import {
   ReferralHistoryEntry,
 } from '../../core/entitygateway/Referral.js'
 import { UserReferral } from '../../core/entities/UserReferral.js'
-import { UserReferralModel, UserModel, OrderModel, PlanModel } from './models/index.js'
+import {
+  UserReferralModel,
+  UserModel,
+  OrderModel,
+  PlanModel,
+} from './models/index.js'
 
 @Injectable()
 export class ReferralPersistenceService
@@ -88,7 +93,8 @@ export class ReferralPersistenceService
     )
 
     return referrals.map(r => {
-      const planId = orderMap.get(`${r.referredUserId}:${r.referralCode}`) ?? null
+      const planId =
+        orderMap.get(`${r.referredUserId}:${r.referralCode}`) ?? null
       return {
         referredUserName: userMap.get(r.referredUserId) ?? 'Unknown',
         joinedAt: r.createdAt,

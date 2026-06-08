@@ -1,3 +1,4 @@
+import { HARDCODED_PAYMENT_METHODS } from '../../constants/hardcoded-payment-methods.js'
 import { Deps } from '../../entitygateway/index.js'
 
 export interface GetPaymentMethodsInput {
@@ -14,28 +15,18 @@ export interface GetPaymentMethodsOutput {
   }>
 }
 
-export function makeUC(deps: Deps) {
+export function makeUC(_deps: Deps) {
   return async function getPaymentMethods(
-    input: GetPaymentMethodsInput
+    _input: GetPaymentMethodsInput
   ): Promise<GetPaymentMethodsOutput> {
-    const { logger, paymentMethodLoader } = deps
-    try {
-      const methods = await paymentMethodLoader.getMethodsByUserId(input.userId)
-      return {
-        payment_methods: methods.map(m => ({
-          id: m.id,
-          type: m.type,
-          label: m.label,
-          is_default: m.isDefault,
-          is_last_used: m.isLastUsed,
-        })),
-      }
-    } catch (error) {
-      logger.error(
-        'Failed to get payment methods',
-        error instanceof Error ? error.message : String(error)
-      )
-      throw error
+    return {
+      payment_methods: HARDCODED_PAYMENT_METHODS.map(m => ({
+        id: m.id,
+        type: m.type,
+        label: m.label,
+        is_default: m.isDefault,
+        is_last_used: false,
+      })),
     }
   }
 }

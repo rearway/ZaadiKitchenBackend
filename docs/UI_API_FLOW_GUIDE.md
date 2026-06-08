@@ -1,6 +1,6 @@
 # Zaadi Kitchen — Unified API Flow Guide
 > **For:** UI / Mobile Developers  
-> **Version:** 1.0 (generated 2026-05-22)  
+> **Version:** 2.0 (updated 2026-06-08)  
 > **Base URL:** `http://localhost:3000/api/v1` (dev) · `https://api.zaadiKitchen.com/api/v1` (prod)  
 > **Auth:** `Authorization: Bearer <access_token>` on all protected endpoints  
 > **Content-Type:** `application/json`
@@ -14,12 +14,13 @@
 3. [Onboarding Flow](#3-onboarding-flow)
 4. [Plans & Checkout Flow](#4-plans--checkout-flow)
 5. [Subscription Management](#5-subscription-management)
-6. [Wallet & Referrals](#6-wallet--referrals)
-7. [Home Screen Module](#7-home-screen-module)
-8. [Menu & Meal Detail Module](#8-menu--meal-detail-module)
-9. [Admin / Ops Portal](#9-admin--ops-portal)
-10. [Complete Endpoint Index](#10-complete-endpoint-index)
-11. [Misalignments & Deviations from Spec](#11-misalignments--deviations-from-spec)
+6. [Meal History, Ratings & Issue Reporting](#6-meal-history-ratings--issue-reporting)
+7. [Wallet, Orders & Referrals](#7-wallet-orders--referrals)
+8. [Home Screen Module](#8-home-screen-module)
+9. [Menu & Meal Detail Module](#9-menu--meal-detail-module)
+10. [Admin / Ops Portal](#10-admin--ops-portal)
+11. [Complete Endpoint Index](#11-complete-endpoint-index)
+12. [Misalignments & Deviations from Spec](#12-misalignments--deviations-from-spec)
 
 ---
 
@@ -72,6 +73,11 @@ Errors follow:
 
 ### Phone Format
 All phone numbers must be **E.164** format: `+966512345678`
+
+### Request Body Field Naming
+Request bodies use **snake_case** field names (e.g. `plan_id`, `meal_type`, `start_date`).  
+Responses use **camelCase** field names (e.g. `planId`, `mealType`, `startDate`).  
+See [§12.7](#127-ℹ️-response-field-naming-convention) and [§12.8](#128-⚠️-request-body-field-naming) for full detail.
 
 ---
 
@@ -168,6 +174,7 @@ No auth required
 isNewUser = true  → Name Entry screen (POST /users/profile)
 isNewUser = false + onboardingComplete = false → Area Selection screen
 isNewUser = false + onboardingComplete = true  → Home screen
+role = "DRIVER"   → Rider delivery list screen
 ```
 
 `accessExpiresIn: 3153600000` = 100 years in seconds. Treat this token as permanent. Do not call refresh automatically.
@@ -226,7 +233,7 @@ Revokes the refresh token. The access token remains cryptographically valid (100
 
 ---
 
-### 9.0 Admin Login *(Admin Portal only)*
+### 2.5 Admin Login *(Admin Portal only)*
 ```
 POST /auth/admin/login
 No auth required
@@ -521,6 +528,58 @@ Returns **all** saved addresses. Primary address is first in the array.
 
 ---
 
+### 3.10 Update Delivery Location
+```
+PATCH /users/delivery-location/:location_id
+🔒 Requires auth
+```
+
+**Request:** (all fields optional — send only what changed)
+```json
+{
+  "floor": "Floor 9",
+  "deskArea": "Desk C3",
+  "deliveryPreference": "reception",
+  "riderNotes": "Leave at reception desk"
+}
+```
+
+**Response `200`:** Updated location object (same shape as single item in GET list).
+
+**Errors:** `LOCATION_NOT_FOUND` | `FORBIDDEN` (not the user's location)
+
+---
+
+### 3.11 Delete Delivery Location
+```
+DELETE /users/delivery-location/:location_id
+🔒 Requires auth
+```
+
+**Response `200`:** `{ "message": "Delivery location deleted" }`
+
+> **Business rule:** Deleting the primary address auto-promotes the most recently created remaining address to primary.
+
+**Errors:** `LOCATION_NOT_FOUND` | `FORBIDDEN`
+
+---
+
+### 3.12 Set Primary Delivery Location
+```
+PATCH /users/delivery-location/:location_id/primary
+🔒 Requires auth
+```
+
+No request body.
+
+**Response `200`:** `{ "data": { "id": "loc_01HXYZ9999", "isPrimary": true } }`
+
+> The previously primary address has its `isPrimary` set to `false` automatically.
+
+**Errors:** `LOCATION_NOT_FOUND` | `FORBIDDEN`
+
+---
+
 ## 4. Plans & Checkout Flow
 
 **Screen sequence:**
@@ -600,6 +659,8 @@ GET /delivery/start-dates
 
 Returns the next N available delivery start dates, excluding weekends and public holidays.
 
+Optional: `?limit=14` (max 30)
+
 **Response `200`:**
 ```json
 {
@@ -646,13 +707,12 @@ POST /checkout/session
 **Request:**
 ```json
 {
-  "planId": "plan-uuid",
-  "mealType": "executive",
-  "startDate": "2025-06-02"
+  "plan_id": "plan-uuid",
+  "meal_type": "executive"
 }
 ```
 
-`mealType`: `"executive"` | `"standard"` *(check your plan config for available types)*
+`meal_type`: `"executive"` | `"standard"` *(check your plan config for available types)*
 
 **Response `201`:**
 ```json
@@ -729,26 +789,24 @@ GET /payment/methods
 🔒 Requires auth
 ```
 
+> ℹ️ **Hardcoded methods** — payment gateway integration is pending. This endpoint always returns the same three fixed options regardless of user. Use the IDs below when placing an order.
+
 **Response `200`:**
 ```json
 {
-  "data": {
-    "methods": [
-      {
-        "id": "pm-uuid-1",
-        "type": "mada",
-        "label": "Mada ····4242",
-        "isDefault": true,
-        "isLastUsed": true
-      }
-    ]
-  }
+  "payment_methods": [
+    { "id": "00000000-0000-0000-0000-000000000001", "type": "mada",      "label": "Mada",      "is_default": true,  "is_last_used": false },
+    { "id": "00000000-0000-0000-0000-000000000002", "type": "visa",      "label": "Visa",      "is_default": false, "is_last_used": false },
+    { "id": "00000000-0000-0000-0000-000000000003", "type": "apple_pay", "label": "Apple Pay", "is_default": false, "is_last_used": false }
+  ]
 }
 ```
 
+> `POST /payment/methods` (add card) and `DELETE /payment/methods/:id` (remove card) remain available but are unused until real gateway integration.
+
 ---
 
-### 4.10 Add Payment Method
+### 4.10 Add Payment Method *(unused until gateway integration)*
 ```
 POST /payment/methods
 🔒 Requires auth
@@ -767,7 +825,7 @@ POST /payment/methods
 
 ---
 
-### 4.11 Delete Payment Method
+### 4.11 Delete Payment Method *(unused until gateway integration)*
 ```
 DELETE /payment/methods/:method_id
 🔒 Requires auth
@@ -920,7 +978,26 @@ DELETE /subscriptions/me/deliveries/:delivery_date/skip
 
 ---
 
-### 5.5 Pause Subscription
+### 5.5 Toggle Salad for a Day
+```
+PATCH /subscriptions/me/deliveries/:delivery_date/salad
+🔒 Requires auth
+```
+
+**Request:**
+```json
+{ "enabled": true }
+```
+
+`enabled: true` = switch to salad for this day, `enabled: false` = switch back to executive.
+
+**Response `200`:** `{ "data": { "date": "2025-06-05", "mealType": "salad" } }`
+
+**Errors:** `PAST_CUTOFF` (after 6 PM lock) | `NOT_SUBSCRIBED` | `ALREADY_SKIPPED`
+
+---
+
+### 5.6 Pause Subscription
 ```
 POST /subscriptions/me/pause
 🔒 Requires auth
@@ -929,10 +1006,12 @@ POST /subscriptions/me/pause
 **Request:**
 ```json
 {
-  "pauseFrom": "2025-06-10",
-  "pauseUntil": "2025-06-20"
+  "start_date": "2025-06-10",
+  "end_date": "2025-06-20"
 }
 ```
+
+> ⚠️ Field names are `start_date` / `end_date` (snake_case). See [§12.8](#128-⚠️-request-body-field-naming).
 
 **Response `200`:**
 ```json
@@ -951,7 +1030,7 @@ POST /subscriptions/me/pause
 
 ---
 
-### 5.6 Resume Subscription
+### 5.7 Resume Subscription
 ```
 POST /subscriptions/me/resume
 🔒 Requires auth
@@ -963,7 +1042,7 @@ No request body.
 
 ---
 
-### 5.7 Cancel Subscription
+### 5.8 Cancel Subscription
 ```
 POST /subscriptions/me/cancel
 🔒 Requires auth
@@ -975,7 +1054,7 @@ No request body.
 
 ---
 
-### 5.8 Switch Meal Type
+### 5.9 Switch Meal Type (Whole Plan or Specific Days)
 ```
 PATCH /subscriptions/me/meal-type
 🔒 Requires auth
@@ -983,20 +1062,177 @@ PATCH /subscriptions/me/meal-type
 
 **Request:**
 ```json
-{ "mealType": "standard" }
+{
+  "meal_type": "salad",
+  "apply_to": "all"
+}
 ```
 
-**Response `200`:** `{ "data": { "mealType": "standard" } }`
+`apply_to`: `"all"` (entire remaining plan) — per-day switching uses [§5.5 Salad Toggle](#55-toggle-salad-for-a-day) instead.
+
+**Response `200`:** `{ "data": { "mealType": "salad" } }`
 
 **Error:** `PLAN_MISMATCH` (chosen meal type not available in current plan)
 
 ---
 
-## 6. Wallet & Referrals
+## 6. Meal History, Ratings & Issue Reporting
 
 ---
 
-### 6.1 Get Wallet Balance
+### 6.1 Get Meal History
+```
+GET /subscriptions/me/history
+🔒 Requires auth
+```
+
+Paginated delivery history — used on the Meal History & calorie tracker screen.
+
+**Query params:** `?page=1&per_page=20&period=last_30_days`
+
+`period`: `"last_30_days"` | `"last_90_days"`
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "deliveries": [
+      {
+        "id": "dd-uuid-1",
+        "date": "2025-06-02",
+        "mealName": "Lamb Kabsa",
+        "mealType": "executive",
+        "kcal": 550,
+        "status": "delivered",
+        "stars": 4
+      }
+    ],
+    "pagination": { "page": 1, "perPage": 20, "total": 60 }
+  }
+}
+```
+
+---
+
+### 6.2 Get Pending Ratings
+```
+GET /subscriptions/me/pending-ratings
+🔒 Requires auth
+```
+
+Returns up to 5 delivered meals awaiting a star rating. Triggered daily at 3 PM.
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "pendingRatings": [
+      {
+        "deliveryDayId": "dd-uuid-1",
+        "mealId": "meal_01JK2ABX",
+        "mealName": "Lamb Kabsa",
+        "mealType": "executive",
+        "deliveryDate": "2025-06-02",
+        "emoji": "🍛"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 6.3 Get Submitted Ratings
+```
+GET /subscriptions/me/ratings
+🔒 Requires auth
+```
+
+Paginated list of all submitted ratings. Used on the Meal History screen.
+
+**Query params:** `?page=1&per_page=20`
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "ratings": [
+      {
+        "mealId": "meal_01JK2ABX",
+        "mealName": "Lamb Kabsa",
+        "deliveryDate": "2025-06-02",
+        "stars": 4,
+        "tags": ["Great portion"],
+        "submittedAt": "2025-06-02T15:30:00Z"
+      }
+    ],
+    "pagination": { "page": 1, "perPage": 20, "total": 15 }
+  }
+}
+```
+
+---
+
+### 6.4 Submit Meal Rating
+```
+POST /meals/:meal_id/rating
+🔒 Requires auth
+```
+
+**Request:**
+```json
+{
+  "deliveryDayId": "dd-uuid-1",
+  "stars": 4,
+  "tags": ["Great portion"]
+}
+```
+
+`stars`: 1–5 (required). `tags`: optional multi-select — `"Great portion"` | `"Too spicy"` | `"Too salty"` | `"Small portion"`.
+
+**Response `201`:** `{ "message": "Rating submitted" }`
+
+**Business rules:**
+- Once submitted, rating cannot be updated or deleted.
+- Only meals with `status: "delivered"` in the user's subscription can be rated.
+- `deliveryDayId` must belong to the authenticated user.
+
+**Errors:** `ALREADY_RATED` | `DELIVERY_NOT_FOUND` | `INVALID_STARS`
+
+---
+
+### 6.5 Submit Delivery Issue
+```
+POST /subscriptions/me/issues
+🔒 Requires auth
+```
+
+**Request:**
+```json
+{
+  "deliveryDate": "2025-05-05",
+  "issueType": "wrong_order",
+  "description": "I received the salad instead of the executive meal."
+}
+```
+
+`issueType`: `"wrong_order"` | `"quality_issue"` | `"not_delivered"` | `"damaged"`
+
+`description` is optional free text.
+
+**Response `201`:** `{ "message": "Issue reported", "data": { "issueId": "issue-uuid-1" } }`
+
+> The created issue appears immediately in the Admin issues queue (`GET /admin/ops/issues`).
+
+**Errors:** `DELIVERY_NOT_FOUND` | `ISSUE_ALREADY_REPORTED` | `INVALID_ISSUE_TYPE`
+
+---
+
+## 7. Wallet, Orders & Referrals
+
+---
+
+### 7.1 Get Wallet Balance
 ```
 GET /users/wallet
 🔒 Requires auth
@@ -1013,7 +1249,7 @@ GET /users/wallet
 
 ---
 
-### 6.2 Get Wallet Transactions
+### 7.2 Get Wallet Transactions
 ```
 GET /users/wallet/transactions
 🔒 Requires auth
@@ -1040,7 +1276,7 @@ Optional: `?page=1&perPage=20`
 
 ---
 
-### 6.3 Get My Referral Info
+### 7.3 Get My Referral Info
 ```
 GET /users/referral
 🔒 Requires auth
@@ -1061,16 +1297,61 @@ GET /users/referral
 
 ---
 
-### 6.4 Validate Referral Code *(also listed under checkout)*
+### 7.4 Validate Referral Code *(also listed under checkout)*
 ```
 POST /referrals/validate
 🔒 Requires auth
 ```
-See [4.4](#44-validate-referral-code-optional-before-checkout).
+See [§4.4](#44-validate-referral-code-optional-before-checkout).
 
 ---
 
-## 7. Home Screen Module
+### 7.5 List Orders (Billing History)
+```
+GET /orders
+🔒 Requires auth
+```
+
+Paginated list of all orders for the authenticated customer. Used on the Billing & Wallet screen.
+
+**Query params:** `?page=1&per_page=20`
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "orders": [
+      {
+        "orderId": "order-uuid-1",
+        "planName": "Month Plan",
+        "totalPaidSar": 450,
+        "promoCode": "AHMED10",
+        "status": "confirmed",
+        "createdAt": "2025-06-01T10:00:00Z"
+      }
+    ],
+    "pagination": { "page": 1, "perPage": 20, "total": 5 }
+  }
+}
+```
+
+---
+
+### 7.6 Download Order Receipt (PDF)
+```
+GET /orders/:order_id/receipt
+🔒 Requires auth
+```
+
+Returns a PDF blob. Set `Accept: application/pdf`.
+
+**Response `200`:** PDF binary stream with `Content-Type: application/pdf`.
+
+Receipt content: order reference, plan name, amount paid, promo applied, date, customer name.
+
+---
+
+## 8. Home Screen Module
 
 **Flow summary:**
 ```
@@ -1082,7 +1363,7 @@ App open
 
 ---
 
-### 7.1 GET /home
+### 8.1 GET /home
 ```
 GET /home
 🔒 Requires auth
@@ -1164,7 +1445,7 @@ Composite endpoint. Returns everything needed to render the Home screen header f
 
 ---
 
-### 7.2 GET /home/this-week
+### 8.2 GET /home/this-week
 ```
 GET /home/this-week
 🔒 Requires auth
@@ -1228,7 +1509,7 @@ Returns the horizontal meal strip cards for the current working week (Sun–Thu)
 
 ---
 
-## 8. Menu & Meal Detail Module
+## 9. Menu & Meal Detail Module
 
 **Flow summary:**
 ```
@@ -1240,7 +1521,7 @@ Home card tap  → GET /meals/:meal_id (bottom sheet)
 
 ---
 
-### 8.1 GET /menu
+### 9.1 GET /menu
 ```
 GET /menu
 🔒 Requires auth
@@ -1271,7 +1552,7 @@ Returns light metadata for the Menu tab header — week range labels and filter 
 
 ---
 
-### 8.2 GET /menu/week
+### 9.2 GET /menu/week
 ```
 GET /menu/week?meal_type=all
 🔒 Requires auth
@@ -1335,7 +1616,7 @@ Filtering is server-side — the client does not need to filter locally.
 
 ---
 
-### 8.3 GET /meals/:meal_id
+### 9.3 GET /meals/:meal_id
 ```
 GET /meals/:meal_id
 🔒 Requires auth
@@ -1378,7 +1659,7 @@ Returns full detail for a single meal. Used for **both** the bottom sheet (Home 
 
 ---
 
-## 9. Admin / Ops Portal
+## 10. Admin / Ops Portal
 
 ### Auth
 Admin and Ops users authenticate with **email + password** (not OTP).
@@ -1389,11 +1670,11 @@ POST /auth/refresh
 POST /auth/admin/logout
 ```
 
-See [Admin Login](#admin-login-admin-portal-only).
+See [§2.5 Admin Login](#25-admin-login-admin-portal-only).
 
 ---
 
-### 9.1 Area Management ✅ Implemented
+### 10.1 Area Management ✅ Implemented
 
 **List All Areas (Admin view — includes all statuses)**
 ```
@@ -1434,6 +1715,38 @@ POST /admin/areas
 
 ---
 
+**Update Area**
+```
+PATCH /admin/areas/:area_id
+🔒 ADMIN | OPS
+```
+
+**Request:** (all fields optional)
+```json
+{
+  "name": "Updated Area Name",
+  "status": "active"
+}
+```
+
+When setting `status: "active"`, send `"confirm_activation": true` to confirm activation:
+```json
+{
+  "status": "active",
+  "confirm_activation": true
+}
+```
+
+---
+
+**List Buildings for Area (Admin view)**
+```
+GET /admin/areas/:area_id/buildings
+🔒 ADMIN | OPS
+```
+
+---
+
 **Add Building to Area**
 ```
 POST /admin/areas/:area_id/buildings
@@ -1443,14 +1756,48 @@ POST /admin/areas/:area_id/buildings
 **Request:**
 ```json
 {
-  "name": "Al Zahra Tower 1",
-  "floorsCount": 22
+  "name": "Al Zahra Tower 1"
 }
 ```
 
 ---
 
-### 9.2 Meal Library ✅ Implemented
+**Rename Building**
+```
+PATCH /admin/areas/:area_id/buildings/:building_id
+🔒 ADMIN | OPS
+```
+
+**Request:**
+```json
+{ "name": "Updated Building Name" }
+```
+
+---
+
+**Remove Building**
+```
+DELETE /admin/areas/:area_id/buildings/:building_id
+🔒 ADMIN | OPS
+```
+
+**Response `200`:** `{ "message": "Building removed" }`
+
+---
+
+**Get Out-of-Zone Requests**
+```
+GET /admin/areas/out-of-zone-requests
+🔒 ADMIN | OPS
+```
+
+**Query params:** `?page=1&per_page=20`
+
+Returns customer-submitted area interest requests (from `POST /delivery/areas/out-of-zone`).
+
+---
+
+### 10.2 Meal Library ✅ Implemented
 
 ```
 GET    /admin/meals                          → List / search meals
@@ -1459,6 +1806,7 @@ POST   /admin/meals                          → Create meal (always draft)
 PATCH  /admin/meals/:meal_id                 → Update meal fields
 PATCH  /admin/meals/:meal_id/status          → Activate or draft a meal
 POST   /admin/meals/import                   → Bulk import from XLSX
+GET    /admin/meals/:meal_id/photo-upload-url → Get presigned S3 URL for photo upload
 ```
 
 **List meals — `GET /admin/meals`**
@@ -1519,6 +1867,26 @@ Response `201`: `{ "meal_id": "...", "name_en": "...", "status": "draft", "creat
 
 When drafting a meal that is in a published week, the server returns `409 MEAL_IN_PUBLISHED_WEEK`. Re-send with `"confirm_published_edit": true` to override.
 
+**Get photo upload URL — `GET /admin/meals/:meal_id/photo-upload-url`**
+
+```
+GET /admin/meals/:meal_id/photo-upload-url?content_type=image%2Fjpeg
+```
+
+`content_type`: `image/jpeg` | `image/png` | `image/webp`
+
+Returns a presigned S3 URL. Upload the photo directly from the browser using a `PUT` request to the returned URL.
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "uploadUrl": "https://s3.amazonaws.com/...",
+    "expiresIn": 300
+  }
+}
+```
+
 **Import meals — `POST /admin/meals/import`**
 
 - Content-Type: `multipart/form-data`
@@ -1548,7 +1916,7 @@ Optional: `name_ar`, `protein_g`, `carbs_g`, `fat_g`, `chef_note`, `key_ingredie
 
 ---
 
-### 9.3 Menu Manager ✅ Implemented
+### 10.3 Menu Manager ✅ Implemented
 
 The planner always manages two working weeks simultaneously:
 
@@ -1661,7 +2029,78 @@ Returns updated slot + `week_fill_status: { filled_slots, total_slots, publish_r
 
 ---
 
-### 9.4 Not Yet Implemented ❌
+### 10.4 Customer Management ✅ Implemented
+
+```
+GET    /admin/customers                          → Paginated customer list
+GET    /admin/customers/:id                      → Customer detail (inline)
+GET    /admin/customers/:id/history              → Full history panel
+POST   /admin/customers/:id/deactivate           → Deactivate account
+POST   /admin/customers/:id/wallet/credit        → Manual wallet credit
+```
+
+**List customers — `GET /admin/customers`**
+
+| Query param | Values | Default | Notes |
+|---|---|---|---|
+| `page` | integer | `1` | |
+| `per_page` | integer | `20` | Max `50` |
+| `q` | string | — | Search by name, phone, or email |
+| `status` | `active` \| `paused` \| `cancelled` \| `expired` | — | Filter by subscription status |
+
+**Response `200`:**
+```json
+{
+  "data": {
+    "customers": [
+      {
+        "id": "usr_01HXYZ5678",
+        "fullName": "Ahmed Al-Rashidi",
+        "phone": "+966512345678",
+        "subscriptionStatus": "active",
+        "planName": "Month Plan",
+        "endDate": "2025-07-01"
+      }
+    ],
+    "pagination": { "page": 1, "perPage": 20, "total": 142 }
+  }
+}
+```
+
+**Get customer detail — `GET /admin/customers/:id`**
+
+Returns current plan, end date, wallet balance, delivery address, issue count.
+
+**Get customer history — `GET /admin/customers/:id/history`**
+
+Returns all subscription periods, delivery records, skipped days, and resolved issues.
+
+**Deactivate customer — `POST /admin/customers/:id/deactivate`**
+```
+🔒 ADMIN only
+```
+No request body. **Response `200`:** `{ "message": "Customer deactivated" }`
+
+**Credit customer wallet — `POST /admin/customers/:id/wallet/credit`**
+```
+🔒 ADMIN | OPS
+```
+
+**Request:**
+```json
+{
+  "amountSar": 28,
+  "note": "Compensation for missed delivery on 2026-06-07"
+}
+```
+
+`note` is mandatory. `amountSar` must be positive (max SAR 30 for issue-related credits, no ceiling for manual admin credits).
+
+**Response `200`:** `{ "data": { "newBalanceSar": 78.00 } }`
+
+---
+
+### 10.5 Not Yet Implemented ❌
 
 The following are in the admin spec but have **no backend implementation** yet:
 
@@ -1671,13 +2110,13 @@ The following are in the admin spec but have **no backend implementation** yet:
 | Daily Ops | `GET /admin/ops/daily-summary`, `POST /admin/ops/advance-stage`, `GET /admin/ops/export-delivery-sheet`, `GET /admin/ops/issues`, `POST /admin/ops/issues/:id/credit`, `POST /admin/ops/issues/:id/reject` |
 | Label Printing | `GET /admin/labels`, `GET /admin/labels/:id/download`, `GET /admin/labels/area/:id/download`, `GET /admin/labels/download-all`, `GET /admin/labels/:id/preview` |
 | Revenue Dashboard | `GET /admin/revenue/summary`, `GET /admin/revenue/daily-chart`, `GET /admin/revenue/plan-breakdown` |
-| Customer Management | `GET /admin/customers`, `GET /admin/customers/:id`, `POST /admin/customers/:id/deactivate`, `POST /admin/customers/:id/wallet/credit` |
-| Comms & Automations | `GET /admin/comms/automations`, `PUT /admin/comms/automations/:id` |
+| Comms & Automations | `GET /admin/comms/automations`, `PUT /admin/comms/automations/:id`, `GET /admin/comms/broadcast/segments`, `POST /admin/comms/broadcast` |
+| Plan Configuration | `GET /admin/plans`, `PATCH /admin/plans/:id` |
 | Rider App | `GET /rider/deliveries/today`, `POST /rider/deliveries/:id/complete`, `POST /rider/deliveries/:id/issue` |
 
 ---
 
-## 10. Complete Endpoint Index
+## 11. Complete Endpoint Index
 
 ### Health
 
@@ -1702,37 +2141,48 @@ The following are in the admin spec but have **no backend implementation** yet:
 | 11 | GET | `/delivery/areas/:area_id/buildings` | JWT | ✅ |
 | 12 | POST | `/users/delivery-location` | JWT | ✅ |
 | 13 | GET | `/users/delivery-location` | JWT | ✅ |
-| 14 | GET | `/config/public-holidays` | JWT | ✅ |
-| 15 | GET | `/plans/active` | JWT | ✅ |
-| 16 | GET | `/plans` | JWT | ✅ |
-| 17 | GET | `/delivery/start-dates` | JWT | ✅ |
-| 18 | POST | `/referrals/validate` | JWT | ✅ |
-| 19 | GET | `/referrals/me` | JWT | ✅ |
-| 20 | POST | `/checkout/session` | JWT | ✅ |
-| 21 | GET | `/checkout/session/:session_id` | JWT | ✅ |
-| 22 | POST | `/checkout/session/:session_id/promo` | JWT | ✅ |
-| 23 | DELETE | `/checkout/session/:session_id/promo` | JWT | ✅ |
-| 24 | GET | `/payment/methods` | JWT | ✅ |
-| 25 | POST | `/payment/methods` | JWT | ✅ |
-| 26 | DELETE | `/payment/methods/:method_id` | JWT | ✅ |
-| 27 | POST | `/orders` | JWT | ✅ |
-| 28 | GET | `/orders/:order_id` | JWT | ✅ |
-| 29 | GET | `/subscriptions/me` | JWT | ✅ |
-| 30 | GET | `/subscriptions/me/deliveries` | JWT | ✅ |
-| 31 | POST | `/subscriptions/me/deliveries/:date/skip` | JWT | ✅ |
-| 32 | DELETE | `/subscriptions/me/deliveries/:date/skip` | JWT | ✅ |
-| 33 | POST | `/subscriptions/me/pause` | JWT | ✅ |
-| 34 | POST | `/subscriptions/me/resume` | JWT | ✅ |
-| 35 | POST | `/subscriptions/me/cancel` | JWT | ✅ |
-| 36 | PATCH | `/subscriptions/me/meal-type` | JWT | ✅ |
-| 37 | GET | `/users/wallet` | JWT | ✅ |
-| 38 | GET | `/users/wallet/transactions` | JWT | ✅ |
-| 39 | GET | `/users/referral` | JWT | ✅ |
-| 40 | GET | `/home` | JWT | ✅ |
-| 41 | GET | `/home/this-week` | JWT | ✅ |
-| 42 | GET | `/menu` | JWT | ✅ |
-| 43 | GET | `/menu/week` | JWT | ✅ |
-| 44 | GET | `/meals/:meal_id` | JWT | ✅ |
+| 14 | PATCH | `/users/delivery-location/:id` | JWT | ✅ |
+| 15 | DELETE | `/users/delivery-location/:id` | JWT | ✅ |
+| 16 | PATCH | `/users/delivery-location/:id/primary` | JWT | ✅ |
+| 17 | GET | `/config/public-holidays` | JWT | ✅ |
+| 18 | GET | `/plans/active` | JWT | ✅ |
+| 19 | GET | `/plans` | JWT | ✅ |
+| 20 | GET | `/delivery/start-dates` | JWT | ✅ |
+| 21 | POST | `/referrals/validate` | JWT | ✅ |
+| 22 | GET | `/referrals/me` | JWT | ✅ |
+| 23 | POST | `/checkout/session` | JWT | ✅ |
+| 24 | GET | `/checkout/session/:session_id` | JWT | ✅ |
+| 25 | POST | `/checkout/session/:session_id/promo` | JWT | ✅ |
+| 26 | DELETE | `/checkout/session/:session_id/promo` | JWT | ✅ |
+| 27 | GET | `/payment/methods` | JWT | ✅ |
+| 28 | POST | `/payment/methods` | JWT | ✅ |
+| 29 | DELETE | `/payment/methods/:method_id` | JWT | ✅ |
+| 30 | POST | `/orders` | JWT | ✅ |
+| 31 | GET | `/orders/:order_id` | JWT | ✅ |
+| 32 | GET | `/orders` | JWT | ❌ |
+| 33 | GET | `/orders/:order_id/receipt` | JWT | ❌ |
+| 34 | GET | `/subscriptions/me` | JWT | ✅ |
+| 35 | GET | `/subscriptions/me/deliveries` | JWT | ✅ |
+| 36 | POST | `/subscriptions/me/deliveries/:date/skip` | JWT | ✅ |
+| 37 | DELETE | `/subscriptions/me/deliveries/:date/skip` | JWT | ✅ |
+| 38 | PATCH | `/subscriptions/me/deliveries/:date/salad` | JWT | ✅ |
+| 39 | POST | `/subscriptions/me/pause` | JWT | ✅ |
+| 40 | POST | `/subscriptions/me/resume` | JWT | ✅ |
+| 41 | POST | `/subscriptions/me/cancel` | JWT | ✅ |
+| 42 | PATCH | `/subscriptions/me/meal-type` | JWT | ✅ |
+| 43 | GET | `/subscriptions/me/history` | JWT | ❌ |
+| 44 | GET | `/subscriptions/me/pending-ratings` | JWT | ❌ |
+| 45 | GET | `/subscriptions/me/ratings` | JWT | ❌ |
+| 46 | POST | `/subscriptions/me/issues` | JWT | ❌ |
+| 47 | POST | `/meals/:meal_id/rating` | JWT | ❌ |
+| 48 | GET | `/users/wallet` | JWT | ✅ |
+| 49 | GET | `/users/wallet/transactions` | JWT | ✅ |
+| 50 | GET | `/users/referral` | JWT | ✅ |
+| 51 | GET | `/home` | JWT | ✅ |
+| 52 | GET | `/home/this-week` | JWT | ✅ |
+| 53 | GET | `/menu` | JWT | ✅ |
+| 54 | GET | `/menu/week` | JWT | ✅ |
+| 55 | GET | `/meals/:meal_id` | JWT | ✅ |
 
 ### Admin / Ops Portal — All Endpoints
 
@@ -1743,46 +2193,63 @@ The following are in the admin spec but have **no backend implementation** yet:
 | 3 | POST | `/auth/admin/logout` | ADMIN | ✅ |
 | 4 | GET | `/admin/areas` | ADMIN\|OPS | ✅ |
 | 5 | POST | `/admin/areas` | ADMIN\|OPS | ✅ |
-| 6 | POST | `/admin/areas/:id/buildings` | ADMIN\|OPS | ✅ |
-| 7 | GET | `/admin/meals` | ADMIN\|OPS | ✅ |
-| 8 | GET | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
-| 9 | POST | `/admin/meals` | ADMIN\|OPS | ✅ |
-| 10 | PATCH | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
-| 11 | PATCH | `/admin/meals/:meal_id/status` | ADMIN\|OPS | ✅ |
-| 12 | POST | `/admin/meals/import` | ADMIN\|OPS | ✅ |
-| 13 | GET | `/admin/menu/weeks` | ADMIN\|OPS | ✅ |
-| 14 | GET | `/admin/menu/weeks/:week_id` | ADMIN\|OPS | ✅ |
-| 15 | POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN\|OPS | ✅ |
-| 16 | DELETE | `/admin/menu/weeks/:week_id/slots/:slot_id` | ADMIN\|OPS | ✅ |
-| 17 | POST | `/admin/menu/weeks/:week_id/publish` | ADMIN\|OPS | ✅ |
-| 18 | GET | `/admin/dashboard/summary` | ADMIN\|OPS | ❌ |
-| 19 | GET | `/admin/ops/daily-summary` | ADMIN\|OPS | ❌ |
-| 20 | POST | `/admin/ops/advance-stage` | ADMIN\|OPS | ❌ |
-| 21 | GET | `/admin/ops/export-delivery-sheet` | ADMIN\|OPS | ❌ |
-| 22 | GET | `/admin/ops/issues` | ADMIN\|OPS | ❌ |
-| 23 | POST | `/admin/ops/issues/:id/credit` | ADMIN\|OPS | ❌ |
-| 24 | POST | `/admin/ops/issues/:id/reject` | ADMIN\|OPS | ❌ |
-| 25 | GET | `/admin/labels` | ADMIN\|OPS | ❌ |
-| 26 | GET | `/admin/revenue/summary` | ADMIN | ❌ |
-| 27 | GET | `/admin/revenue/daily-chart` | ADMIN | ❌ |
-| 28 | GET | `/admin/revenue/plan-breakdown` | ADMIN | ❌ |
-| 29 | GET | `/admin/customers` | ADMIN\|OPS | ❌ |
-| 30 | GET | `/admin/customers/:id` | ADMIN\|OPS | ❌ |
-| 31 | POST | `/admin/customers/:id/deactivate` | ADMIN | ❌ |
-| 32 | POST | `/admin/customers/:id/wallet/credit` | ADMIN\|OPS | ❌ |
-| 33 | GET | `/rider/deliveries/today` | DRIVER | ❌ |
-| 34 | POST | `/rider/deliveries/:id/complete` | DRIVER | ❌ |
-| 35 | POST | `/rider/deliveries/:id/issue` | DRIVER | ❌ |
+| 6 | PATCH | `/admin/areas/:id` | ADMIN\|OPS | ✅ |
+| 7 | GET | `/admin/areas/:id/buildings` | ADMIN\|OPS | ✅ |
+| 8 | POST | `/admin/areas/:id/buildings` | ADMIN\|OPS | ✅ |
+| 9 | PATCH | `/admin/areas/:id/buildings/:building_id` | ADMIN\|OPS | ✅ |
+| 10 | DELETE | `/admin/areas/:id/buildings/:building_id` | ADMIN\|OPS | ✅ |
+| 11 | GET | `/admin/areas/out-of-zone-requests` | ADMIN\|OPS | ✅ |
+| 12 | GET | `/admin/meals` | ADMIN\|OPS | ✅ |
+| 13 | GET | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
+| 14 | POST | `/admin/meals` | ADMIN\|OPS | ✅ |
+| 15 | PATCH | `/admin/meals/:meal_id` | ADMIN\|OPS | ✅ |
+| 16 | PATCH | `/admin/meals/:meal_id/status` | ADMIN\|OPS | ✅ |
+| 17 | POST | `/admin/meals/import` | ADMIN\|OPS | ✅ |
+| 18 | GET | `/admin/meals/:meal_id/photo-upload-url` | ADMIN\|OPS | ✅ |
+| 19 | GET | `/admin/menu/weeks` | ADMIN\|OPS | ✅ |
+| 20 | GET | `/admin/menu/weeks/:week_id` | ADMIN\|OPS | ✅ |
+| 21 | POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN\|OPS | ✅ |
+| 22 | DELETE | `/admin/menu/weeks/:week_id/slots/:slot_id` | ADMIN\|OPS | ✅ |
+| 23 | POST | `/admin/menu/weeks/:week_id/publish` | ADMIN\|OPS | ✅ |
+| 24 | GET | `/admin/customers` | ADMIN\|OPS | ✅ |
+| 25 | GET | `/admin/customers/:id` | ADMIN\|OPS | ✅ |
+| 26 | GET | `/admin/customers/:id/history` | ADMIN\|OPS | ✅ |
+| 27 | POST | `/admin/customers/:id/deactivate` | ADMIN | ✅ |
+| 28 | POST | `/admin/customers/:id/wallet/credit` | ADMIN\|OPS | ✅ |
+| 29 | GET | `/admin/dashboard/summary` | ADMIN\|OPS | ❌ |
+| 30 | GET | `/admin/ops/daily-summary` | ADMIN\|OPS | ❌ |
+| 31 | POST | `/admin/ops/advance-stage` | ADMIN\|OPS | ❌ |
+| 32 | GET | `/admin/ops/export-delivery-sheet` | ADMIN\|OPS | ❌ |
+| 33 | GET | `/admin/ops/issues` | ADMIN | ❌ |
+| 34 | POST | `/admin/ops/issues/:id/credit` | ADMIN | ❌ |
+| 35 | POST | `/admin/ops/issues/:id/reject` | ADMIN | ❌ |
+| 36 | GET | `/admin/labels` | ADMIN\|OPS | ❌ |
+| 37 | GET | `/admin/labels/download-all` | ADMIN\|OPS | ❌ |
+| 38 | GET | `/admin/labels/area/:area_id/download` | ADMIN\|OPS | ❌ |
+| 39 | GET | `/admin/labels/:id/preview` | ADMIN\|OPS | ❌ |
+| 40 | GET | `/admin/labels/:id/download` | ADMIN\|OPS | ❌ |
+| 41 | GET | `/admin/revenue/summary` | ADMIN | ❌ |
+| 42 | GET | `/admin/revenue/daily-chart` | ADMIN | ❌ |
+| 43 | GET | `/admin/revenue/plan-breakdown` | ADMIN | ❌ |
+| 44 | GET | `/admin/comms/automations` | ADMIN | ❌ |
+| 45 | PUT | `/admin/comms/automations/:id` | ADMIN | ❌ |
+| 46 | GET | `/admin/comms/broadcast/segments` | ADMIN | ❌ |
+| 47 | POST | `/admin/comms/broadcast` | ADMIN | ❌ |
+| 48 | GET | `/admin/plans` | ADMIN | ❌ |
+| 49 | PATCH | `/admin/plans/:id` | ADMIN | ❌ |
+| 50 | GET | `/rider/deliveries/today` | DRIVER | ❌ |
+| 51 | POST | `/rider/deliveries/:id/complete` | DRIVER | ❌ |
+| 52 | POST | `/rider/deliveries/:id/issue` | DRIVER | ❌ |
 
 ---
 
-## 11. Misalignments & Deviations from Spec
+## 12. Misalignments & Deviations from Spec
 
 These are differences between the API design documents and the current implementation that UI developers must be aware of.
 
 ---
 
-### 11.1 ⚠️ Refresh Token Endpoint Path
+### 12.1 ⚠️ Refresh Token Endpoint Path
 
 | | Path |
 |---|---|
@@ -1793,7 +2260,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 11.2 ⚠️ OTP Verify — `otp_id` Not Required in Request
+### 12.2 ⚠️ OTP Verify — `otp_id` Not Required in Request
 
 | | Behaviour |
 |---|---|
@@ -1804,7 +2271,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 11.3 ⚠️ GET /users/delivery-location Returns Array, Not Single Object
+### 12.3 ⚠️ GET /users/delivery-location Returns Array, Not Single Object
 
 | | Response |
 |---|---|
@@ -1815,7 +2282,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 11.4 ⚠️ Access Token Lifetime
+### 12.4 ⚠️ Access Token Lifetime
 
 | | Value |
 |---|---|
@@ -1826,7 +2293,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 11.5 ⚠️ Admin Auth — OTP vs Email/Password
+### 12.5 ⚠️ Admin Auth — OTP vs Email/Password
 
 | | Method |
 |---|---|
@@ -1837,7 +2304,7 @@ These are differences between the API design documents and the current implement
 
 ---
 
-### 11.6 ℹ️ Dual Referral Endpoints
+### 12.6 ℹ️ Dual Referral Endpoints
 
 Both of these exist and return referral data:
 - `GET /users/referral` — user-facing referral summary
@@ -1847,7 +2314,7 @@ Either works. Prefer `/users/referral` for the customer app.
 
 ---
 
-### 11.7 ℹ️ Response Field Naming Convention
+### 12.7 ℹ️ Response Field Naming Convention
 
 The spec examples use `snake_case` field names (e.g. `is_new_user`, `access_token`).
 
@@ -1857,4 +2324,28 @@ The backend returns **`camelCase`** (e.g. `isNewUser`, `accessToken`).
 
 ---
 
-*Last updated: 2026-05-23*
+### 12.8 ⚠️ Request Body Field Naming
+
+Request bodies sent **to** the server use **snake_case** (e.g. `plan_id`, `meal_type`, `start_date`, `end_date`).
+
+The response fields returned **from** the server use **camelCase** (e.g. `planId`, `mealType`, `startDate`).
+
+Affected endpoints:
+- `POST /checkout/session` — send `plan_id`, `meal_type`
+- `POST /subscriptions/me/pause` — send `start_date`, `end_date` (not `pauseFrom`/`pauseUntil`)
+- `PATCH /subscriptions/me/meal-type` — send `meal_type`, `apply_to`
+
+---
+
+### 12.9 ⚠️ Pause Request Field Names
+
+| | Field names |
+|---|---|
+| **Spec says** | `pauseFrom` / `pauseUntil` |
+| **Implemented as** | `start_date` / `end_date` |
+
+**Send `start_date` and `end_date` in the pause request body.**
+
+---
+
+*Last updated: 2026-06-08*
