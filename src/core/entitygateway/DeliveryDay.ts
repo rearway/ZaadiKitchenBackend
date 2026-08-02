@@ -16,6 +16,25 @@ export interface DeliveryDayLoader {
     perPage: number,
     period?: string
   ): Promise<{ days: DeliveryHistoryEntry[]; total: number }>
+  getRiderDeliveriesByDate(
+    date: string,
+    areaId?: string
+  ): Promise<RiderDeliveryRow[]>
+}
+
+export interface RiderDeliveryRow {
+  deliveryDayId: string
+  customerName: string
+  buildingName: string | null
+  floor: string | null
+  deskArea: string | null
+  deliveryPreference: 'hand_to_me' | 'reception' | null
+  riderNotes: string | null
+  areaName: string | null
+  mealType: 'executive' | 'salad'
+  mealName: string | null
+  status: DeliveryDayStatus
+  deliveredAt: Date | null
 }
 
 export interface DeliveryHistoryEntry {
@@ -37,6 +56,7 @@ export interface DeliveryDayPersistor {
     id: string,
     status: DeliveryDayStatus
   ): Promise<DeliveryDay>
+  markDeliveryDelivered(id: string): Promise<DeliveryDay>
   bulkUpdateDeliveryDayStatus(
     subscriptionId: string,
     fromDate: string,

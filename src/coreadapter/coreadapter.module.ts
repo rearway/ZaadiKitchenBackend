@@ -24,6 +24,7 @@ import {
   DeliveryIssuePersistenceS,
   MealRatingPersistenceS,
   AdminCustomerPersistenceS,
+  RiderPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -48,6 +49,7 @@ import { AuditLogPersistenceService } from '../infrastructure/SequelizePersisten
 import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
+import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -101,6 +103,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: DeliveryIssuePersistenceS, useClass: DeliveryIssuePersistenceService },
     { provide: MealRatingPersistenceS, useClass: MealRatingPersistenceService },
     { provide: AdminCustomerPersistenceS, useClass: AdminCustomerPersistenceService },
+    { provide: RiderPersistenceS, useClass: RiderPersistenceService },
 
     // Core adapter — maps infra → Deps → initUseCases()
     coreAdapterService,

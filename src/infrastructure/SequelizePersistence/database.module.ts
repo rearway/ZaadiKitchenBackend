@@ -25,6 +25,7 @@ import { MenuSlotModel } from './models/MenuSlotModel.js'
 import { AuditLogModel } from './models/AuditLogModel.js'
 import { DeliveryIssueModel } from './models/DeliveryIssueModel.js'
 import { MealRatingModel } from './models/MealRatingModel.js'
+import { RiderIssueModel } from './models/RiderIssueModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -75,6 +76,7 @@ import { MealRatingModel } from './models/MealRatingModel.js'
             AuditLogModel,
             DeliveryIssueModel,
             MealRatingModel,
+            RiderIssueModel,
           ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
@@ -115,6 +117,7 @@ import { MealRatingModel } from './models/MealRatingModel.js'
       AuditLogModel,
       DeliveryIssueModel,
       MealRatingModel,
+      RiderIssueModel,
     ]),
   ],
   exports: [SequelizeModule],

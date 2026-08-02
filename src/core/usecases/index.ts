@@ -46,6 +46,8 @@ import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
 import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
+import * as MarkDeliveryDelivered from './commands/MarkDeliveryDelivered.js'
+import * as ReportRiderIssue from './commands/ReportRiderIssue.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -84,6 +86,7 @@ import * as GetMealPhotoUploadUrl from './queries/GetMealPhotoUploadUrl.js'
 import * as GetAdminCustomers from './queries/GetAdminCustomers.js'
 import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
 import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
+import * as GetMyDeliveries from './queries/GetMyDeliveries.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -371,6 +374,18 @@ export function initUseCases(deps: Deps) {
     AdminCreditWallet.name,
     ...defaultWrappers
   )
+  const markDeliveryDelivered = wrapUC(
+    deps,
+    MarkDeliveryDelivered.makeUC(deps),
+    MarkDeliveryDelivered.name,
+    ...defaultWrappers
+  )
+  const reportRiderIssue = wrapUC(
+    deps,
+    ReportRiderIssue.makeUC(deps),
+    ReportRiderIssue.name,
+    ...defaultWrappers
+  )
   const getPendingRatings = wrapUC(
     deps,
     GetPendingRatings.makeUC(deps),
@@ -591,6 +606,12 @@ export function initUseCases(deps: Deps) {
     GetAdminCustomerHistory.name,
     ...defaultWrappers
   )
+  const getMyDeliveries = wrapUC(
+    deps,
+    GetMyDeliveries.makeUC(deps),
+    GetMyDeliveries.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -630,6 +651,7 @@ export function initUseCases(deps: Deps) {
       getAdminCustomers,
       getAdminCustomer,
       getAdminCustomerHistory,
+      getMyDeliveries,
     },
     commands: {
       sendOtp,
@@ -677,6 +699,8 @@ export function initUseCases(deps: Deps) {
       submitMealRating,
       deactivateCustomer,
       adminCreditWallet,
+      markDeliveryDelivered,
+      reportRiderIssue,
     },
   }
 }

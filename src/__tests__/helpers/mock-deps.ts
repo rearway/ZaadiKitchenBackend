@@ -160,6 +160,7 @@ export const makeDeliveryDay = (overrides: Record<string, unknown> = {}) => ({
   mealType: 'executive' as const,
   mealName: null as string | null,
   status: 'scheduled' as const,
+  deliveredAt: null as Date | null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -381,11 +382,13 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDaysBySubscription: jest.fn().mockResolvedValue([]),
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
+      getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['deliveryDayLoader'],
 
     deliveryDayPersistor: {
       bulkCreateDeliveryDays: jest.fn().mockResolvedValue([makeDeliveryDay()]),
       updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
+      markDeliveryDelivered: jest.fn().mockResolvedValue(makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })),
       bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
       updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryDayPersistor'],
@@ -509,6 +512,18 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     adminCustomerPersistor: {
       deactivateCustomer: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['adminCustomerPersistor'],
+
+    riderIssuePersistor: {
+      createRiderIssue: jest.fn().mockResolvedValue({
+        id: 'rider-issue-uuid-1',
+        deliveryDayId: 'dd-uuid-1',
+        riderId: 'rider-uuid-1',
+        issueType: 'customer_not_found',
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    } as unknown as Deps['riderIssuePersistor'],
   }
 
   return { ...base, ...overrides }

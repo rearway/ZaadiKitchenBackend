@@ -203,6 +203,18 @@ export class RatingAlreadySubmittedError extends BaseError {
   }
 }
 
+export class DeliveryNotFoundError extends BaseError {
+  constructor() {
+    super('DELIVERY_NOT_FOUND', 404, 'Delivery not found.')
+  }
+}
+
+export class AlreadyDeliveredError extends BaseError {
+  constructor() {
+    super('ALREADY_DELIVERED', 409, 'This delivery has already been marked as delivered.')
+  }
+}
+
 export class ActivationRequiresConfirmationError extends BaseError {
   constructor(areaName: string) {
     super(

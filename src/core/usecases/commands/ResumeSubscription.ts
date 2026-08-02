@@ -95,6 +95,7 @@ function generateExtensionDays(
         mealType,
         mealName: null,
         status: 'scheduled',
+        deliveredAt: null,
       })
     }
     cursor = addDays(cursor, 1)
