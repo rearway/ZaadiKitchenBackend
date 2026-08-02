@@ -8,6 +8,7 @@ import {
   DeliveryDayLoader,
   DeliveryDayPersistor,
   DeliveryHistoryEntry,
+  RiderDeliveryRow,
 } from '../../core/entitygateway/DeliveryDay.js'
 import { Subscription } from '../../core/entities/Subscription.js'
 import {
@@ -187,6 +188,101 @@ export class SubscriptionPersistenceService
     return this.toDeliveryDayEntity(model!)
   }
 
+  async markDeliveryDelivered(id: string): Promise<DeliveryDay> {
+    const deliveredAt = new Date()
+    await DeliveryDayModel.update(
+      { status: 'delivered', deliveredAt },
+      { where: { id } }
+    )
+    const model = await DeliveryDayModel.findByPk(id)
+    return this.toDeliveryDayEntity(model!)
+  }
+
+  async getRiderDeliveriesByDate(
+    date: string,
+    areaId?: string
+  ): Promise<RiderDeliveryRow[]> {
+    const sequelize = DeliveryDayModel.sequelize!
+
+    const rows = await sequelize.query<{
+      delivery_day_id: string
+      customer_name: string
+      building_name: string | null
+      floor: string | null
+      desk_area: string | null
+      gate: string | null
+      delivery_preference: 'hand_to_me' | 'reception' | null
+      rider_notes: string | null
+      area_id: string | null
+      area_name: string | null
+      meal_type: 'executive' | 'salad'
+      meal_name: string | null
+      status: DeliveryDayStatus
+      delivered_at: Date | null
+    }>(
+      `SELECT dd.id as delivery_day_id,
+              u.full_name as customer_name,
+              dl.building_name,
+              dl.floor,
+              dl.desk_area,
+              dl.gate,
+              dl.delivery_preference,
+              dl.rider_notes,
+              da.id as area_id,
+              da.name as area_name,
+              dd.meal_type,
+              dd.meal_name,
+              dd.status,
+              dd.delivered_at
+       FROM delivery_days dd
+       JOIN users u ON u.id = dd.user_id
+       LEFT JOIN delivery_locations dl ON dl.user_id = dd.user_id AND dl.is_primary = true
+       LEFT JOIN delivery_areas da ON da.id = dl.area_id
+       WHERE dd.date = :date
+         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+         ${areaId ? 'AND da.id = :areaId' : ''}
+       ORDER BY da.name ASC NULLS LAST, dl.building_name ASC NULLS LAST, u.full_name ASC`,
+      {
+        replacements: areaId ? { date, areaId } : { date },
+        type: QueryTypes.SELECT,
+      }
+    )
+
+    return rows.map(r => ({
+      deliveryDayId: r.delivery_day_id,
+      customerName: r.customer_name,
+      buildingName: r.building_name,
+      floor: r.floor,
+      deskArea: r.desk_area,
+      gate: r.gate,
+      deliveryPreference: r.delivery_preference,
+      riderNotes: r.rider_notes,
+      areaId: r.area_id,
+      areaName: r.area_name,
+      mealType: r.meal_type,
+      mealName: r.meal_name,
+      status: r.status,
+      deliveredAt: r.delivered_at,
+    }))
+  }
+
+  async getMealBreakdownByDate(
+    date: string
+  ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]> {
+    const models = await DeliveryDayModel.findAll({
+      where: { date, status: { [Op.in]: ['scheduled', 'past_cutoff', 'delivered'] } },
+      attributes: ['mealType'],
+    })
+
+    const counts = { executive: 0, salad: 0 }
+    for (const m of models) counts[m.mealType]++
+
+    return [
+      { mealType: 'executive' as const, count: counts.executive },
+      { mealType: 'salad' as const, count: counts.salad },
+    ]
+  }
+
   async bulkUpdateDeliveryDayStatus(
     subscriptionId: string,
     fromDate: string,
@@ -259,6 +355,7 @@ export class SubscriptionPersistenceService
       mealType: model.mealType,
       mealName: model.mealName,
       status: model.status,
+      deliveredAt: model.deliveredAt,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

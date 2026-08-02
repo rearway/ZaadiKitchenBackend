@@ -25,6 +25,9 @@ import {
   DeliveryIssuePersistenceS,
   MealRatingPersistenceS,
   AdminCustomerPersistenceS,
+  RiderPersistenceS,
+  DailyOpsPersistenceS,
+  NotificationS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -49,6 +52,9 @@ import { AuditLogPersistenceService } from '../infrastructure/SequelizePersisten
 import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
+import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
+import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
+import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -75,7 +81,10 @@ export const coreAdapterService: FactoryProvider = {
     auditLogPersistence: AuditLogPersistenceService,
     deliveryIssuePersistence: DeliveryIssuePersistenceService,
     mealRatingPersistence: MealRatingPersistenceService,
-    adminCustomerPersistence: AdminCustomerPersistenceService
+    adminCustomerPersistence: AdminCustomerPersistenceService,
+    riderPersistence: RiderPersistenceService,
+    dailyOpsPersistence: DailyOpsPersistenceService,
+    notificationService: ConsoleNotificationService
   ): UseCases =>
     initUseCases({
       logger,
@@ -142,6 +151,10 @@ export const coreAdapterService: FactoryProvider = {
       mealRatingLoader: mealRatingPersistence,
       adminCustomerLoader: adminCustomerPersistence,
       adminCustomerPersistor: adminCustomerPersistence,
+      riderIssuePersistor: riderPersistence,
+      dailyOpsDayLoader: dailyOpsPersistence,
+      dailyOpsDayPersistor: dailyOpsPersistence,
+      notificationGateway: notificationService,
     }),
   inject: [
     LoggerS,
@@ -167,5 +180,8 @@ export const coreAdapterService: FactoryProvider = {
     DeliveryIssuePersistenceS,
     MealRatingPersistenceS,
     AdminCustomerPersistenceS,
+    RiderPersistenceS,
+    DailyOpsPersistenceS,
+    NotificationS,
   ],
 }

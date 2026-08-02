@@ -1,2019 +1,2523 @@
 {
-  "info": {
-    "_postman_id": "aa123456-7890-abcd-ef12-34567890abcd",
-    "name": "Zaadi Kitchen API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Send OTP",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"phone\": \"+966500000001\",\n    \"channel\": \"whatsapp\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/otp/send",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "otp",
-                "send"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Verify OTP",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"phone\": \"+966500000001\",\n    \"code\": \"1234\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/otp/verify",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "otp",
-                "verify"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Admin Login",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"Admin@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/admin/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "admin",
-                "login"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Token",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/refresh",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "refresh"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Admin Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/admin/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "admin",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Onboarding & Profile",
-      "item": [
-        {
-          "name": "Get Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/profile",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "profile"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Profile",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"fullName\": \"Ahmed Al-Rashidi\",\n    \"email\": \"ahmed@example.com\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/users/profile",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "profile"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Language Preference",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"language\": \"AR\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/users/preferences/language",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "preferences",
-                "language"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Delivery Areas",
-      "item": [
-        {
-          "name": "List Active Delivery Areas",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/delivery/areas",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "areas"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Search Delivery Areas",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/delivery/areas/search?q=nakheel",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "areas",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "nakheel"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "List Buildings for Area",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/delivery/areas/{{area_id}}/buildings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "areas",
-                "{{area_id}}",
-                "buildings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Search Buildings for Area",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/delivery/areas/{{area_id}}/buildings?q=tower",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "areas",
-                "{{area_id}}",
-                "buildings"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "tower"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Submit Out-of-Zone Interest",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"areaName\": \"Al Zahra\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/delivery/areas/out-of-zone",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "areas",
-                "out-of-zone"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Save Delivery Location",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"areaId\": \"{{area_id}}\",\n    \"building\": \"Al Nakheel Tower, King Fahad Rd\",\n    \"buildingId\": null,\n    \"floor\": \"Floor 7\",\n    \"deskArea\": \"Desk B12\",\n    \"deliveryPreference\": \"hand_to_me\",\n    \"riderNotes\": \"Call me on arrival\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/users/delivery-location",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "delivery-location"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Saved Delivery Location",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/delivery-location",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "delivery-location"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Delivery Start Dates",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/delivery/start-dates?limit=14",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "delivery",
-                "start-dates"
-              ],
-              "query": [
-                {
-                  "key": "from",
-                  "value": "",
-                  "description": "Optional: YYYY-MM-DD earliest date",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "14",
-                  "description": "Number of dates to return (max 30)"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Admin Delivery",
-      "item": [
-        {
-          "name": "List Areas (Admin)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/areas",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "areas"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "active",
-                  "description": "Filter: active | coming_soon | paused",
-                  "disabled": true
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Delivery Area",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Downtown Riyadh\",\n    \"description\": \"Core downtown area\",\n    \"status\": \"coming_soon\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/areas",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "areas"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Add Building to Area",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Al Nakheel Gate Tower\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/areas/{{area_id}}/buildings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "areas",
-                "{{area_id}}",
-                "buildings"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Config",
-      "item": [
-        {
-          "name": "Get Public Holidays",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/config/public-holidays?year=2025",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "config",
-                "public-holidays"
-              ],
-              "query": [
-                {
-                  "key": "year",
-                  "value": "2025",
-                  "description": "Optional: defaults to current year"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Plans",
-      "item": [
-        {
-          "name": "Get All Plans",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/plans",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "plans"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Active Plans (with wallet balance)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/plans/active",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "plans",
-                "active"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Referrals",
-      "item": [
-        {
-          "name": "Validate Referral / Promo Code",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"code\": \"AHMED15\",\n    \"plan_id\": \"month\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/referrals/validate",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "referrals",
-                "validate"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get My Referral Stats",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/referrals/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "referrals",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Checkout",
-      "item": [
-        {
-          "name": "Create Checkout Session",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"plan_id\": \"month\",\n    \"meal_type\": \"executive\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/checkout/session",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "checkout",
-                "session"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Checkout Session",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/checkout/session/{{session_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "checkout",
-                "session",
-                "{{session_id}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Apply Promo Code",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"code\": \"AHMED15\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/checkout/session/{{session_id}}/promo",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "checkout",
-                "session",
-                "{{session_id}}",
-                "promo"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Remove Promo Code",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/checkout/session/{{session_id}}/promo",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "checkout",
-                "session",
-                "{{session_id}}",
-                "promo"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Payment Methods",
-      "item": [
-        {
-          "name": "Get Payment Methods",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/methods",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "methods"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Add Payment Method",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"type\": \"mada\",\n    \"token\": \"tok_sandbox_xxxxxxxxxxxx\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/payment/methods",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "methods"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Payment Method",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/methods/{{payment_method_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "methods",
-                "{{payment_method_id}}"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Orders",
-      "item": [
-        {
-          "name": "Create Order (Pay)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"session_id\": \"{{session_id}}\",\n    \"payment_method_id\": \"{{payment_method_id}}\",\n    \"start_date\": \"2025-05-05\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/orders",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "orders"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Order by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/orders/{{order_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "orders",
-                "{{order_id}}"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Subscriptions",
-      "item": [
-        {
-          "name": "Get My Subscription",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Subscription Deliveries",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/deliveries",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "deliveries"
-              ],
-              "query": [
-                {
-                  "key": "from",
-                  "value": "2025-05-01",
-                  "description": "Optional filter start YYYY-MM-DD",
-                  "disabled": true
-                },
-                {
-                  "key": "to",
-                  "value": "2025-05-31",
-                  "description": "Optional filter end YYYY-MM-DD",
-                  "disabled": true
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Skip Delivery Day",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/deliveries/2025-05-06/skip",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "deliveries",
-                "2025-05-06",
-                "skip"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Undo Skip Delivery Day",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/deliveries/2025-05-06/skip",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "deliveries",
-                "2025-05-06",
-                "skip"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Pause Subscription",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"start_date\": \"2025-05-12\",\n    \"end_date\": \"2025-05-18\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/pause",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "pause"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Resume Subscription",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"resume_date\": \"2025-05-20\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/resume",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "resume"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Cancel Subscription",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/cancel",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "cancel"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Switch Meal Type",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"meal_type\": \"salad\",\n    \"apply_to\": \"all\",\n    \"specific_days\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/subscriptions/me/meal-type",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "subscriptions",
-                "me",
-                "meal-type"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Wallet & Referral",
-      "item": [
-        {
-          "name": "Get Wallet Balance",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/wallet",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "wallet"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Wallet Transactions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/wallet/transactions?page=1&per_page=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "wallet",
-                "transactions"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "per_page",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get My Referral (via /users)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/referral",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "referral"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Health",
-      "item": [
-        {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Admin Meals",
-      "item": [
-        {
-          "name": "List Meals",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/meals?status=all&meal_type=all&page=1&per_page=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "all"
-                },
-                {
-                  "key": "meal_type",
-                  "value": "all"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "per_page",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Meal Detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/meals/{{meal_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals",
-                "{{meal_id}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Meal",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/meals",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals"
-              ]
-            },
-            "response": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name_en\": \"Lamb Kabsa\",\n    \"name_ar\": \"\\u0643\\u0628\\u0633\\u0629 \\u0644\\u062d\\u0645\",\n    \"meal_type\": \"executive\",\n    \"kcal\": 550,\n    \"macros\": {\n        \"protein_g\": 38,\n        \"carbs_g\": 62,\n        \"fat_g\": 14\n    },\n    \"chef_note\": \"Slow-cooked for 4 hours.\",\n    \"key_ingredients\": [\n        \"Lamb\",\n        \"Saffron rice\"\n    ],\n    \"emoji\": \"\\ud83c\\udf5b\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Meal",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/meals/{{meal_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals",
-                "{{meal_id}}"
-              ]
-            },
-            "response": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name_en\": \"Updated Name\",\n    \"kcal\": 560\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Meal Status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/meals/{{meal_id}}/status",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals",
-                "{{meal_id}}",
-                "status"
-              ]
-            },
-            "response": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Import Meals (XLSX)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": ""
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/meals/import",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "meals",
-                "import"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Admin Menu Manager",
-      "item": [
-        {
-          "name": "List Week Planner",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/menu/weeks?count=2",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "menu",
-                "weeks"
-              ],
-              "query": [
-                {
-                  "key": "count",
-                  "value": "2"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Week Detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "menu",
-                "weeks",
-                "{{week_id}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Assign Meal to Slot",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/slots/{{slot_id}}/assign",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "menu",
-                "weeks",
-                "{{week_id}}",
-                "slots",
-                "{{slot_id}}",
-                "assign"
-              ]
-            },
-            "response": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"meal_id\": \"{{meal_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Clear Slot",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/slots/{{slot_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "menu",
-                "weeks",
-                "{{week_id}}",
-                "slots",
-                "{{slot_id}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Publish Week",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/publish",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "menu",
-                "weeks",
-                "{{week_id}}",
-                "publish"
-              ]
-            },
-            "response": []
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Home",
-      "item": [
-        {
-          "name": "GET /home",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/home",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "home"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "GET /home/this-week",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/home/this-week",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "home",
-                "this-week"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Menu",
-      "item": [
-        {
-          "name": "GET /menu (metadata)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/menu",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "menu"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "GET /menu/week (10-day schedule)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/menu/week?meal_type=all",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "menu",
-                "week"
-              ],
-              "query": [
-                {
-                  "key": "meal_type",
-                  "value": "all"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "GET /meals/:meal_id (meal detail)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/meals/{{meal_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "meals",
-                "{{meal_id}}"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:3000/api/v1",
-      "type": "string"
-    },
-    {
-      "key": "access_token",
-      "value": "your-jwt-access-token",
-      "type": "string"
-    },
-    {
-      "key": "refresh_token",
-      "value": "your-jwt-refresh-token",
-      "type": "string"
-    },
-    {
-      "key": "area_id",
-      "value": "your-area-uuid",
-      "type": "string"
-    },
-    {
-      "key": "session_id",
-      "value": "your-checkout-session-id",
-      "type": "string"
-    },
-    {
-      "key": "payment_method_id",
-      "value": "your-payment-method-id",
-      "type": "string"
-    },
-    {
-      "key": "order_id",
-      "value": "your-order-id",
-      "type": "string"
-    },
-    {
-      "key": "meal_id",
-      "value": "your-meal-uuid",
-      "type": "string"
-    },
-    {
-      "key": "week_id",
-      "value": "w2025-23",
-      "type": "string"
-    },
-    {
-      "key": "slot_id",
-      "value": "slot_w2025-23_sun_exec",
-      "type": "string"
-    }
-  ]
+	"info": {
+		"_postman_id": "aa123456-7890-abcd-ef12-34567890abcd",
+		"name": "Zaadi Kitchen API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone\": \"+966500000001\",\n    \"channel\": \"whatsapp\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/otp/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"otp",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone\": \"+966500000001\",\n    \"code\": \"1234\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/otp/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"otp",
+								"verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"Admin@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/admin/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"admin",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/admin/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"admin",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ops Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/admin/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"admin",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"ops@zaadikitchen.com\",\n    \"password\": \"Ops@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Onboarding & Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"Ahmed Al-Rashidi\",\n    \"email\": \"ahmed@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Language Preference",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"language\": \"AR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/preferences/language",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"preferences",
+								"language"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delivery Areas",
+			"item": [
+				{
+					"name": "List Active Delivery Areas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/delivery/areas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"areas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Delivery Areas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/delivery/areas/search?q=nakheel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"areas",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "nakheel"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Buildings for Area",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/delivery/areas/{{area_id}}/buildings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"areas",
+								"{{area_id}}",
+								"buildings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Buildings for Area",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/delivery/areas/{{area_id}}/buildings?q=tower",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"areas",
+								"{{area_id}}",
+								"buildings"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "tower"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Out-of-Zone Interest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"areaName\": \"Al Zahra\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/delivery/areas/out-of-zone",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"areas",
+								"out-of-zone"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Save Delivery Location",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"areaId\": \"{{area_id}}\",\n    \"building\": \"Al Nakheel Tower, King Fahad Rd\",\n    \"buildingId\": null,\n    \"floor\": \"Floor 7\",\n    \"deskArea\": \"Desk B12\",\n    \"deliveryPreference\": \"hand_to_me\",\n    \"riderNotes\": \"Call me on arrival\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/delivery-location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"delivery-location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Saved Delivery Location",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/delivery-location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"delivery-location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Delivery Start Dates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/delivery/start-dates?limit=14",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delivery",
+								"start-dates"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "",
+									"description": "Optional: YYYY-MM-DD earliest date",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "14",
+									"description": "Number of dates to return (max 30)"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Delivery",
+			"item": [
+				{
+					"name": "List Areas (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/areas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"areas"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "active",
+									"description": "Filter: active | coming_soon | paused",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Delivery Area",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Downtown Riyadh\",\n    \"description\": \"Core downtown area\",\n    \"status\": \"coming_soon\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/areas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"areas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Building to Area",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Al Nakheel Gate Tower\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/areas/{{area_id}}/buildings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"areas",
+								"{{area_id}}",
+								"buildings"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Config",
+			"item": [
+				{
+					"name": "Get Public Holidays",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/config/public-holidays?year=2025",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"config",
+								"public-holidays"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2025",
+									"description": "Optional: defaults to current year"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Plans",
+			"item": [
+				{
+					"name": "Get All Plans",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plans",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"plans"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Plans (with wallet balance)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plans/active",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"plans",
+								"active"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Referrals",
+			"item": [
+				{
+					"name": "Validate Referral / Promo Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"AHMED15\",\n    \"plan_id\": \"month\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/referrals/validate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"referrals",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Referral Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/referrals/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"referrals",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Checkout",
+			"item": [
+				{
+					"name": "Create Checkout Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"plan_id\": \"month\",\n    \"meal_type\": \"executive\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/checkout/session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"checkout",
+								"session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Checkout Session",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/checkout/session/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"checkout",
+								"session",
+								"{{session_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Apply Promo Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"AHMED15\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/checkout/session/{{session_id}}/promo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"checkout",
+								"session",
+								"{{session_id}}",
+								"promo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Promo Code",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/checkout/session/{{session_id}}/promo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"checkout",
+								"session",
+								"{{session_id}}",
+								"promo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payment Methods",
+			"item": [
+				{
+					"name": "Get Payment Methods",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payment/methods",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payment",
+								"methods"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Payment Method",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"mada\",\n    \"token\": \"tok_sandbox_xxxxxxxxxxxx\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/payment/methods",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payment",
+								"methods"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Payment Method",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payment/methods/{{payment_method_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payment",
+								"methods",
+								"{{payment_method_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create Order (Pay)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"session_id\": \"{{session_id}}\",\n    \"payment_method_id\": \"{{payment_method_id}}\",\n    \"start_date\": \"2025-05-05\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/orders/{{order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"item": [
+				{
+					"name": "Get My Subscription",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Subscription Deliveries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/deliveries",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"deliveries"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "2025-05-01",
+									"description": "Optional filter start YYYY-MM-DD",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2025-05-31",
+									"description": "Optional filter end YYYY-MM-DD",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Skip Delivery Day",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/deliveries/2025-05-06/skip",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"deliveries",
+								"2025-05-06",
+								"skip"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Undo Skip Delivery Day",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/deliveries/2025-05-06/skip",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"deliveries",
+								"2025-05-06",
+								"skip"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pause Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"start_date\": \"2025-05-12\",\n    \"end_date\": \"2025-05-18\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/pause",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"pause"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resume Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resume_date\": \"2025-05-20\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/resume",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"resume"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Switch Meal Type",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"meal_type\": \"salad\",\n    \"apply_to\": \"all\",\n    \"specific_days\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/subscriptions/me/meal-type",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"subscriptions",
+								"me",
+								"meal-type"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet & Referral",
+			"item": [
+				{
+					"name": "Get Wallet Balance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/wallet",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"wallet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/wallet/transactions?page=1&per_page=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"wallet",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Referral (via /users)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/referral",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"referral"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Meals",
+			"item": [
+				{
+					"name": "List Meals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/meals?status=all&meal_type=all&page=1&per_page=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "all"
+								},
+								{
+									"key": "meal_type",
+									"value": "all"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Meal Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/meals/{{meal_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals",
+								"{{meal_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Meal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/meals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals"
+							]
+						},
+						"response": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name_en\": \"Lamb Kabsa\",\n    \"name_ar\": \"\\u0643\\u0628\\u0633\\u0629 \\u0644\\u062d\\u0645\",\n    \"meal_type\": \"executive\",\n    \"kcal\": 550,\n    \"macros\": {\n        \"protein_g\": 38,\n        \"carbs_g\": 62,\n        \"fat_g\": 14\n    },\n    \"chef_note\": \"Slow-cooked for 4 hours.\",\n    \"key_ingredients\": [\n        \"Lamb\",\n        \"Saffron rice\"\n    ],\n    \"emoji\": \"\\ud83c\\udf5b\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Meal",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/meals/{{meal_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals",
+								"{{meal_id}}"
+							]
+						},
+						"response": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name_en\": \"Updated Name\",\n    \"kcal\": 560\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Meal Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/meals/{{meal_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals",
+								"{{meal_id}}",
+								"status"
+							]
+						},
+						"response": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import Meals (XLSX)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/meals/import",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"meals",
+								"import"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Menu Manager",
+			"item": [
+				{
+					"name": "List Week Planner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/menu/weeks?count=2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"menu",
+								"weeks"
+							],
+							"query": [
+								{
+									"key": "count",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Week Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/menu/weeks/{{week_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"menu",
+								"weeks",
+								"{{week_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Meal to Slot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/slots/{{slot_id}}/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"menu",
+								"weeks",
+								"{{week_id}}",
+								"slots",
+								"{{slot_id}}",
+								"assign"
+							]
+						},
+						"response": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"meal_id\": \"{{meal_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Slot",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/slots/{{slot_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"menu",
+								"weeks",
+								"{{week_id}}",
+								"slots",
+								"{{slot_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Week",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/publish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"menu",
+								"weeks",
+								"{{week_id}}",
+								"publish"
+							]
+						},
+						"response": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rider App",
+			"description": "Driver-role endpoints. Log in via Send OTP / Verify OTP above with a DRIVER-role phone number, then paste the returned accessToken into the access_token collection variable.",
+			"item": [
+				{
+					"name": "Get My Deliveries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rider/deliveries?date=your-date-yyyy-mm-dd&area_id=your-area-uuid",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rider",
+								"deliveries"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								},
+								{
+									"key": "area_id",
+									"value": "your-area-uuid",
+									"description": "Optional area filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Delivery Delivered",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rider/deliveries/{{delivery_id}}/delivered",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rider",
+								"deliveries",
+								"{{delivery_id}}",
+								"delivered"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Report Rider Issue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rider/deliveries/{{delivery_id}}/issue",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rider",
+								"deliveries",
+								"{{delivery_id}}",
+								"issue"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"issue_type\": \"customer_not_found\",\n    \"notes\": \"Called twice, no answer. Left at reception.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Daily Operations",
+			"description": "Production pipeline (Locked \u2192 Dispatch \u2192 Delivered) and the customer issues queue. Ops routes require an OPS-role token (see Ops Login above); everything else requires ADMIN.",
+			"item": [
+				{
+					"name": "Get Daily Ops (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops?date=your-date-yyyy-mm-dd",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Advance Pipeline Stage (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/pipeline/advance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"pipeline",
+								"advance"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"your-date-yyyy-mm-dd\",\n    \"from_stage\": \"locked\",\n    \"to_stage\": \"dispatch\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Issues Queue",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues?date=your-date-yyyy-mm-dd&status=open",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								},
+								{
+									"key": "status",
+									"value": "open",
+									"description": "open (default) or all"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Credit Issue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues/{{issue_id}}/credit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues",
+								"{{issue_id}}",
+								"credit"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"credit_sar\": 28,\n    \"note\": \"Meal quality did not meet our standards. Credited full meal value.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Issue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues/{{issue_id}}/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues",
+								"{{issue_id}}",
+								"reject"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Unable to verify the reported issue based on kitchen records.\",\n    \"note\": \"Kitchen confirmed meal was prepared and packed at correct temperature.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily Ops (Ops)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/ops/daily-ops?date=your-date-yyyy-mm-dd",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ops",
+								"daily-ops"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Advance Pipeline Stage (Ops)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/ops/daily-ops/pipeline/advance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ops",
+								"daily-ops",
+								"pipeline",
+								"advance"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"your-date-yyyy-mm-dd\",\n    \"from_stage\": \"dispatch\",\n    \"to_stage\": \"delivered\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Delivery Labels",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/labels?date=your-date-yyyy-mm-dd&meal_type=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"labels"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								},
+								{
+									"key": "meal_type",
+									"value": "all",
+									"description": "all (default), executive, or salad"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Delivery Labels (PDF)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/labels/download?date=your-date-yyyy-mm-dd&meal_type=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"labels",
+								"download"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								},
+								{
+									"key": "meal_type",
+									"value": "all",
+									"description": "all (default), executive, or salad"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export Delivery Sheet (XLSX)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/export?date=your-date-yyyy-mm-dd",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"export"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "your-date-yyyy-mm-dd",
+									"description": "Optional, defaults to today"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Home",
+			"item": [
+				{
+					"name": "GET /home",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/home",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"home"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /home/this-week",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/home/this-week",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"home",
+								"this-week"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Menu",
+			"item": [
+				{
+					"name": "GET /menu (metadata)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/menu",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"menu"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /menu/week (10-day schedule)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/menu/week?meal_type=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"menu",
+								"week"
+							],
+							"query": [
+								{
+									"key": "meal_type",
+									"value": "all"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /meals/:meal_id (meal detail)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meals/{{meal_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"{{meal_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "your-jwt-access-token",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "your-jwt-refresh-token",
+			"type": "string"
+		},
+		{
+			"key": "area_id",
+			"value": "your-area-uuid",
+			"type": "string"
+		},
+		{
+			"key": "session_id",
+			"value": "your-checkout-session-id",
+			"type": "string"
+		},
+		{
+			"key": "payment_method_id",
+			"value": "your-payment-method-id",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "your-order-id",
+			"type": "string"
+		},
+		{
+			"key": "meal_id",
+			"value": "your-meal-uuid",
+			"type": "string"
+		},
+		{
+			"key": "week_id",
+			"value": "w2025-23",
+			"type": "string"
+		},
+		{
+			"key": "slot_id",
+			"value": "slot_w2025-23_sun_exec",
+			"type": "string"
+		},
+		{
+			"key": "delivery_id",
+			"value": "your-delivery-day-uuid",
+			"type": "string"
+		},
+		{
+			"key": "issue_id",
+			"value": "your-issue-uuid",
+			"type": "string"
+		}
+	]
 }

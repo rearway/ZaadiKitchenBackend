@@ -333,6 +333,7 @@ export class DeliveryPersistenceService
       buildingName: model.buildingName,
       floor: model.floor || undefined,
       deskArea: model.deskArea || undefined,
+      gate: model.gate || undefined,
       deliveryPreference: model.deliveryPreference,
       riderNotes: model.riderNotes || undefined,
       isPrimary: model.isPrimary,

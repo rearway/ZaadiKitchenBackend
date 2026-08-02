@@ -97,6 +97,7 @@ export class UserController {
       buildingId: dto.buildingId,
       floor: dto.floor,
       deskArea: dto.deskArea,
+      gate: dto.gate,
       deliveryPreference: dto.deliveryPreference,
       riderNotes: dto.riderNotes,
     })
@@ -121,6 +122,7 @@ export class UserController {
       building: dto.building,
       floor: dto.floor,
       deskArea: dto.deskArea,
+      gate: dto.gate,
       deliveryPreference: dto.deliveryPreference,
       riderNotes: dto.riderNotes,
     })

@@ -9,6 +9,7 @@ export interface SaveDeliveryLocationInput {
   building?: string
   floor?: string
   deskArea?: string
+  gate?: string
   deliveryPreference?: 'hand_to_me' | 'reception'
   riderNotes?: string
 }
@@ -37,6 +38,7 @@ export function makeUC(deps: Deps) {
         building,
         floor,
         deskArea,
+        gate,
         deliveryPreference,
         riderNotes,
       } = input
@@ -84,6 +86,7 @@ export function makeUC(deps: Deps) {
         buildingName: resolvedBuildingName,
         floor,
         deskArea,
+        gate,
         deliveryPreference: deliveryPreference || 'hand_to_me',
         riderNotes,
         isPrimary: true,

@@ -52,6 +52,15 @@ export class SaveDeliveryLocationDTO {
   deskArea?: string
 
   @ApiPropertyOptional({
+    description: 'Gate / entrance note',
+    maxLength: 100,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  gate?: string
+
+  @ApiPropertyOptional({
     description: 'Delivery preference',
     enum: ['hand_to_me', 'reception'],
     default: 'hand_to_me',

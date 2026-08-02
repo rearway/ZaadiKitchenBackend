@@ -91,6 +91,7 @@ function generateDeliveryDays(
   mealType: 'executive' | 'salad'
   mealName: null
   status: 'scheduled'
+  deliveredAt: null
 }> {
   const days: Array<{
     subscriptionId: string
@@ -99,6 +100,7 @@ function generateDeliveryDays(
     mealType: 'executive' | 'salad'
     mealName: null
     status: 'scheduled'
+    deliveredAt: null
   }> = []
   let cursor = new Date(startDate + 'T00:00:00Z')
   let maxIterations = 500
@@ -113,6 +115,7 @@ function generateDeliveryDays(
         mealType,
         mealName: null,
         status: 'scheduled',
+        deliveredAt: null,
       })
     }
     cursor = addDays(cursor, 1)

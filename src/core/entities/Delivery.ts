@@ -32,6 +32,7 @@ export interface DeliveryLocation {
   buildingName: string
   floor?: string
   deskArea?: string
+  gate?: string
   deliveryPreference: 'hand_to_me' | 'reception'
   riderNotes?: string
   isPrimary: boolean

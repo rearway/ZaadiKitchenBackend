@@ -51,6 +51,10 @@ export class DeliveryDayModel extends Model {
   )
   declare status: DeliveryDayStatus
 
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  declare deliveredAt: Date | null
+
   @CreatedAt
   declare createdAt: Date
 

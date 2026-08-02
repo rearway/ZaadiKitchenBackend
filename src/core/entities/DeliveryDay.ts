@@ -15,6 +15,7 @@ export interface DeliveryDay {
   mealType: MealType
   mealName: string | null
   status: DeliveryDayStatus
+  deliveredAt: Date | null
   createdAt: Date
   updatedAt: Date
 }

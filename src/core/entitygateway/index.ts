@@ -33,6 +33,9 @@ export * from './AuditLog.js'
 export * from './DeliveryIssue.js'
 export * from './MealRating.js'
 export * from './AdminCustomer.js'
+export * from './RiderIssue.js'
+export * from './DailyOpsDay.js'
+export * from './Notification.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -82,6 +85,9 @@ import type { AuditLogPersistor, AuditLogLoader } from './AuditLog.js'
 import type { DeliveryIssuePersistor, DeliveryIssueLoader } from './DeliveryIssue.js'
 import type { MealRatingPersistor, MealRatingLoader } from './MealRating.js'
 import type { AdminCustomerLoader, AdminCustomerPersistor } from './AdminCustomer.js'
+import type { RiderIssuePersistor } from './RiderIssue.js'
+import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
+import type { NotificationGateway } from './Notification.js'
 
 export type Deps = {
   logger: Logger
@@ -139,4 +145,8 @@ export type Deps = {
   mealRatingLoader: MealRatingLoader
   adminCustomerLoader: AdminCustomerLoader
   adminCustomerPersistor: AdminCustomerPersistor
+  riderIssuePersistor: RiderIssuePersistor
+  dailyOpsDayLoader: DailyOpsDayLoader
+  dailyOpsDayPersistor: DailyOpsDayPersistor
+  notificationGateway: NotificationGateway
 }
