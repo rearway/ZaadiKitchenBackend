@@ -45,7 +45,8 @@ export function makeUC(deps: Deps) {
       ])
 
       const count = Math.min(8, Math.max(1, input.count ?? 2))
-      const weeks = await menuWeekLoader.getWeeks({ fromWeek: input.fromWeek, count })
+      const fromWeek = input.fromWeek ?? currentWeekBounds.weekId
+      const weeks = await menuWeekLoader.getWeeks({ fromWeek, count })
 
       const mappedWeeks = await Promise.all(
         weeks.map(async week => {
