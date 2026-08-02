@@ -26,6 +26,8 @@ import {
   MealRatingPersistenceS,
   AdminCustomerPersistenceS,
   RiderPersistenceS,
+  DailyOpsPersistenceS,
+  NotificationS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -51,6 +53,8 @@ import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePers
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
+import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
+import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -78,7 +82,9 @@ export const coreAdapterService: FactoryProvider = {
     deliveryIssuePersistence: DeliveryIssuePersistenceService,
     mealRatingPersistence: MealRatingPersistenceService,
     adminCustomerPersistence: AdminCustomerPersistenceService,
-    riderPersistence: RiderPersistenceService
+    riderPersistence: RiderPersistenceService,
+    dailyOpsPersistence: DailyOpsPersistenceService,
+    notificationService: ConsoleNotificationService
   ): UseCases =>
     initUseCases({
       logger,
@@ -146,6 +152,9 @@ export const coreAdapterService: FactoryProvider = {
       adminCustomerLoader: adminCustomerPersistence,
       adminCustomerPersistor: adminCustomerPersistence,
       riderIssuePersistor: riderPersistence,
+      dailyOpsDayLoader: dailyOpsPersistence,
+      dailyOpsDayPersistor: dailyOpsPersistence,
+      notificationGateway: notificationService,
     }),
   inject: [
     LoggerS,
@@ -172,5 +181,7 @@ export const coreAdapterService: FactoryProvider = {
     MealRatingPersistenceS,
     AdminCustomerPersistenceS,
     RiderPersistenceS,
+    DailyOpsPersistenceS,
+    NotificationS,
   ],
 }

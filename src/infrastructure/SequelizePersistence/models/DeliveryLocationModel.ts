@@ -49,6 +49,10 @@ export class DeliveryLocationModel extends Model {
   @Column(DataType.STRING)
   declare deskArea: string | null
 
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  declare gate: string | null
+
   @AllowNull(false)
   @Default('hand_to_me')
   @Column(DataType.ENUM('hand_to_me', 'reception'))

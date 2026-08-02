@@ -7,6 +7,7 @@ export interface UpdateDeliveryLocationInput {
   locationId: string
   floor?: string
   deskArea?: string
+  gate?: string
   deliveryPreference?: 'hand_to_me' | 'reception'
   riderNotes?: string
   building?: string
@@ -34,6 +35,7 @@ export function makeUC(deps: Deps) {
 
       if (input.floor !== undefined) updates.floor = input.floor
       if (input.deskArea !== undefined) updates.deskArea = input.deskArea
+      if (input.gate !== undefined) updates.gate = input.gate
       if (input.deliveryPreference !== undefined) updates.deliveryPreference = input.deliveryPreference
       if (input.riderNotes !== undefined) updates.riderNotes = input.riderNotes
 

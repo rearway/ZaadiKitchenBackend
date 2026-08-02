@@ -383,6 +383,10 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
       getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
+      getMealBreakdownByDate: jest.fn().mockResolvedValue([
+        { mealType: 'executive', count: 0 },
+        { mealType: 'salad', count: 0 },
+      ]),
     } as unknown as Deps['deliveryDayLoader'],
 
     deliveryDayPersistor: {
@@ -486,11 +490,13 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     deliveryIssuePersistor: {
       createIssue: jest.fn().mockResolvedValue(null),
+      resolveIssue: jest.fn().mockResolvedValue(null),
     } as unknown as Deps['deliveryIssuePersistor'],
 
     deliveryIssueLoader: {
       getIssuesBySubscription: jest.fn().mockResolvedValue([]),
       getIssueById: jest.fn().mockResolvedValue(null),
+      getOpenIssuesByDate: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['deliveryIssueLoader'],
 
     mealRatingPersistor: {
@@ -524,6 +530,18 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         updatedAt: new Date(),
       }),
     } as unknown as Deps['riderIssuePersistor'],
+
+    dailyOpsDayLoader: {
+      getByDate: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['dailyOpsDayLoader'],
+
+    dailyOpsDayPersistor: {
+      advanceStage: jest.fn(),
+    } as unknown as Deps['dailyOpsDayPersistor'],
+
+    notificationGateway: {
+      notify: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Deps['notificationGateway'],
   }
 
   return { ...base, ...overrides }

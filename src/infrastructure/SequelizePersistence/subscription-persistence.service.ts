@@ -210,8 +210,10 @@ export class SubscriptionPersistenceService
       building_name: string | null
       floor: string | null
       desk_area: string | null
+      gate: string | null
       delivery_preference: 'hand_to_me' | 'reception' | null
       rider_notes: string | null
+      area_id: string | null
       area_name: string | null
       meal_type: 'executive' | 'salad'
       meal_name: string | null
@@ -223,8 +225,10 @@ export class SubscriptionPersistenceService
               dl.building_name,
               dl.floor,
               dl.desk_area,
+              dl.gate,
               dl.delivery_preference,
               dl.rider_notes,
+              da.id as area_id,
               da.name as area_name,
               dd.meal_type,
               dd.meal_name,
@@ -250,14 +254,33 @@ export class SubscriptionPersistenceService
       buildingName: r.building_name,
       floor: r.floor,
       deskArea: r.desk_area,
+      gate: r.gate,
       deliveryPreference: r.delivery_preference,
       riderNotes: r.rider_notes,
+      areaId: r.area_id,
       areaName: r.area_name,
       mealType: r.meal_type,
       mealName: r.meal_name,
       status: r.status,
       deliveredAt: r.delivered_at,
     }))
+  }
+
+  async getMealBreakdownByDate(
+    date: string
+  ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]> {
+    const models = await DeliveryDayModel.findAll({
+      where: { date, status: { [Op.in]: ['scheduled', 'past_cutoff', 'delivered'] } },
+      attributes: ['mealType'],
+    })
+
+    const counts = { executive: 0, salad: 0 }
+    for (const m of models) counts[m.mealType]++
+
+    return [
+      { mealType: 'executive' as const, count: counts.executive },
+      { mealType: 'salad' as const, count: counts.salad },
+    ]
   }
 
   async bulkUpdateDeliveryDayStatus(

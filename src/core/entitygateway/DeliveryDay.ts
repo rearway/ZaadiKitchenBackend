@@ -20,6 +20,9 @@ export interface DeliveryDayLoader {
     date: string,
     areaId?: string
   ): Promise<RiderDeliveryRow[]>
+  getMealBreakdownByDate(
+    date: string
+  ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]>
 }
 
 export interface RiderDeliveryRow {
@@ -28,8 +31,10 @@ export interface RiderDeliveryRow {
   buildingName: string | null
   floor: string | null
   deskArea: string | null
+  gate: string | null
   deliveryPreference: 'hand_to_me' | 'reception' | null
   riderNotes: string | null
+  areaId: string | null
   areaName: string | null
   mealType: 'executive' | 'salad'
   mealName: string | null

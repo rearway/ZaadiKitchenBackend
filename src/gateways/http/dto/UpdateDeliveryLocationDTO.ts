@@ -30,6 +30,12 @@ export class UpdateDeliveryLocationDTO {
   @MaxLength(50)
   deskArea?: string
 
+  @ApiPropertyOptional({ description: 'Gate / entrance note', maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  gate?: string
+
   @ApiPropertyOptional({ enum: ['hand_to_me', 'reception'] })
   @IsOptional()
   @IsEnum(['hand_to_me', 'reception'])

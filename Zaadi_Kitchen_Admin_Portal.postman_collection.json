@@ -161,6 +161,52 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Ops Login",
+					"auth": {
+						"type": "noauth"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.data && res.data.accessToken) {",
+									"    pm.collectionVariables.set('ops_access_token', res.data.accessToken);",
+									"    console.log('\u2705 ops_access_token saved');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"ops@zaadikitchen.com\",\n    \"password\": \"Ops@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/admin/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"admin",
+								"login"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -1202,6 +1248,338 @@
 			]
 		},
 		{
+			"name": "Daily Operations",
+			"description": "Production pipeline (Locked \u2192 Dispatch \u2192 Delivered) and the customer issues queue. Ops routes use ops_access_token (Ops Login above); everything else uses the collection's default admin_access_token.",
+			"item": [
+				{
+					"name": "Get Daily Ops (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops?date={{daily_ops_date}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Advance Pipeline Stage (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"{{daily_ops_date}}\",\n    \"from_stage\": \"locked\",\n    \"to_stage\": \"dispatch\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/pipeline/advance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"pipeline",
+								"advance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Issues Queue",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues?date={{daily_ops_date}}&status=open",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								},
+								{
+									"key": "status",
+									"value": "open",
+									"description": "open (default) or all"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Credit Issue",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"credit_sar\": 28,\n    \"note\": \"Meal quality did not meet our standards. Credited full meal value.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues/{{issue_id}}/credit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues",
+								"{{issue_id}}",
+								"credit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Issue",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Unable to verify the reported issue based on kitchen records.\",\n    \"note\": \"Kitchen confirmed meal was prepared and packed at correct temperature.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/issues/{{issue_id}}/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"issues",
+								"{{issue_id}}",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily Ops (Ops)",
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{ops_access_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ops/daily-ops?date={{daily_ops_date}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ops",
+								"daily-ops"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Advance Pipeline Stage (Ops)",
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{ops_access_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"{{daily_ops_date}}\",\n    \"from_stage\": \"dispatch\",\n    \"to_stage\": \"delivered\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/ops/daily-ops/pipeline/advance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ops",
+								"daily-ops",
+								"pipeline",
+								"advance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Delivery Labels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/labels?date={{daily_ops_date}}&meal_type=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"labels"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								},
+								{
+									"key": "meal_type",
+									"value": "all",
+									"description": "all (default), executive, or salad"
+								},
+								{
+									"key": "area_id",
+									"value": "{{area_id}}",
+									"description": "Optional: filter to a single delivery area",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Delivery Labels (PDF)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/labels/download?date={{daily_ops_date}}&meal_type=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"labels",
+								"download"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								},
+								{
+									"key": "meal_type",
+									"value": "all",
+									"description": "all (default), executive, or salad"
+								},
+								{
+									"key": "area_id",
+									"value": "{{area_id}}",
+									"description": "Optional: filter to a single delivery area",
+									"disabled": true
+								},
+								{
+									"key": "label_id",
+									"value": "{{delivery_id}}",
+									"description": "Optional: download a single label by delivery_day id",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export Delivery Sheet (XLSX)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/daily-ops/export?date={{daily_ops_date}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"daily-ops",
+								"export"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "{{daily_ops_date}}",
+									"description": "YYYY-MM-DD, defaults to today if omitted"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Health",
 			"item": [
 				{
@@ -1290,6 +1668,21 @@
 		},
 		{
 			"key": "delivery_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ops_access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "daily_ops_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "issue_id",
 			"value": "",
 			"type": "string"
 		}

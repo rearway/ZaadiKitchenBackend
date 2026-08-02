@@ -105,14 +105,20 @@ export function formatWeekRangeLabel(dateFrom: string, dateTo: string): string {
 }
 
 /**
- * Determines if the skip cutoff has passed for a given delivery date.
+ * Returns the skip cutoff timestamp for a given delivery date.
  * Cutoff = 18:00 AST (UTC+3) the day before delivery.
  */
-export function isAfterSkipCutoff(deliveryDate: string, now: Date = new Date()): boolean {
+export function getSkipCutoffTimestamp(deliveryDate: string): Date {
   const delivery = new Date(deliveryDate)
   const dayBefore = new Date(delivery)
   dayBefore.setDate(delivery.getDate() - 1)
   // 18:00 AST = 15:00 UTC
-  const cutoff = new Date(Date.UTC(dayBefore.getFullYear(), dayBefore.getMonth(), dayBefore.getDate(), 15, 0, 0))
-  return now.getTime() >= cutoff.getTime()
+  return new Date(Date.UTC(dayBefore.getFullYear(), dayBefore.getMonth(), dayBefore.getDate(), 15, 0, 0))
+}
+
+/**
+ * Determines if the skip cutoff has passed for a given delivery date.
+ */
+export function isAfterSkipCutoff(deliveryDate: string, now: Date = new Date()): boolean {
+  return now.getTime() >= getSkipCutoffTimestamp(deliveryDate).getTime()
 }

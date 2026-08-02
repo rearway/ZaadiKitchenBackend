@@ -215,6 +215,22 @@ export class AlreadyDeliveredError extends BaseError {
   }
 }
 
+export class StageMismatchError extends BaseError {
+  constructor(actualStage: string, expectedStage: string) {
+    super(
+      'STAGE_MISMATCH',
+      409,
+      `Pipeline is currently at '${actualStage}', not '${expectedStage}'. Refresh and try again.`
+    )
+  }
+}
+
+export class IssueAlreadyResolvedError extends BaseError {
+  constructor() {
+    super('ISSUE_ALREADY_RESOLVED', 409, 'This issue has already been resolved.')
+  }
+}
+
 export class ActivationRequiresConfirmationError extends BaseError {
   constructor(areaName: string) {
     super(

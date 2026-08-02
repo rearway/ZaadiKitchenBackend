@@ -48,6 +48,9 @@ import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
 import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
 import * as MarkDeliveryDelivered from './commands/MarkDeliveryDelivered.js'
 import * as ReportRiderIssue from './commands/ReportRiderIssue.js'
+import * as AdvancePipelineStage from './commands/AdvancePipelineStage.js'
+import * as CreditDeliveryIssue from './commands/CreditDeliveryIssue.js'
+import * as RejectDeliveryIssue from './commands/RejectDeliveryIssue.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -87,6 +90,10 @@ import * as GetAdminCustomers from './queries/GetAdminCustomers.js'
 import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
 import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
 import * as GetMyDeliveries from './queries/GetMyDeliveries.js'
+import * as GetDailyOps from './queries/GetDailyOps.js'
+import * as GetDeliveryLabels from './queries/GetDeliveryLabels.js'
+import * as GenerateDeliveryLabelsPdf from './queries/GenerateDeliveryLabelsPdf.js'
+import * as GenerateDeliverySheetExport from './queries/GenerateDeliverySheetExport.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -386,6 +393,24 @@ export function initUseCases(deps: Deps) {
     ReportRiderIssue.name,
     ...defaultWrappers
   )
+  const advancePipelineStage = wrapUC(
+    deps,
+    AdvancePipelineStage.makeUC(deps),
+    AdvancePipelineStage.name,
+    ...defaultWrappers
+  )
+  const creditDeliveryIssue = wrapUC(
+    deps,
+    CreditDeliveryIssue.makeUC(deps),
+    CreditDeliveryIssue.name,
+    ...defaultWrappers
+  )
+  const rejectDeliveryIssue = wrapUC(
+    deps,
+    RejectDeliveryIssue.makeUC(deps),
+    RejectDeliveryIssue.name,
+    ...defaultWrappers
+  )
   const getPendingRatings = wrapUC(
     deps,
     GetPendingRatings.makeUC(deps),
@@ -612,6 +637,30 @@ export function initUseCases(deps: Deps) {
     GetMyDeliveries.name,
     ...defaultWrappers
   )
+  const getDailyOps = wrapUC(
+    deps,
+    GetDailyOps.makeUC(deps),
+    GetDailyOps.name,
+    ...defaultWrappers
+  )
+  const getDeliveryLabels = wrapUC(
+    deps,
+    GetDeliveryLabels.makeUC(deps),
+    GetDeliveryLabels.name,
+    ...defaultWrappers
+  )
+  const generateDeliveryLabelsPdf = wrapUC(
+    deps,
+    GenerateDeliveryLabelsPdf.makeUC(deps),
+    GenerateDeliveryLabelsPdf.name,
+    ...defaultWrappers
+  )
+  const generateDeliverySheetExport = wrapUC(
+    deps,
+    GenerateDeliverySheetExport.makeUC(deps),
+    GenerateDeliverySheetExport.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -652,6 +701,10 @@ export function initUseCases(deps: Deps) {
       getAdminCustomer,
       getAdminCustomerHistory,
       getMyDeliveries,
+      getDailyOps,
+      getDeliveryLabels,
+      generateDeliveryLabelsPdf,
+      generateDeliverySheetExport,
     },
     commands: {
       sendOtp,
@@ -701,6 +754,9 @@ export function initUseCases(deps: Deps) {
       adminCreditWallet,
       markDeliveryDelivered,
       reportRiderIssue,
+      advancePipelineStage,
+      creditDeliveryIssue,
+      rejectDeliveryIssue,
     },
   }
 }
