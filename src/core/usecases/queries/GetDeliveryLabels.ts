@@ -30,7 +30,7 @@ export function makeUC(deps: Deps) {
 
       const withRef = filteredRows.map((r, i) => ({
         ...r,
-        orderRef: `#ZK-${date}-${String(i + 1).padStart(4, '0')}`,
+        orderRef: `#PL-${date}-${String(i + 1).padStart(4, '0')}`,
       }))
 
       const areaOrder: string[] = []

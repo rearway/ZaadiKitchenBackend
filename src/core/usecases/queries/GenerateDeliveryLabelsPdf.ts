@@ -27,10 +27,10 @@ function todayIsoDate(): string {
 type LabelRow = RiderDeliveryRow & { orderRef: string }
 
 function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
-  const bandColor = row.mealType === 'executive' ? '#E4572E' : '#3A8C43'
+  const bandColor = row.mealType === 'executive' ? '#E4281D' : '#16A34A'
 
   doc.rect(0, 0, LABEL_WIDTH, 22).fill(bandColor)
-  doc.fillColor('#FFFFFF').fontSize(9).text('ZAADI KITCHEN', 8, 6)
+  doc.fillColor('#FFFFFF').fontSize(9).text('PLATIO KITCHEN', 8, 6)
   doc.fillColor('#FFFFFF').fontSize(8).text(row.mealType === 'executive' ? 'EXECUTIVE' : 'SALAD', 8, 6, {
     width: LABEL_WIDTH - 16,
     align: 'right',
@@ -69,7 +69,7 @@ export function makeUC(deps: Deps) {
       const filteredRows = mealType === 'all' ? allRows : allRows.filter(r => r.mealType === mealType)
       const withRef: LabelRow[] = filteredRows.map((r, i) => ({
         ...r,
-        orderRef: `#ZK-${date}-${String(i + 1).padStart(4, '0')}`,
+        orderRef: `#PL-${date}-${String(i + 1).padStart(4, '0')}`,
       }))
 
       let toRender = withRef
@@ -100,8 +100,8 @@ export function makeUC(deps: Deps) {
 
       const buffer = await finished
       const filename = input.labelId
-        ? `zaadi-label-${input.labelId}.pdf`
-        : `zaadi-labels-${date}-${mealType}.pdf`
+        ? `platio-label-${input.labelId}.pdf`
+        : `platio-labels-${date}-${mealType}.pdf`
 
       return { buffer, filename }
     } catch (error) {

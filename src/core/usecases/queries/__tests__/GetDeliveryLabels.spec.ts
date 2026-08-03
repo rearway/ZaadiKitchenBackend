@@ -43,8 +43,8 @@ describe('GetDeliveryLabels', () => {
     expect(result.areas).toHaveLength(2)
     expect(result.areas[0]).toMatchObject({ area_name: 'Al Nakheel', count: 2 })
     expect(result.areas[0].labels.map((l: { order_ref: string }) => l.order_ref)).toEqual([
-      '#ZK-2026-08-02-0001',
-      '#ZK-2026-08-02-0002',
+      '#PL-2026-08-02-0001',
+      '#PL-2026-08-02-0002',
     ])
     expect(result.areas[1]).toMatchObject({ area_name: 'Olaya', count: 1 })
   })
