@@ -35,7 +35,7 @@ describe('GenerateDeliveryLabelsPdf', () => {
 
     expect(result.buffer.length).toBeGreaterThan(0)
     expect(result.buffer.subarray(0, 4).toString()).toBe('%PDF')
-    expect(result.filename).toBe('zaadi-labels-2026-08-02-all.pdf')
+    expect(result.filename).toBe('platio-labels-2026-08-02-all.pdf')
   })
 
   it('renders only the matching label when labelId is given', async () => {
@@ -53,7 +53,7 @@ describe('GenerateDeliveryLabelsPdf', () => {
     const result = await generateDeliveryLabelsPdf({ date: '2026-08-02', labelId: 'dd-2' })
 
     expect(result.buffer.subarray(0, 4).toString()).toBe('%PDF')
-    expect(result.filename).toBe('zaadi-label-dd-2.pdf')
+    expect(result.filename).toBe('platio-label-dd-2.pdf')
   })
 
   it('throws RESOURCE_NOT_FOUND when labelId does not match any delivery', async () => {
