@@ -36,6 +36,7 @@ export * from './AdminCustomer.js'
 export * from './RiderIssue.js'
 export * from './DailyOpsDay.js'
 export * from './Notification.js'
+export * from './UserDevice.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -88,6 +89,7 @@ import type { AdminCustomerLoader, AdminCustomerPersistor } from './AdminCustome
 import type { RiderIssuePersistor } from './RiderIssue.js'
 import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
 import type { NotificationGateway } from './Notification.js'
+import type { UserDeviceLoader, UserDevicePersistor } from './UserDevice.js'
 
 export type Deps = {
   logger: Logger
@@ -149,4 +151,6 @@ export type Deps = {
   dailyOpsDayLoader: DailyOpsDayLoader
   dailyOpsDayPersistor: DailyOpsDayPersistor
   notificationGateway: NotificationGateway
+  userDeviceLoader: UserDeviceLoader
+  userDevicePersistor: UserDevicePersistor
 }

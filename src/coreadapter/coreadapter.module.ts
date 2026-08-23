@@ -27,6 +27,7 @@ import {
   RiderPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
+  UserDevicePersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -54,6 +55,8 @@ import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePers
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
+import { SnsNotificationService } from '../infrastructure/SNSNotification/sns-notification.service.js'
+import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -92,6 +95,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: ReferralPersistenceS, useClass: ReferralPersistenceService },
     { provide: MealPersistenceS, useClass: MealPersistenceService },
     { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
+    { provide: UserDevicePersistenceS, useClass: UserDevicePersistenceService },
 
     // External services
     {
@@ -109,7 +113,14 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: AdminCustomerPersistenceS, useClass: AdminCustomerPersistenceService },
     { provide: RiderPersistenceS, useClass: RiderPersistenceService },
     { provide: DailyOpsPersistenceS, useClass: DailyOpsPersistenceService },
-    { provide: NotificationS, useClass: ConsoleNotificationService },
+    { 
+      provide: NotificationS, 
+      useFactory: (configService: ConfigService, logger: LoggerService) => {
+        const skipSns = configService.get<string>('SKIP_SNS', 'false') === 'true'
+        return skipSns ? new ConsoleNotificationService() : new SnsNotificationService(configService, logger)
+      },
+      inject: [ConfigService, LoggerS]
+    },
 
     // Core adapter — maps infra → Deps → initUseCases()
     coreAdapterService,

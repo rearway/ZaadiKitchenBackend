@@ -84,4 +84,80 @@ describe('GetMyDeliveries', () => {
 
     expect(deps.deliveryDayLoader.getRiderDeliveriesByDate).toHaveBeenCalledWith('2026-08-02', 'area-uuid-1')
   })
+
+  it('defaults to "all areas" (undefined) when no areaId is given', async () => {
+    const deps = buildDeps({
+      userLoader: {
+        ...buildDeps().userLoader,
+        getUserById: jest.fn().mockResolvedValue(makeUser({ id: RIDER_ID })),
+      },
+    })
+    const getMyDeliveries = makeUC(deps)
+
+    await getMyDeliveries({ riderId: RIDER_ID, date: '2026-08-02' })
+
+    expect(deps.deliveryDayLoader.getRiderDeliveriesByDate).toHaveBeenCalledWith('2026-08-02', undefined)
+  })
+
+  it('returns a zeroed-out shape (not an error) when the loader finds no deliveries', async () => {
+    const deps = buildDeps({
+      userLoader: {
+        ...buildDeps().userLoader,
+        getUserById: jest.fn().mockResolvedValue(makeUser({ id: RIDER_ID })),
+      },
+      deliveryDayLoader: {
+        ...buildDeps().deliveryDayLoader,
+        getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
+      },
+    })
+    const getMyDeliveries = makeUC(deps)
+
+    const result = await getMyDeliveries({ riderId: RIDER_ID, date: '2026-08-02', areaId: 'area-uuid-1' })
+
+    expect(result).toMatchObject({
+      total_deliveries: 0,
+      delivered_count: 0,
+      pending_count: 0,
+      deliveries: [],
+    })
+  })
+
+  it('falls back to an empty rider_name (does not throw) when the rider profile lookup returns null', async () => {
+    const deps = buildDeps({
+      userLoader: {
+        ...buildDeps().userLoader,
+        getUserById: jest.fn().mockResolvedValue(null),
+      },
+      deliveryDayLoader: {
+        ...buildDeps().deliveryDayLoader,
+        getRiderDeliveriesByDate: jest.fn().mockResolvedValue([makeRow()]),
+      },
+    })
+    const getMyDeliveries = makeUC(deps)
+
+    const result = await getMyDeliveries({ riderId: RIDER_ID, date: '2026-08-02' })
+
+    expect(result.rider_name).toBe('')
+    expect(result.total_deliveries).toBe(1)
+  })
+
+  it('a row with no primary delivery location (null area/building) is passed through without throwing', async () => {
+    const deps = buildDeps({
+      userLoader: {
+        ...buildDeps().userLoader,
+        getUserById: jest.fn().mockResolvedValue(makeUser({ id: RIDER_ID })),
+      },
+      deliveryDayLoader: {
+        ...buildDeps().deliveryDayLoader,
+        getRiderDeliveriesByDate: jest.fn().mockResolvedValue([
+          makeRow({ areaName: null, buildingName: null, floor: null, deskArea: null }),
+        ]),
+      },
+    })
+    const getMyDeliveries = makeUC(deps)
+
+    const result = await getMyDeliveries({ riderId: RIDER_ID, date: '2026-08-02' })
+
+    expect(result.deliveries[0]).toMatchObject({ area: null, building: null, floor: null, desk_area: null })
+  })
 })

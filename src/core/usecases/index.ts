@@ -51,6 +51,8 @@ import * as ReportRiderIssue from './commands/ReportRiderIssue.js'
 import * as AdvancePipelineStage from './commands/AdvancePipelineStage.js'
 import * as CreditDeliveryIssue from './commands/CreditDeliveryIssue.js'
 import * as RejectDeliveryIssue from './commands/RejectDeliveryIssue.js'
+import * as RegisterDevice from './commands/RegisterDevice.js'
+import * as SendBulkBroadcast from './commands/SendBulkBroadcast.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -411,6 +413,18 @@ export function initUseCases(deps: Deps) {
     RejectDeliveryIssue.name,
     ...defaultWrappers
   )
+  const registerDevice = wrapUC(
+    deps,
+    RegisterDevice.makeUC(deps),
+    RegisterDevice.name,
+    ...defaultWrappers
+  )
+  const sendBulkBroadcast = wrapUC(
+    deps,
+    SendBulkBroadcast.makeUC(deps),
+    SendBulkBroadcast.name,
+    ...defaultWrappers
+  )
   const getPendingRatings = wrapUC(
     deps,
     GetPendingRatings.makeUC(deps),
@@ -757,6 +771,8 @@ export function initUseCases(deps: Deps) {
       advancePipelineStage,
       creditDeliveryIssue,
       rejectDeliveryIssue,
+      registerDevice,
+      sendBulkBroadcast,
     },
   }
 }

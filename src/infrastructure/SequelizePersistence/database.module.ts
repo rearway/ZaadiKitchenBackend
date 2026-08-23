@@ -27,6 +27,7 @@ import { DeliveryIssueModel } from './models/DeliveryIssueModel.js'
 import { MealRatingModel } from './models/MealRatingModel.js'
 import { RiderIssueModel } from './models/RiderIssueModel.js'
 import { DailyOpsDayModel } from './models/DailyOpsDayModel.js'
+import { UserDeviceModel } from './models/UserDeviceModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -79,6 +80,7 @@ import { DailyOpsDayModel } from './models/DailyOpsDayModel.js'
             MealRatingModel,
             RiderIssueModel,
             DailyOpsDayModel,
+            UserDeviceModel,
           ],
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
@@ -121,6 +123,7 @@ import { DailyOpsDayModel } from './models/DailyOpsDayModel.js'
       MealRatingModel,
       RiderIssueModel,
       DailyOpsDayModel,
+      UserDeviceModel,
     ]),
   ],
   exports: [SequelizeModule],

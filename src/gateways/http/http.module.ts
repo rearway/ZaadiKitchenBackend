@@ -21,6 +21,8 @@ import { AdminCustomersController } from './admin-customers.controller.js'
 import { RiderController } from './rider.controller.js'
 import { AdminDailyOpsController } from './admin-daily-ops.controller.js'
 import { OpsDailyOpsController } from './ops-daily-ops.controller.js'
+import { DeviceController } from './device.controller.js'
+import { AdminCommunicationController } from './admin-communication.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
@@ -47,6 +49,8 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     RiderController,
     AdminDailyOpsController,
     OpsDailyOpsController,
+    DeviceController,
+    AdminCommunicationController,
   ],
 })
 export class HttpModule {}

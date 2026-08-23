@@ -28,6 +28,7 @@ import {
   RiderPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
+  UserDevicePersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -54,7 +55,8 @@ import { MealRatingPersistenceService } from '../infrastructure/SequelizePersist
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
-import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
+import { NotificationGateway } from '../core/entitygateway/Notification.js'
+import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -84,7 +86,8 @@ export const coreAdapterService: FactoryProvider = {
     adminCustomerPersistence: AdminCustomerPersistenceService,
     riderPersistence: RiderPersistenceService,
     dailyOpsPersistence: DailyOpsPersistenceService,
-    notificationService: ConsoleNotificationService
+    notificationService: NotificationGateway,
+    userDevicePersistence: UserDevicePersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -155,6 +158,8 @@ export const coreAdapterService: FactoryProvider = {
       dailyOpsDayLoader: dailyOpsPersistence,
       dailyOpsDayPersistor: dailyOpsPersistence,
       notificationGateway: notificationService,
+      userDeviceLoader: userDevicePersistence,
+      userDevicePersistor: userDevicePersistence,
     }),
   inject: [
     LoggerS,
@@ -183,5 +188,6 @@ export const coreAdapterService: FactoryProvider = {
     RiderPersistenceS,
     DailyOpsPersistenceS,
     NotificationS,
+    UserDevicePersistenceS,
   ],
 }

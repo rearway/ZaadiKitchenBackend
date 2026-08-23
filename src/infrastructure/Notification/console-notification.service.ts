@@ -11,6 +11,24 @@ import type { NotificationGateway } from '../../core/entitygateway/Notification.
 @Injectable()
 export class ConsoleNotificationService implements NotificationGateway {
   async notify(userId: string, message: string): Promise<void> {
-    console.log(`[notification stub] to user ${userId}: ${message}`)
+    console.log(`[Notification] To ${userId}: ${message}`)
+  }
+
+  async createPlatformEndpoint(platform: 'ios' | 'android', deviceToken: string, userId: string): Promise<string> {
+    console.log(`[Notification] createPlatformEndpoint for ${userId} on ${platform}`)
+    return `arn:aws:sns:mock:endpoint/${userId}`
+  }
+
+  async subscribeToTopic(endpointArn: string, topicName: string): Promise<string> {
+    console.log(`[Notification] subscribeToTopic ${endpointArn} to ${topicName}`)
+    return `arn:aws:sns:mock:subscription/${topicName}`
+  }
+
+  async sendSingleNotification(endpointArn: string, title: string, body: string, data?: Record<string, any>): Promise<void> {
+    console.log(`[Notification] sendSingleNotification to ${endpointArn}: ${title} - ${body}`)
+  }
+
+  async publishToTopic(topicName: string, title: string, body: string, data?: Record<string, any>): Promise<void> {
+    console.log(`[Notification] publishToTopic ${topicName}: ${title} - ${body}`)
   }
 }
