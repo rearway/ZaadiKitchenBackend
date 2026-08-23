@@ -10,7 +10,7 @@ export interface RejectDeliveryIssueInput {
 
 export function makeUC(deps: Deps) {
   return async function rejectDeliveryIssue(input: RejectDeliveryIssueInput) {
-    const { logger, deliveryIssueLoader, deliveryIssuePersistor, userLoader, notificationGateway } = deps
+    const { logger, deliveryIssueLoader, deliveryIssuePersistor, userLoader, notificationGateway, userDeviceLoader } = deps
 
     try {
       const issue = await deliveryIssueLoader.getIssueById(input.issueId)
@@ -22,7 +22,21 @@ export function makeUC(deps: Deps) {
         rejectionNotes: input.note,
       })
 
-      await notificationGateway.notify(issue.userId, input.reason)
+      try {
+        const devices = await userDeviceLoader.getDevicesByUserId(issue.userId)
+        await Promise.allSettled(
+          devices.map(device =>
+            notificationGateway.sendSingleNotification(
+              device.endpointArn,
+              'Issue Update',
+              `Your issue was reviewed: ${input.reason}`,
+              { type: 'issue_rejected', issueId: issue.id }
+            )
+          )
+        )
+      } catch (notifyError) {
+        logger.error('Failed to send Reject push notification', String(notifyError))
+      }
 
       const resolvedByUser = await userLoader.getUserById(input.resolvedByUserId)
 

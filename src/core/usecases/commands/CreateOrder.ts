@@ -145,6 +145,9 @@ export function makeUC(deps: Deps) {
       publicHolidayLoader,
       paymentGateway,
       paymentTransactionPersistor,
+      userDeviceLoader,
+      notificationGateway,
+      walletLoader,
     } = deps
 
     try {
@@ -334,6 +337,9 @@ export function makeUC(deps: Deps) {
         const promo = await promoCodeLoader.getPromoByCode(session.promoCode)
         if (promo?.type === 'referral' && promo.ownerUserId) {
           const rewardSar = Math.round(plan.priceSar * 0.1)
+          
+          await referralPersistor.markRewarded(promo.id, order.id, rewardSar)
+          
           await walletPersistor.createTransaction({
             userId: promo.ownerUserId,
             type: 'credit',
@@ -342,6 +348,7 @@ export function makeUC(deps: Deps) {
             description: `10% of SAR ${plan.priceSar}`,
             referenceId: order.id,
           })
+          
           // Record referral
           await referralPersistor.createReferral({
             referrerUserId: promo.ownerUserId,
@@ -350,7 +357,24 @@ export function makeUC(deps: Deps) {
             rewardCreditedSar: rewardSar,
             isRewarded: true,
           })
-          await promoCodeLoader.getPromoByCode(session.promoCode) // no-op, just type check
+
+          // Send Referral Reward 🎁 push notification
+          try {
+            const balance = await walletLoader.getBalanceByUserId(promo.ownerUserId)
+            const devices = await userDeviceLoader.getDevicesByUserId(promo.ownerUserId)
+            await Promise.allSettled(
+              devices.map(device =>
+                notificationGateway.sendSingleNotification(
+                  device.endpointArn,
+                  'Referral Reward 🎁',
+                  `Your friend subscribed! SAR ${rewardSar} has been credited to your wallet. New balance: SAR ${balance}.`,
+                  { type: 'referral_reward' }
+                )
+              )
+            )
+          } catch (notifyError) {
+            logger.error('Failed to send Referral Reward push notification', String(notifyError))
+          }
         }
       }
 

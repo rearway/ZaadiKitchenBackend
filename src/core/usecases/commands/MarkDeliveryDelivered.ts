@@ -18,14 +18,30 @@ export function makeUC(deps: Deps) {
   return async function markDeliveryDelivered(
     input: MarkDeliveryDeliveredInput
   ): Promise<MarkDeliveryDeliveredOutput> {
-    const { logger, deliveryDayLoader, deliveryDayPersistor } = deps
+    const { logger, deliveryDayLoader, deliveryDayPersistor, userDeviceLoader, notificationGateway } = deps
 
     try {
       const deliveryDay = await deliveryDayLoader.getDeliveryDayById(input.deliveryId)
       if (!deliveryDay) throw new DeliveryNotFoundError()
       if (deliveryDay.status === 'delivered') throw new AlreadyDeliveredError()
-
       const updated = await deliveryDayPersistor.markDeliveryDelivered(input.deliveryId)
+
+      // Send Push Notification (Rule 1: Delivery Confirmed ✅)
+      try {
+        const devices = await userDeviceLoader.getDevicesByUserId(updated.userId)
+        const notificationPromises = devices.map(device => 
+          notificationGateway.sendSingleNotification(
+            device.endpointArn,
+            'Delivery Confirmed ✅',
+            'Your meal has arrived at your desk. Enjoy your lunch!',
+            { type: 'delivery_confirmed', deliveryId: updated.id }
+          )
+        )
+        await Promise.allSettled(notificationPromises)
+      } catch (notifyError) {
+        // Log but do not block the delivery confirmation response
+        logger.error('Failed to send Delivery Confirmed push notification', String(notifyError))
+      }
 
       return {
         message: 'Delivery marked as delivered',

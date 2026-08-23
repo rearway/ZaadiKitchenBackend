@@ -541,10 +541,12 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     notificationGateway: {
       notify: jest.fn().mockResolvedValue(undefined),
+      sendSingleNotification: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['notificationGateway'],
 
     userDeviceLoader: {
       getDeviceByToken: jest.fn().mockResolvedValue(null),
+      getDevicesByUserId: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['userDeviceLoader'],
 
     userDevicePersistor: {

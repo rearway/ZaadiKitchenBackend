@@ -55,7 +55,7 @@ describe('CreditDeliveryIssue', () => {
       referenceId: 'iss-1',
     })
     expect(deps.deliveryIssuePersistor.resolveIssue).toHaveBeenCalledWith('iss-1', 'credited', { creditedAmountSar: 28 })
-    expect(deps.notificationGateway.notify).toHaveBeenCalledWith('user-1', expect.stringContaining('28'))
+    expect(deps.userDeviceLoader.getDevicesByUserId).toHaveBeenCalledWith('user-1')
     expect(result).toMatchObject({ status: 'resolved', resolution: 'credit', credit_sar: 28, resolved_by: 'Mohammed Al-Qahtani' })
   })
 

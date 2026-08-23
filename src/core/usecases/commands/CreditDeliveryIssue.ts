@@ -10,7 +10,7 @@ export interface CreditDeliveryIssueInput {
 
 export function makeUC(deps: Deps) {
   return async function creditDeliveryIssue(input: CreditDeliveryIssueInput) {
-    const { logger, deliveryIssueLoader, deliveryIssuePersistor, walletPersistor, userLoader, notificationGateway } = deps
+    const { logger, deliveryIssueLoader, deliveryIssuePersistor, walletPersistor, userLoader, notificationGateway, userDeviceLoader, walletLoader } = deps
 
     try {
       const issue = await deliveryIssueLoader.getIssueById(input.issueId)
@@ -34,10 +34,23 @@ export function makeUC(deps: Deps) {
         creditedAmountSar: input.creditSar,
       })
 
-      await notificationGateway.notify(
-        issue.userId,
-        `Your issue has been resolved. SAR ${input.creditSar} has been added to your wallet.`
-      )
+      try {
+        const balance = await walletLoader.getBalanceByUserId(issue.userId)
+        const devices = await userDeviceLoader.getDevicesByUserId(issue.userId)
+        
+        await Promise.allSettled(
+          devices.map(device =>
+            notificationGateway.sendSingleNotification(
+              device.endpointArn,
+              'Wallet Credited 💳',
+              `Your issue has been resolved. SAR ${input.creditSar} has been added to your wallet. New balance: SAR ${balance}.`,
+              { type: 'issue_credited', issueId: issue.id }
+            )
+          )
+        )
+      } catch (notifyError) {
+        logger.error('Failed to send Credit push notification', String(notifyError))
+      }
 
       const resolvedByUser = await userLoader.getUserById(input.resolvedByUserId)
 

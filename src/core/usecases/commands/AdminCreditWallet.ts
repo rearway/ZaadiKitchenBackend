@@ -10,7 +10,7 @@ export interface AdminCreditWalletInput {
 
 export function makeUC(deps: Deps) {
   return async function adminCreditWallet(input: AdminCreditWalletInput) {
-    const { logger, userLoader, walletPersistor } = deps
+    const { logger, userLoader, walletPersistor, walletLoader, userDeviceLoader, notificationGateway } = deps
 
     try {
       const user = await userLoader.getUserById(input.customerId)
@@ -31,6 +31,23 @@ export function makeUC(deps: Deps) {
         description: input.note,
         referenceId: null,
       })
+
+      try {
+        const balance = await walletLoader.getBalanceByUserId(input.customerId)
+        const devices = await userDeviceLoader.getDevicesByUserId(input.customerId)
+        await Promise.allSettled(
+          devices.map(device =>
+            notificationGateway.sendSingleNotification(
+              device.endpointArn,
+              'Wallet Credited 💳',
+              `SAR ${input.amountSar} has been credited to your wallet. New balance: SAR ${balance}.`,
+              { type: 'wallet_credited' }
+            )
+          )
+        )
+      } catch (notifyError) {
+        logger.error('Failed to send Wallet Credited push notification', String(notifyError))
+      }
 
       return { message: 'Wallet credited successfully' }
     } catch (error) {

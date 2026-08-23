@@ -83,8 +83,18 @@ describe('CreateOrder', () => {
       walletPersistor: {
         createTransaction: jest.fn().mockResolvedValue(undefined),
       },
+      walletLoader: {
+        getBalanceByUserId: jest.fn().mockResolvedValue(0),
+      },
       referralPersistor: {
         createReferral: jest.fn().mockResolvedValue(undefined),
+        markRewarded: jest.fn().mockResolvedValue(undefined),
+      },
+      userDeviceLoader: {
+        getDevicesByUserId: jest.fn().mockResolvedValue([]),
+      },
+      notificationGateway: {
+        sendSingleNotification: jest.fn().mockResolvedValue(undefined),
       },
       ...overrides,
     })

@@ -50,7 +50,7 @@ describe('RejectDeliveryIssue', () => {
       rejectionReason: 'Unable to verify.',
       rejectionNotes: 'Kitchen confirmed correct order.',
     })
-    expect(deps.notificationGateway.notify).toHaveBeenCalledWith('user-1', 'Unable to verify.')
+    expect(deps.userDeviceLoader.getDevicesByUserId).toHaveBeenCalledWith('user-1')
     expect(result).toMatchObject({ status: 'resolved', resolution: 'rejected', resolved_by: 'Mohammed Al-Qahtani' })
   })
 
