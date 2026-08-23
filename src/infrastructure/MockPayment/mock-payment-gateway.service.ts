@@ -4,6 +4,7 @@ import type {
   PaymentGateway,
   ChargeInput,
   ChargeResult,
+  FetchPaymentResult
 } from '../../core/entitygateway/PaymentGateway.js'
 
 /**
@@ -16,7 +17,15 @@ export class MockPaymentGatewayService implements PaymentGateway {
   async charge(input: ChargeInput): Promise<ChargeResult> {
     return {
       success: true,
-      gatewayPaymentId: `mock_pay_${crypto.randomUUID()}`,
+      gatewayPaymentId: 'mock_pay_' + Date.now(),
+    }
+  }
+
+  async fetchPayment(gatewayPaymentId: string): Promise<FetchPaymentResult> {
+    return {
+      success: true,
+      status: 'paid',
+      gatewayPaymentId
     }
   }
 }

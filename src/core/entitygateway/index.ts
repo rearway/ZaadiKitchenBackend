@@ -90,6 +90,7 @@ import type { RiderIssuePersistor } from './RiderIssue.js'
 import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
 import type { NotificationGateway } from './Notification.js'
 import type { UserDeviceLoader, UserDevicePersistor } from './UserDevice.js'
+import type { PaymentTransactionLoader, PaymentTransactionPersistor } from './PaymentTransaction.js'
 
 export type Deps = {
   logger: Logger
@@ -153,4 +154,6 @@ export type Deps = {
   notificationGateway: NotificationGateway
   userDeviceLoader: UserDeviceLoader
   userDevicePersistor: UserDevicePersistor
+  paymentTransactionLoader: PaymentTransactionLoader
+  paymentTransactionPersistor: PaymentTransactionPersistor
 }

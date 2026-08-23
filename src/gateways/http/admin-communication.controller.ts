@@ -9,7 +9,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
 
 import { CoreS } from '../../tokens.js'
-import { UseCases } from '../../core/usecases/index.js'
+import type { UseCases } from '../../core/usecases/index.js'
 import { JwtAuthGuard } from '../../infrastructure/Auth/jwt-auth.guard.js'
 import { RolesGuard } from '../../infrastructure/Auth/roles.guard.js'
 import { Roles } from '../../infrastructure/Auth/roles.decorator.js'
@@ -24,7 +24,7 @@ export class AdminCommunicationController {
   constructor(@Inject(CoreS) private readonly useCases: UseCases) {}
 
   @Post('broadcast')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.OPS)
   @ApiOperation({ summary: 'Send a bulk broadcast push notification to all users' })
   @ApiResponse({ status: 200, description: 'Broadcast sent successfully' })
   async sendBroadcast(@Body(ValidationPipe) dto: SendBulkBroadcastDTO) {

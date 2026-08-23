@@ -144,6 +144,7 @@ export function makeUC(deps: Deps) {
       referralPersistor,
       publicHolidayLoader,
       paymentGateway,
+      paymentTransactionPersistor,
     } = deps
 
     try {
@@ -198,20 +199,39 @@ export function makeUC(deps: Deps) {
           promo?.type === 'referral' ? 'Referral discount' : 'Promo discount'
       }
 
+      // Record Payment Transaction as INITIATED
+      const paymentTx = await paymentTransactionPersistor.createTransaction({
+        userId,
+        checkoutSessionId: sessionId,
+        amountSar: session.totalDueSar,
+        status: 'INITIATED',
+      })
+
       // Charge payment method
       const chargeResult = await paymentGateway.charge({
         amountSar: session.totalDueSar,
         paymentToken: resolvedMethod.token,
-        orderId: crypto.randomUUID(), // placeholder until order ID exists
+        orderId: paymentTx.id, // We use paymentTx id as the idempotency/reference key for Moyasar
         description: `${plan.name} · ${startDate}`,
       })
+
       if (!chargeResult.success) {
+        await paymentTransactionPersistor.updateTransaction(paymentTx.id, {
+          status: 'FAILED',
+          gatewayPaymentId: chargeResult.gatewayPaymentId || null,
+        })
         const { PaymentFailedError } =
           await import('../../../shared/errors/index.js')
         throw new PaymentFailedError(
           chargeResult.errorMessage ?? 'Payment could not be processed.'
         )
       }
+
+      // Mark transaction as SUCCESS
+      await paymentTransactionPersistor.updateTransaction(paymentTx.id, {
+        status: 'SUCCESS',
+        gatewayPaymentId: chargeResult.gatewayPaymentId,
+      })
 
       // Create order
       const order = await orderPersistor.createOrder({

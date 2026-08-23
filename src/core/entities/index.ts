@@ -1,4 +1,6 @@
 export * from './User.js'
+export * from './UserDevice.js'
+export * from './PaymentTransaction.js'
 export * from './OtpSession.js'
 export * from './RefreshToken.js'
 export * from './Delivery.js'

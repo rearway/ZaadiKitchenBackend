@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 
 import {
   LoggerS,
@@ -28,6 +28,7 @@ import {
   DailyOpsPersistenceS,
   NotificationS,
   UserDevicePersistenceS,
+  PaymentTransactionPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -47,6 +48,7 @@ import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersisten
 import { OtpStubService, SnsOtpService } from '../infrastructure/OtpService/index.js'
 import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
+import { MoyasarPaymentGatewayService } from '../infrastructure/MoyasarPayment/moyasar-payment-gateway.service.js'
 import { S3StorageService } from '../infrastructure/S3Storage/index.js'
 import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
 import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
@@ -57,6 +59,7 @@ import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersisten
 import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
 import { SnsNotificationService } from '../infrastructure/SNSNotification/sns-notification.service.js'
 import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
+import { PaymentTransactionPersistenceService } from '../infrastructure/SequelizePersistence/payment-transaction-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -96,6 +99,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: MealPersistenceS, useClass: MealPersistenceService },
     { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
     { provide: UserDevicePersistenceS, useClass: UserDevicePersistenceService },
+    { provide: PaymentTransactionPersistenceS, useClass: PaymentTransactionPersistenceService },
 
     // External services
     {
@@ -105,7 +109,14 @@ import { coreAdapterService } from './coreadapter.service.js'
         return skipOtp ? new OtpStubService() : new SnsOtpService()
       },
     },
-    { provide: PaymentGatewayS, useClass: MockPaymentGatewayService },
+    { 
+      provide: PaymentGatewayS, 
+      useFactory: (configService: ConfigService, logger: LoggerService) => {
+        const useMock = configService.get<string>('USE_MOCK_PAYMENT', 'true') === 'true'
+        return useMock ? new MockPaymentGatewayService() : new MoyasarPaymentGatewayService(configService, logger)
+      },
+      inject: [ConfigService, LoggerS]
+    },
     { provide: StorageS, useClass: S3StorageService },
     { provide: AuditLogPersistenceS, useClass: AuditLogPersistenceService },
     { provide: DeliveryIssuePersistenceS, useClass: DeliveryIssuePersistenceService },

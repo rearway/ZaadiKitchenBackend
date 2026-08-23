@@ -29,6 +29,7 @@ import {
   DailyOpsPersistenceS,
   NotificationS,
   UserDevicePersistenceS,
+  PaymentTransactionPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -46,8 +47,8 @@ import { WalletPersistenceService } from '../infrastructure/SequelizePersistence
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
 import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
 import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
+import { PaymentGateway } from '../core/entitygateway/PaymentGateway.js'
 import { OtpService } from '../core/entitygateway/OtpService.js'
-import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 import { S3StorageService } from '../infrastructure/S3Storage/index.js'
 import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
 import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
@@ -57,6 +58,7 @@ import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { NotificationGateway } from '../core/entitygateway/Notification.js'
 import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
+import { PaymentTransactionPersistenceService } from '../infrastructure/SequelizePersistence/payment-transaction-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -76,7 +78,7 @@ export const coreAdapterService: FactoryProvider = {
     publicHolidayPersistence: PublicHolidayPersistenceService,
     walletPersistence: WalletPersistenceService,
     referralPersistence: ReferralPersistenceService,
-    paymentGateway: MockPaymentGatewayService,
+    paymentGateway: PaymentGateway,
     mealPersistence: MealPersistenceService,
     menuWeekPersistence: MenuWeekPersistenceService,
     storageGateway: S3StorageService,
@@ -87,7 +89,8 @@ export const coreAdapterService: FactoryProvider = {
     riderPersistence: RiderPersistenceService,
     dailyOpsPersistence: DailyOpsPersistenceService,
     notificationService: NotificationGateway,
-    userDevicePersistence: UserDevicePersistenceService
+    userDevicePersistence: UserDevicePersistenceService,
+    paymentTransactionPersistence: PaymentTransactionPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -160,6 +163,8 @@ export const coreAdapterService: FactoryProvider = {
       notificationGateway: notificationService,
       userDeviceLoader: userDevicePersistence,
       userDevicePersistor: userDevicePersistence,
+      paymentTransactionLoader: paymentTransactionPersistence,
+      paymentTransactionPersistor: paymentTransactionPersistence,
     }),
   inject: [
     LoggerS,
@@ -189,5 +194,6 @@ export const coreAdapterService: FactoryProvider = {
     DailyOpsPersistenceS,
     NotificationS,
     UserDevicePersistenceS,
+    PaymentTransactionPersistenceS,
   ],
 }

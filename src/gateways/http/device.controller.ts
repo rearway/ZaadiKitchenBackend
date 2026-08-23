@@ -9,10 +9,10 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
 
 import { CoreS } from '../../tokens.js'
-import { UseCases } from '../../core/usecases/index.js'
+import type { UseCases } from '../../core/usecases/index.js'
 import { JwtAuthGuard } from '../../infrastructure/Auth/jwt-auth.guard.js'
 import { CurrentUser } from '../../infrastructure/Auth/current-user.decorator.js'
-import { UserWithoutPassword } from '../../core/entities/User.js'
+import type { UserWithoutPassword } from '../../core/entities/User.js'
 import { RegisterDeviceDTO } from './dto/device.dto.js'
 
 @ApiTags('Devices')

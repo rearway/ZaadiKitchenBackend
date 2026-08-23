@@ -542,6 +542,24 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     notificationGateway: {
       notify: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['notificationGateway'],
+
+    userDeviceLoader: {
+      getDeviceByToken: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['userDeviceLoader'],
+
+    userDevicePersistor: {
+      upsertDevice: jest.fn().mockResolvedValue(null),
+    } as unknown as Deps['userDevicePersistor'],
+
+    paymentTransactionLoader: {
+      getTransactionById: jest.fn().mockResolvedValue(null),
+      getTransactionsByStatus: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['paymentTransactionLoader'],
+
+    paymentTransactionPersistor: {
+      createTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'INITIATED' }),
+      updateTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'SUCCESS' }),
+    } as unknown as Deps['paymentTransactionPersistor'],
   }
 
   return { ...base, ...overrides }

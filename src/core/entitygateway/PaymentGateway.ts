@@ -11,6 +11,13 @@ export interface ChargeResult {
   errorMessage?: string
 }
 
+export interface FetchPaymentResult {
+  success: boolean
+  status: string
+  gatewayPaymentId: string
+}
+
 export interface PaymentGateway {
   charge(input: ChargeInput): Promise<ChargeResult>
+  fetchPayment(gatewayPaymentId: string): Promise<FetchPaymentResult>
 }
