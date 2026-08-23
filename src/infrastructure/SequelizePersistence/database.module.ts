@@ -84,6 +84,10 @@ import { PaymentTransactionModel } from './models/PaymentTransactionModel.js'
             UserDeviceModel,
             PaymentTransactionModel,
           ],
+          define: {
+            charset: 'utf8mb4',
+            collate: 'utf8mb4_unicode_ci',
+          },
           autoLoadModels: true,
           synchronize: false, // Use migrations — never auto-sync in production
           logging: isSslEnabled ? false : console.log,

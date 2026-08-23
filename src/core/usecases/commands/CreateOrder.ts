@@ -141,6 +141,7 @@ export function makeUC(deps: Deps) {
       deliveryDayPersistor,
       walletPersistor,
       promoCodeLoader,
+      promoCodePersistor,
       referralPersistor,
       publicHolidayLoader,
       paymentGateway,
@@ -338,7 +339,7 @@ export function makeUC(deps: Deps) {
         if (promo?.type === 'referral' && promo.ownerUserId) {
           const rewardSar = Math.round(plan.priceSar * 0.1)
           
-          await referralPersistor.markRewarded(promo.id, order.id, rewardSar)
+          await promoCodePersistor.incrementTimesUsed(promo.id)
           
           await walletPersistor.createTransaction({
             userId: promo.ownerUserId,

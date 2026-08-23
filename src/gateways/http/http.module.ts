@@ -23,6 +23,7 @@ import { AdminDailyOpsController } from './admin-daily-ops.controller.js'
 import { OpsDailyOpsController } from './ops-daily-ops.controller.js'
 import { DeviceController } from './device.controller.js'
 import { AdminCommunicationController } from './admin-communication.controller.js'
+import { AdminDashboardController } from './admin-dashboard.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
@@ -51,6 +52,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     OpsDailyOpsController,
     DeviceController,
     AdminCommunicationController,
+    AdminDashboardController,
   ],
 })
 export class HttpModule {}
