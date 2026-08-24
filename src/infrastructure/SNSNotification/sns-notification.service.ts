@@ -17,16 +17,20 @@ export class SnsNotificationService implements NotificationGateway {
     private configService: ConfigService,
     private logger: LoggerService
   ) {
-    this.snsClient = new SNSClient({
-      region: this.configService.get<string>('AWS_REGION', 'me-south-1'),
-      credentials: {
-        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: this.configService.get<string>(
-          'AWS_SECRET_ACCESS_KEY',
-          ''
-        ),
-      },
-    })
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID')
+    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY')
+    const region = this.configService.get<string>('AWS_REGION', 'me-south-1')
+
+    const snsConfig: any = { region }
+
+    if (accessKeyId && secretAccessKey) {
+      snsConfig.credentials = {
+        accessKeyId,
+        secretAccessKey,
+      }
+    }
+
+    this.snsClient = new SNSClient(snsConfig)
   }
 
   async notify(userId: string, message: string): Promise<void> {
@@ -39,6 +43,11 @@ export class SnsNotificationService implements NotificationGateway {
     deviceToken: string,
     userId: string
   ): Promise<string> {
+    if (this.configService.get<string>('SKIP_SNS') === 'true') {
+      this.logger.log(`[SKIP_SNS] Mocked createPlatformEndpoint for user ${userId}`)
+      return `arn:aws:sns:mock-region:123456789:endpoint/mock/${userId}`
+    }
+
     const platformAppArn =
       platform === 'ios'
         ? this.configService.get<string>('SNS_PLATFORM_APP_ARN_APNS', '')
@@ -66,6 +75,11 @@ export class SnsNotificationService implements NotificationGateway {
     endpointArn: string,
     topicName: string
   ): Promise<string> {
+    if (this.configService.get<string>('SKIP_SNS') === 'true') {
+      this.logger.log(`[SKIP_SNS] Mocked subscribeToTopic for endpoint ${endpointArn} to topic ${topicName}`)
+      return `arn:aws:sns:mock-region:123456789:subscription/mock-subscription`
+    }
+
     try {
       let topicArn = topicName
       if (topicName === 'broadcast') {
@@ -93,6 +107,11 @@ export class SnsNotificationService implements NotificationGateway {
     body: string,
     data?: Record<string, any>
   ): Promise<void> {
+    if (this.configService.get<string>('SKIP_SNS') === 'true') {
+      this.logger.log(`[SKIP_SNS] Mocked sendSingleNotification to ${endpointArn}: ${title}`)
+      return
+    }
+
     try {
       // In a real app we might construct APNS/GCM specific payloads
       const payload = {
@@ -128,6 +147,11 @@ export class SnsNotificationService implements NotificationGateway {
     body: string,
     data?: Record<string, any>
   ): Promise<void> {
+    if (this.configService.get<string>('SKIP_SNS') === 'true') {
+      this.logger.log(`[SKIP_SNS] Mocked publishToTopic ${topicName}: ${title}`)
+      return
+    }
+
     try {
       let topicArn = topicName
       if (topicName === 'broadcast') {
