@@ -104,4 +104,13 @@ export class AdminMenuController {
       publishedByUserId: user.id,
     })
   }
+
+  @Post('weeks/:week_id/unpublish')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Unpublish a week (move back to draft)' })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('unpublish-menu-week')
+  async unpublishWeek(@Param('week_id') weekId: string) {
+    return this.useCases.commands.unpublishMenuWeek({ weekId })
+  }
 }

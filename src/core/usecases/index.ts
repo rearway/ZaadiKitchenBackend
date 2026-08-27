@@ -42,6 +42,7 @@ import * as ImportMeals from './commands/ImportMeals.js'
 import * as AssignMealToSlot from './commands/AssignMealToSlot.js'
 import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
 import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
+import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
@@ -359,6 +360,12 @@ export function initUseCases(deps: Deps) {
     deps,
     PublishMenuWeek.makeUC(deps),
     PublishMenuWeek.name,
+    ...defaultWrappers
+  )
+  const unpublishMenuWeek = wrapUC(
+    deps,
+    UnpublishMenuWeek.makeUC(deps),
+    UnpublishMenuWeek.name,
     ...defaultWrappers
   )
   const submitDeliveryIssue = wrapUC(
@@ -777,6 +784,7 @@ export function initUseCases(deps: Deps) {
       assignMealToSlot,
       clearMenuSlot,
       publishMenuWeek,
+      unpublishMenuWeek,
       submitDeliveryIssue,
       submitMealRating,
       deactivateCustomer,

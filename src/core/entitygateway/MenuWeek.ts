@@ -24,5 +24,6 @@ export interface MenuWeekPersistor {
   assignMealToSlot(slotId: string, mealId: string): Promise<MenuSlot>
   clearSlot(slotId: string): Promise<MenuSlot>
   publishWeek(weekId: string, publishedBy: string): Promise<MenuWeek>
+  unpublishWeek(weekId: string): Promise<MenuWeek>
   transitionPastWeeks(): Promise<void>
 }

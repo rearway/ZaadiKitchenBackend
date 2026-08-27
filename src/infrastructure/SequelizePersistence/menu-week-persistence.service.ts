@@ -172,6 +172,13 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
     return this.toWeekEntity(week)
   }
 
+  async unpublishWeek(weekId: string): Promise<MenuWeek> {
+    const week = await MenuWeekModel.findByPk(weekId)
+    if (!week) throw new Error(`MenuWeek ${weekId} not found`)
+    await week.update({ status: 'draft', publishedAt: null, publishedBy: null })
+    return this.toWeekEntity(week)
+  }
+
   async transitionPastWeeks(): Promise<void> {
     const today = new Date().toISOString().slice(0, 10)
     await MenuWeekModel.update(
