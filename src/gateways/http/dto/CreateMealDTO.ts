@@ -51,5 +51,6 @@ export class CreateMealDTO {
   emoji?: string
 
   @ApiPropertyOptional({ type: 'string', format: 'binary', description: 'Meal image' })
+  @IsOptional()
   image?: any
 }
