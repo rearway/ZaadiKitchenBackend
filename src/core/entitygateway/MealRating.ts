@@ -17,5 +17,6 @@ export interface MealRatingPersistor {
 export interface MealRatingLoader {
   getRatingByDeliveryDay(userId: string, deliveryDayId: string): Promise<MealRating | null>
   getPendingRatingDays(userId: string, subscriptionId: string, limit: number): Promise<PendingRatingDay[]>
+  getPendingRatingCount(userId: string, subscriptionId: string): Promise<number>
   getRatingsByUser(userId: string, page: number, perPage: number): Promise<{ ratings: MealRating[]; total: number }>
 }

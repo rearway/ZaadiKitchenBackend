@@ -7,14 +7,14 @@ export interface GetProfileInput {
 
 export type GetProfileOutput = {
   message: string
-  data: UserWithoutPassword & { onboardingComplete: boolean }
+  data: UserWithoutPassword & { onboardingComplete: boolean; pendingReviewCount: number }
 }
 
 export function makeUC(deps: Deps) {
   return async function getProfile(
     input: GetProfileInput
   ): Promise<GetProfileOutput> {
-    const { logger, userLoader } = deps
+    const { logger, userLoader, subscriptionLoader, mealRatingLoader } = deps
     try {
       const { userId } = input
 
@@ -29,11 +29,18 @@ export function makeUC(deps: Deps) {
 
       const onboardingComplete = !!user.fullName && user.fullName !== 'New User'
 
+      let pendingReviewCount = 0
+      const subscription = await subscriptionLoader.getActiveSubscriptionByUserId(userId)
+      if (subscription) {
+        pendingReviewCount = await mealRatingLoader.getPendingRatingCount(userId, subscription.id)
+      }
+
       return {
         message: 'Profile fetched successfully',
         data: {
           ...userWithoutPassword,
           onboardingComplete,
+          pendingReviewCount,
         },
       }
     } catch (error) {

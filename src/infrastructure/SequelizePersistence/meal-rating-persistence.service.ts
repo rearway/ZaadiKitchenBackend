@@ -51,7 +51,7 @@ export class MealRatingPersistenceService
        FROM delivery_days dd
        INNER JOIN meals m ON m.id = (
          SELECT ms.meal_id FROM menu_slots ms
-         INNER JOIN menu_weeks mw ON mw.id = ms.menu_week_id
+         INNER JOIN menu_weeks mw ON mw.id = ms.week_id
          WHERE ms.meal_type = dd.meal_type
            AND mw.date_from <= dd.date AND mw.date_to >= dd.date
          LIMIT 1
@@ -77,6 +77,26 @@ export class MealRatingPersistenceService
       kcal: r.kcal,
       emoji: r.emoji,
     }))
+  }
+
+  async getPendingRatingCount(
+    userId: string,
+    subscriptionId: string
+  ): Promise<number> {
+    const sequelize = DeliveryDayModel.sequelize!
+    const rows = await sequelize.query<{ count: string }>(
+      `SELECT COUNT(dd.id) as count
+       FROM delivery_days dd
+       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
+       WHERE dd.subscription_id = :subscriptionId
+         AND dd.status = 'delivered'
+         AND mr.id IS NULL`,
+      {
+        replacements: { userId, subscriptionId },
+        type: QueryTypes.SELECT,
+      }
+    )
+    return rows.length > 0 ? parseInt(rows[0].count, 10) : 0
   }
 
   async getRatingsByUser(
