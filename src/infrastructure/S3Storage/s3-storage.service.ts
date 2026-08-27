@@ -27,4 +27,16 @@ export class S3StorageService implements StorageGateway {
   getPublicUrl(key: string): string {
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`
   }
+
+  async uploadPublicFile(file: import('../../core/entitygateway/Storage.js').FileData, key: string): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimeType,
+      // ACL: 'public-read' // Only if bucket supports ACLs, else rely on bucket policy
+    })
+    await this.s3.send(command)
+    return this.getPublicUrl(key)
+  }
 }

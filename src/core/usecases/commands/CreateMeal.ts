@@ -12,18 +12,19 @@ export interface CreateMealInput {
   chefNote?: string
   keyIngredients?: string[]
   emoji?: string
+  image?: import('../../entitygateway/Storage.js').FileData
 }
 
 export interface CreateMealOutput {
   message: string
-  data: Pick<Meal, 'id' | 'nameEn' | 'status' | 'createdAt'>
+  data: Pick<Meal, 'id' | 'nameEn' | 'status' | 'createdAt'> & { photoUrl?: string }
 }
 
 export function makeUC(deps: Deps) {
   return async function createMeal(
     input: CreateMealInput
   ): Promise<CreateMealOutput> {
-    const { logger, mealLoader, mealPersistor } = deps
+    const { logger, mealLoader, mealPersistor, storageGateway } = deps
 
     try {
       const existing = await mealLoader.getMealByName(input.nameEn)
@@ -33,7 +34,15 @@ export function makeUC(deps: Deps) {
         throw new ResourceAlreadyExistsError('Meal', input.nameEn)
       }
 
-      const meal = await mealPersistor.createMeal(input)
+      let photoUrl: string | undefined
+      if (input.image) {
+        const ext = input.image.mimeType.split('/')[1] || 'jpg'
+        const tempId = crypto.randomUUID()
+        const key = `meals/${tempId}/photo.${ext}`
+        photoUrl = await storageGateway.uploadPublicFile(input.image, key)
+      }
+
+      const meal = await mealPersistor.createMeal({ ...input, photoUrl })
       return {
         message: 'Meal created successfully',
         data: {
@@ -41,6 +50,7 @@ export function makeUC(deps: Deps) {
           nameEn: meal.nameEn,
           status: meal.status,
           createdAt: meal.createdAt,
+          photoUrl: meal.photoUrl,
         },
       }
     } catch (error) {

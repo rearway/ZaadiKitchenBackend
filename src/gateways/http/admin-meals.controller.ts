@@ -71,10 +71,15 @@ export class AdminMealsController {
   }
 
   @Post()
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create meal (always draft)' })
   @ApiResponse({ status: 201 })
   @HandleErrors('create-meal')
-  async createMeal(@Body(ValidationPipe) dto: CreateMealDTO) {
+  async createMeal(
+    @Body(ValidationPipe) dto: CreateMealDTO,
+    @UploadedFile() image?: Express.Multer.File
+  ) {
     return this.useCases.commands.createMeal({
       nameEn: dto.name_en,
       nameAr: dto.name_ar,
@@ -86,6 +91,11 @@ export class AdminMealsController {
       chefNote: dto.chef_note,
       keyIngredients: dto.key_ingredients,
       emoji: dto.emoji,
+      image: image ? {
+        buffer: image.buffer,
+        mimeType: image.mimetype,
+        fileName: image.originalname,
+      } : undefined,
     })
   }
 

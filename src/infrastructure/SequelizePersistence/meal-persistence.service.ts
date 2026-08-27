@@ -126,6 +126,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       keyIngredients: input.keyIngredients ?? null,
       emoji: input.emoji ?? '🍛',
       status: 'draft',
+      photoUrl: input.photoUrl ?? null,
     })
     return this.toEntity(model)
   }
