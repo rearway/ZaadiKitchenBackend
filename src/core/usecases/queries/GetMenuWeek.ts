@@ -23,6 +23,7 @@ export interface GetMenuWeekOutput {
         meal_id: string
         name_en: string
         kcal: number
+        photo_url: string | null
       } | null
       is_filled: boolean
       is_editable: boolean
@@ -89,7 +90,7 @@ export function makeUC(deps: Deps) {
               meal_type: slot.mealType,
               meal_type_label: slot.mealType === 'executive' ? 'Exec' : 'Salad',
               meal: meal
-                ? { meal_id: meal.id, name_en: meal.nameEn, kcal: meal.kcal }
+                ? { meal_id: meal.id, name_en: meal.nameEn, kcal: meal.kcal, photo_url: meal.photoUrl ?? null }
                 : null,
               is_filled: !!slot.mealId,
               is_editable: isEditable,

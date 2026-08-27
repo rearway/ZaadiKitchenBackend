@@ -24,6 +24,7 @@ interface MealCard {
   meal_type: string
   kcal: number
   emoji: string
+  photo_url: string | null
   delivery_date: string
   day_label: string
   card_state: CardState
@@ -109,6 +110,7 @@ export function makeUC(deps: Deps) {
           meal_type: slot.meal.mealType,
           kcal: slot.meal.kcal,
           emoji: slot.meal.emoji,
+          photo_url: slot.meal.photoUrl ?? null,
           delivery_date: slot.deliveryDate,
           day_label: buildDayLabel(slot.deliveryDate, isToday),
           card_state,

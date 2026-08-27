@@ -19,6 +19,7 @@ export interface GetAdminMealsOutput {
     meal_type: string
     kcal: number
     status: string
+    photo_url: string | null
     already_used: boolean | null
     used_on_day: string | null
   }>
@@ -56,6 +57,7 @@ export function makeUC(deps: Deps) {
           meal_type: m.mealType,
           kcal: m.kcal,
           status: m.status,
+          photo_url: m.photoUrl ?? null,
           already_used: input.excludeWeekId ? (m.alreadyUsed ?? false) : null,
           used_on_day: input.excludeWeekId ? (m.usedOnDay ?? null) : null,
         })),
