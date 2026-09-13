@@ -1,10 +1,33 @@
 import { Injectable } from '@nestjs/common'
-import { Op, QueryTypes } from 'sequelize'
+import { QueryTypes } from 'sequelize'
 import { MealRatingPersistor, MealRatingLoader, PendingRatingDay } from '../../core/entitygateway/MealRating.js'
 import { MealRating } from '../../core/entities/MealRating.js'
 import { MealRatingModel } from './models/MealRatingModel.js'
 import { DeliveryDayModel } from './models/DeliveryDayModel.js'
-import { MealModel } from './models/MealModel.js'
+
+export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
+              dd.date as delivery_date,
+              m.id as meal_id,
+              m.name_en as meal_name_en,
+              m.meal_type,
+              m.kcal,
+              m.emoji
+       FROM delivery_days dd
+       INNER JOIN menu_slots ms
+         ON ms.delivery_date = dd.date
+        AND ms.meal_type::text = dd.meal_type::text
+       INNER JOIN menu_weeks mw
+         ON mw.id = ms.week_id
+        AND mw.date_from <= dd.date
+        AND mw.date_to >= dd.date
+       INNER JOIN meals m ON m.id = ms.meal_id
+       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
+       WHERE dd.subscription_id = :subscriptionId
+         AND dd.status = 'delivered'
+         AND mr.id IS NULL
+         AND ms.meal_id IS NOT NULL
+       ORDER BY dd.date DESC
+       LIMIT :limit`
 
 @Injectable()
 export class MealRatingPersistenceService
@@ -41,27 +64,7 @@ export class MealRatingPersistenceService
       kcal: number
       emoji: string
     }>(
-      `SELECT dd.id as delivery_day_id,
-              dd.date as delivery_date,
-              m.id as meal_id,
-              m.name_en as meal_name_en,
-              m.meal_type,
-              m.kcal,
-              m.emoji
-       FROM delivery_days dd
-       INNER JOIN meals m ON m.id = (
-         SELECT ms.meal_id FROM menu_slots ms
-         INNER JOIN menu_weeks mw ON mw.id = ms.week_id
-         WHERE ms.meal_type = dd.meal_type
-           AND mw.date_from <= dd.date AND mw.date_to >= dd.date
-         LIMIT 1
-       )
-       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
-       WHERE dd.subscription_id = :subscriptionId
-         AND dd.status = 'delivered'
-         AND mr.id IS NULL
-       ORDER BY dd.date DESC
-       LIMIT :limit`,
+      PENDING_RATING_DAYS_SQL,
       {
         replacements: { userId, subscriptionId, limit },
         type: QueryTypes.SELECT,

@@ -26,7 +26,7 @@ export interface GetHomeThisWeekOutput {
 
 export function makeUC(deps: Deps) {
   return async function getHomeThisWeek(input: GetHomeThisWeekInput): Promise<GetHomeThisWeekOutput> {
-    const { logger, subscriptionLoader, menuWeekLoader } = deps
+    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } = deps
 
     try {
       const now = new Date()
@@ -38,6 +38,14 @@ export function makeUC(deps: Deps) {
         menuWeekLoader.getMenuForDateRange(bounds.dateFrom, bounds.dateTo),
       ])
 
+      const deliveryDays = sub
+        ? await deliveryDayLoader.getDeliveryDaysBySubscription(sub.id, {
+            from: bounds.dateFrom,
+            to: bounds.dateTo,
+          })
+        : []
+      const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
+
       const subStatus = sub?.status ?? 'none'
 
       const cards = slots
@@ -48,6 +56,8 @@ export function makeUC(deps: Deps) {
           const isToday = slot.deliveryDate === todayStr
           const isPast = slot.deliveryDate < todayStr
           const dayAbbr = getDayLabel(slot.deliveryDate)
+          const dayStatus = statusByDate.get(slot.deliveryDate)
+          const isSkipped = subStatus === 'active' && dayStatus === 'skipped'
 
           let card_state: GetHomeThisWeekOutput['cards'][0]['card_state']
           let cta_label: string | null = null
@@ -56,6 +66,9 @@ export function makeUC(deps: Deps) {
           if (subStatus === 'paused') {
             card_state = 'browse_only'
             cta_label = 'Browse only'
+          } else if (isSkipped) {
+            card_state = 'skipped'
+            cta_label = 'Undo'
           } else if (isPast) {
             card_state = 'past'
             cta_label = null
@@ -65,7 +78,7 @@ export function makeUC(deps: Deps) {
             card_state = 'upcoming'
           }
 
-          if (subStatus === 'active' && !isPast && card_state !== 'browse_only') {
+          if (subStatus === 'active' && !isPast && !isSkipped && card_state !== 'browse_only') {
             const skipUsed = sub!.skipDaysUsed
             const skipAllowed = sub!.skipDaysAllowed
             const cutoffPassed = isAfterSkipCutoff(slot.deliveryDate, now)

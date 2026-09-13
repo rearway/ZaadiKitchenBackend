@@ -579,13 +579,34 @@
             "method": "POST",
             "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name_en\": \"Lamb Kabsa\",\n    \"name_ar\": \"كبسة لحم\",\n    \"meal_type\": \"executive\",\n    \"kcal\": 550,\n    \"macros\": {\n        \"protein_g\": 38,\n        \"carbs_g\": 62,\n        \"fat_g\": 14\n    },\n    \"chef_note\": \"Slow-cooked for 4 hours.\",\n    \"key_ingredients\": [\"Lamb\", \"Saffron rice\"],\n    \"emoji\": \"🍛\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name_en",
+                  "value": "Lamb Kabsa",
+                  "type": "text"
+                },
+                {
+                  "key": "name_ar",
+                  "value": "كبسة لحم",
+                  "type": "text"
+                },
+                {
+                  "key": "meal_type",
+                  "value": "executive",
+                  "type": "text"
+                },
+                {
+                  "key": "kcal",
+                  "value": "550",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
                 }
-              }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/admin/meals",

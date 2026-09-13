@@ -53,7 +53,7 @@ function buildDayLabel(deliveryDate: string, isToday: boolean): string {
 
 export function makeUC(deps: Deps) {
   return async function getCustomerMenuWeek(input: GetCustomerMenuWeekInput): Promise<GetCustomerMenuWeekOutput> {
-    const { logger, subscriptionLoader, menuWeekLoader } = deps
+    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } = deps
 
     try {
       const now = new Date()
@@ -66,6 +66,14 @@ export function makeUC(deps: Deps) {
         menuWeekLoader.getMenuForDateRange(thisWeek.dateFrom, nextWeek.dateTo),
       ])
 
+      const deliveryDays = sub
+        ? await deliveryDayLoader.getDeliveryDaysBySubscription(sub.id, {
+            from: thisWeek.dateFrom,
+            to: nextWeek.dateTo,
+          })
+        : []
+      const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
+
       const subStatus = sub?.status ?? null
       const mealTypeFilter = input.mealType ?? 'all'
 
@@ -75,9 +83,11 @@ export function makeUC(deps: Deps) {
 
         const isToday = slot.deliveryDate === todayStr
         const isPast = slot.deliveryDate < todayStr
+        const isSkipped = subStatus === 'active' && statusByDate.get(slot.deliveryDate) === 'skipped'
 
         let card_state: CardState
-        if (isPast) card_state = 'past'
+        if (isSkipped) card_state = 'skipped'
+        else if (isPast) card_state = 'past'
         else if (isToday) card_state = 'today'
         else card_state = 'upcoming'
 
@@ -93,7 +103,10 @@ export function makeUC(deps: Deps) {
         } else if (subStatus === 'paused') {
           skip_reason = 'subscription_paused'
         } else if (subStatus === 'active') {
-          if (isPast) {
+          if (isSkipped) {
+            skip_available = false
+            skip_reason = 'already_skipped'
+          } else if (isPast) {
             skip_reason = 'past_cutoff'
           } else if (isAfterSkipCutoff(slot.deliveryDate, now)) {
             skip_reason = 'past_cutoff'
