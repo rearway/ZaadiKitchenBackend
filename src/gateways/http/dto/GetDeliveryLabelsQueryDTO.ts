@@ -12,7 +12,7 @@ export class GetDeliveryLabelsQueryDTO {
 
   @ApiPropertyOptional({
     example: '2026-09-18',
-    description: 'Explicit delivery date (YYYY-MM-DD). Wins over day if both sent. Must be today or tomorrow in Asia/Riyadh.',
+    description: 'Explicit delivery date (YYYY-MM-DD). Wins over day if both sent. Must be today through today+7 days in Asia/Riyadh.',
   })
   @IsOptional()
   @IsString()

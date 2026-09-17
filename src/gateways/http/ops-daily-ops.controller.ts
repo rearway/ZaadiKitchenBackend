@@ -57,7 +57,7 @@ export class OpsDailyOpsController {
         date: query.date,
       },
       new Date(),
-      { restrictToTodayTomorrow: false }
+      { restrictToLabelWindow: false }
     )
     return this.useCases.queries.getDailyOps({ date: resolved.date, role: 'ops' })
   }

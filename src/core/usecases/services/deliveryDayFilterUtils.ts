@@ -3,6 +3,9 @@ import { todayKSA } from './revenueUtils.js'
 
 export type DeliveryDayFilter = 'today' | 'tomorrow'
 
+/** Inclusive window for Print Labels list, PDF download, and XLSX export. */
+export const DELIVERY_LABELS_MAX_DAYS_AHEAD = 7
+
 export interface ResolveDeliveryDayInput {
   day?: DeliveryDayFilter
   delivery_date?: string
@@ -17,8 +20,11 @@ export interface ResolvedDeliveryDay {
 }
 
 export interface ResolveDeliveryDayOptions {
-  /** When true (default), only today and tomorrow (KSA) are allowed. */
-  restrictToTodayTomorrow?: boolean
+  /**
+   * When true (default), date must fall within [today, today + DELIVERY_LABELS_MAX_DAYS_AHEAD]
+   * in Asia/Riyadh. Set false for dashboard/historical views that accept any date.
+   */
+  restrictToLabelWindow?: boolean
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -31,6 +37,15 @@ export function addCalendarDays(dateStr: string, days: number): string {
 
 export function tomorrowKSA(referenceDate: Date = new Date()): string {
   return addCalendarDays(todayKSA(referenceDate), 1)
+}
+
+export function getDeliveryLabelDateWindow(referenceDate: Date = new Date()): {
+  min_date: string
+  max_date: string
+} {
+  const min_date = todayKSA(referenceDate)
+  const max_date = addCalendarDays(min_date, DELIVERY_LABELS_MAX_DAYS_AHEAD)
+  return { min_date, max_date }
 }
 
 function formatShortDateLabel(date: string): string {
@@ -65,15 +80,19 @@ export function formatDeliveryDayLabel(
   return short
 }
 
+function isWithinLabelWindow(date: string, minDate: string, maxDate: string): boolean {
+  return date >= minDate && date <= maxDate
+}
+
 export function resolveDeliveryDayFilter(
   input: ResolveDeliveryDayInput,
   referenceDate: Date = new Date(),
   options: ResolveDeliveryDayOptions = {}
 ): ResolvedDeliveryDay {
-  const restrict = options.restrictToTodayTomorrow !== false
+  const restrict = options.restrictToLabelWindow !== false
   const today = todayKSA(referenceDate)
   const tomorrow = addCalendarDays(today, 1)
-  const allowed = new Set([today, tomorrow])
+  const { min_date, max_date } = getDeliveryLabelDateWindow(referenceDate)
 
   let date: string
   if (input.delivery_date) {
@@ -92,12 +111,14 @@ export function resolveDeliveryDayFilter(
     })
   }
 
-  if (restrict && !allowed.has(date)) {
+  if (restrict && !isWithinLabelWindow(date, min_date, max_date)) {
     throw new ValidationError(
-      'Delivery date must be today or tomorrow in Asia/Riyadh',
+      `Delivery date must be between ${min_date} and ${max_date} (Asia/Riyadh, up to ${DELIVERY_LABELS_MAX_DAYS_AHEAD} days ahead)`,
       {
         error: 'DATE_OUT_OF_RANGE',
-        allowed_dates: [today, tomorrow],
+        min_date,
+        max_date,
+        max_days_ahead: DELIVERY_LABELS_MAX_DAYS_AHEAD,
       }
     )
   }

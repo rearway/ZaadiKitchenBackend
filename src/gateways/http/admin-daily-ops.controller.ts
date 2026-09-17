@@ -60,7 +60,7 @@ export class AdminDailyOpsController {
         date: query.date,
       },
       new Date(),
-      { restrictToTodayTomorrow: false }
+      { restrictToLabelWindow: false }
     )
     return this.useCases.queries.getDailyOps({ date: resolved.date, role: 'admin' })
   }
@@ -96,7 +96,7 @@ export class AdminDailyOpsController {
         date: query.date,
       },
       new Date(),
-      { restrictToTodayTomorrow: false }
+      { restrictToLabelWindow: false }
     )
     const result = await this.useCases.queries.getDailyOps({
       date: resolved.date,
