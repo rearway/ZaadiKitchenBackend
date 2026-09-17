@@ -1,6 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { Meal } from '../../entities/index.js'
 import { ResourceNotFoundError, MealInPublishedWeekError } from '../../../shared/errors/domain.errors.js'
+import { getPublishedWeeksBlockingMealEdit } from '../services/getMealPublishedEditBlockers.js'
 
 export interface UpdateMealInput {
   mealId: string
@@ -38,15 +39,11 @@ export function makeUC(deps: Deps) {
         }
       }
 
-      // Check if meal is in a published week — require confirmation
-      const publishedSlots = await menuWeekLoader.getMealsInWeek('__check_published__').catch(() => [])
-      const usedInPublished = await (async () => {
-        const allSlots = await menuWeekLoader.getMenuForDateRange('1970-01-01', '2099-12-31')
-        const publishedSlotMealIds = allSlots
-          .filter(s => s.mealId === input.mealId)
-          .map(s => s.weekId)
-        return [...new Set(publishedSlotMealIds)]
-      })()
+      // Block edits only when the meal is in a published current or next work week
+      const usedInPublished = await getPublishedWeeksBlockingMealEdit(
+        input.mealId,
+        menuWeekLoader
+      )
 
       if (usedInPublished.length > 0 && !input.confirmPublishedEdit) {
         throw new MealInPublishedWeekError(usedInPublished)

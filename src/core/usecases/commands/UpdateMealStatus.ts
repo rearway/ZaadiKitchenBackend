@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError, MealInPublishedWeekError } from '../../../shared/errors/domain.errors.js'
+import { getPublishedWeeksBlockingMealEdit } from '../services/getMealPublishedEditBlockers.js'
 
 export interface UpdateMealStatusInput {
   mealId: string
@@ -22,14 +23,12 @@ export function makeUC(deps: Deps) {
       const meal = await mealLoader.getMealById(input.mealId)
       if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
 
-      // Moving to draft while assigned to a published week requires confirmation
+      // Moving to draft while assigned to a published current/next week requires confirmation
       if (input.status === 'draft') {
-        const publishedSlots = await menuWeekLoader.getMenuForDateRange('1970-01-01', '2099-12-31')
-        const affectedWeeks = [...new Set(
-          publishedSlots
-            .filter(s => s.mealId === input.mealId)
-            .map(s => s.weekId)
-        )]
+        const affectedWeeks = await getPublishedWeeksBlockingMealEdit(
+          input.mealId,
+          menuWeekLoader
+        )
         if (affectedWeeks.length > 0 && !input.confirmPublishedEdit) {
           throw new MealInPublishedWeekError(affectedWeeks)
         }
