@@ -149,6 +149,7 @@ export function makeUC(deps: Deps) {
       userDeviceLoader,
       notificationGateway,
       walletLoader,
+      commsLoader,
     } = deps
 
     try {
@@ -361,18 +362,21 @@ export function makeUC(deps: Deps) {
 
           // Send Referral Reward 🎁 push notification
           try {
-            const balance = await walletLoader.getBalanceByUserId(promo.ownerUserId)
-            const devices = await userDeviceLoader.getDevicesByUserId(promo.ownerUserId)
-            await Promise.allSettled(
-              devices.map(device =>
-                notificationGateway.sendSingleNotification(
-                  device.endpointArn,
-                  'Referral Reward 🎁',
-                  `Your friend subscribed! SAR ${rewardSar} has been credited to your wallet. New balance: SAR ${balance}.`,
-                  { type: 'referral_reward' }
+            const enabled = await commsLoader.isAutomationEnabled('referral_reward')
+            if (enabled) {
+              const balance = await walletLoader.getBalanceByUserId(promo.ownerUserId)
+              const devices = await userDeviceLoader.getDevicesByUserId(promo.ownerUserId)
+              await Promise.allSettled(
+                devices.map(device =>
+                  notificationGateway.sendSingleNotification(
+                    device.endpointArn,
+                    'Referral Reward 🎁',
+                    `Your friend subscribed! SAR ${rewardSar} has been credited to your wallet. New balance: SAR ${balance}.`,
+                    { type: 'referral_reward' }
+                  )
                 )
               )
-            )
+            }
           } catch (notifyError) {
             logger.error('Failed to send Referral Reward push notification', String(notifyError))
           }

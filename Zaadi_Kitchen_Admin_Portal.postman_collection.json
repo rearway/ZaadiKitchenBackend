@@ -1690,10 +1690,85 @@
       ]
     },
     {
-      "name": "Communications",
+      "name": "Comms & Broadcast",
       "item": [
         {
-          "name": "Send Bulk Broadcast",
+          "name": "List Automations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/automations",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "automations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Automation",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_enabled\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/comms/automations/delivery_confirmed",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "automations", "delivery_confirmed"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Broadcast Segments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast/segments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast", "segments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Segment Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast/segments/delivering_today/count",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast", "segments", "delivering_today", "count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Broadcast",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"segment_id\": \"delivering_today\",\n  \"message\": \"Your lunch is on the way! Expected delivery between 12:00–1:00 PM.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Bulk Broadcast (legacy)",
           "request": {
             "method": "POST",
             "header": [
@@ -1713,18 +1788,11 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/communications/broadcast",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "communications",
-                "broadcast"
-              ]
-            }
+              "raw": "{{base_url}}/admin/communications/broadcast",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "communications", "broadcast"]
+            },
+            "description": "Legacy all-subscribers topic broadcast. Prefer POST /admin/comms/broadcast."
           },
           "response": []
         }

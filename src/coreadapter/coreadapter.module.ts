@@ -25,6 +25,7 @@ import {
   MealRatingPersistenceS,
   AdminCustomerPersistenceS,
   RevenuePersistenceS,
+  CommsPersistenceS,
   RiderPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
@@ -56,6 +57,7 @@ import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePers
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
 import { RevenuePersistenceService } from '../infrastructure/SequelizePersistence/revenue-persistence.service.js'
+import { CommsPersistenceService } from '../infrastructure/SequelizePersistence/comms-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
@@ -125,6 +127,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: MealRatingPersistenceS, useClass: MealRatingPersistenceService },
     { provide: AdminCustomerPersistenceS, useClass: AdminCustomerPersistenceService },
     { provide: RevenuePersistenceS, useClass: RevenuePersistenceService },
+    { provide: CommsPersistenceS, useClass: CommsPersistenceService },
     { provide: RiderPersistenceS, useClass: RiderPersistenceService },
     { provide: DailyOpsPersistenceS, useClass: DailyOpsPersistenceService },
     { 

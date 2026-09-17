@@ -54,6 +54,8 @@ import * as CreditDeliveryIssue from './commands/CreditDeliveryIssue.js'
 import * as RejectDeliveryIssue from './commands/RejectDeliveryIssue.js'
 import * as RegisterDevice from './commands/RegisterDevice.js'
 import * as SendBulkBroadcast from './commands/SendBulkBroadcast.js'
+import * as SendCommsBroadcast from './commands/SendCommsBroadcast.js'
+import * as UpdateCommsAutomation from './commands/UpdateCommsAutomation.js'
 import * as SyncPendingPayments from './commands/SyncPendingPayments.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
@@ -101,6 +103,9 @@ import * as GenerateDeliverySheetExport from './queries/GenerateDeliverySheetExp
 import * as GetDashboardStats from './queries/GetDashboardStats.js'
 import * as GetRevenueSummary from './queries/GetRevenueSummary.js'
 import * as GetRevenueDaily from './queries/GetRevenueDaily.js'
+import * as GetCommsAutomations from './queries/GetCommsAutomations.js'
+import * as GetBroadcastSegments from './queries/GetBroadcastSegments.js'
+import * as GetBroadcastSegmentCount from './queries/GetBroadcastSegmentCount.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -436,6 +441,18 @@ export function initUseCases(deps: Deps) {
     SendBulkBroadcast.name,
     ...defaultWrappers
   )
+  const sendCommsBroadcast = wrapUC(
+    deps,
+    SendCommsBroadcast.makeUC(deps),
+    SendCommsBroadcast.name,
+    ...defaultWrappers
+  )
+  const updateCommsAutomation = wrapUC(
+    deps,
+    UpdateCommsAutomation.makeUC(deps),
+    UpdateCommsAutomation.name,
+    ...defaultWrappers
+  )
   const syncPendingPayments = wrapUC(
     deps,
     SyncPendingPayments.makeUC(deps),
@@ -710,6 +727,24 @@ export function initUseCases(deps: Deps) {
     GetRevenueDaily.name,
     ...defaultWrappers
   )
+  const getCommsAutomations = wrapUC(
+    deps,
+    GetCommsAutomations.makeUC(deps),
+    GetCommsAutomations.name,
+    ...defaultWrappers
+  )
+  const getBroadcastSegments = wrapUC(
+    deps,
+    GetBroadcastSegments.makeUC(deps),
+    GetBroadcastSegments.name,
+    ...defaultWrappers
+  )
+  const getBroadcastSegmentCount = wrapUC(
+    deps,
+    GetBroadcastSegmentCount.makeUC(deps),
+    GetBroadcastSegmentCount.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -757,6 +792,9 @@ export function initUseCases(deps: Deps) {
       getDashboardStats,
       getRevenueSummary,
       getRevenueDaily,
+      getCommsAutomations,
+      getBroadcastSegments,
+      getBroadcastSegmentCount,
     },
     commands: {
       sendOtp,
@@ -812,6 +850,8 @@ export function initUseCases(deps: Deps) {
       rejectDeliveryIssue,
       registerDevice,
       sendBulkBroadcast,
+      sendCommsBroadcast,
+      updateCommsAutomation,
       syncPendingPayments,
     },
   }

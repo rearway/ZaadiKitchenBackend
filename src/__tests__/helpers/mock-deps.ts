@@ -535,6 +535,37 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getAvailableRevenueMonths: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['revenueLoader'],
 
+    commsLoader: {
+      getAutomationStates: jest.fn().mockResolvedValue([]),
+      isAutomationEnabled: jest.fn().mockResolvedValue(true),
+      getBroadcastSegmentCounts: jest.fn().mockResolvedValue({
+        all_subscribers: 0,
+        active: 0,
+        paused: 0,
+        delivering_today: 0,
+      }),
+      getSegmentRecipientUserIds: jest.fn().mockResolvedValue([]),
+      getActiveDeviceEndpointsForUsers: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['commsLoader'],
+
+    commsPersistor: {
+      setAutomationEnabled: jest.fn().mockResolvedValue({
+        id: 'delivery_confirmed',
+        isEnabled: true,
+        updatedAt: new Date(),
+        updatedByUserId: 'admin-uuid-1',
+      }),
+      createBroadcastRecord: jest.fn().mockResolvedValue({
+        id: 'bc-uuid-1',
+        segmentId: 'active',
+        message: 'Test',
+        recipientCount: 1,
+        sentByUserId: 'admin-uuid-1',
+        status: 'sent',
+        sentAt: new Date(),
+      }),
+    } as unknown as Deps['commsPersistor'],
+
     riderIssuePersistor: {
       createRiderIssue: jest.fn().mockResolvedValue({
         id: 'rider-issue-uuid-1',

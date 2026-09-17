@@ -26,6 +26,7 @@ import {
   MealRatingPersistenceS,
   AdminCustomerPersistenceS,
   RevenuePersistenceS,
+  CommsPersistenceS,
   RiderPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
@@ -56,6 +57,7 @@ import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePers
 import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
 import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
 import { RevenuePersistenceService } from '../infrastructure/SequelizePersistence/revenue-persistence.service.js'
+import { CommsPersistenceService } from '../infrastructure/SequelizePersistence/comms-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { NotificationGateway } from '../core/entitygateway/Notification.js'
@@ -89,6 +91,7 @@ export const coreAdapterService: FactoryProvider = {
     mealRatingPersistence: MealRatingPersistenceService,
     adminCustomerPersistence: AdminCustomerPersistenceService,
     revenuePersistence: RevenuePersistenceService,
+    commsPersistence: CommsPersistenceService,
     riderPersistence: RiderPersistenceService,
     dailyOpsPersistence: DailyOpsPersistenceService,
     notificationService: NotificationGateway,
@@ -161,6 +164,8 @@ export const coreAdapterService: FactoryProvider = {
       adminCustomerLoader: adminCustomerPersistence,
       adminCustomerPersistor: adminCustomerPersistence,
       revenueLoader: revenuePersistence,
+      commsLoader: commsPersistence,
+      commsPersistor: commsPersistence,
       riderIssuePersistor: riderPersistence,
       dailyOpsDayLoader: dailyOpsPersistence,
       dailyOpsDayPersistor: dailyOpsPersistence,
@@ -195,6 +200,7 @@ export const coreAdapterService: FactoryProvider = {
     MealRatingPersistenceS,
     AdminCustomerPersistenceS,
     RevenuePersistenceS,
+    CommsPersistenceS,
     RiderPersistenceS,
     DailyOpsPersistenceS,
     NotificationS,

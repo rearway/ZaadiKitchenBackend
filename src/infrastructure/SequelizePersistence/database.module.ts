@@ -29,6 +29,8 @@ import { RiderIssueModel } from './models/RiderIssueModel.js'
 import { DailyOpsDayModel } from './models/DailyOpsDayModel.js'
 import { UserDeviceModel } from './models/UserDeviceModel.js'
 import { PaymentTransactionModel } from './models/PaymentTransactionModel.js'
+import { CommsAutomationModel } from './models/CommsAutomationModel.js'
+import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -83,6 +85,8 @@ import { PaymentTransactionModel } from './models/PaymentTransactionModel.js'
             DailyOpsDayModel,
             UserDeviceModel,
             PaymentTransactionModel,
+            CommsAutomationModel,
+            CommsBroadcastModel,
           ],
           define: {
             charset: 'utf8mb4',
@@ -131,6 +135,8 @@ import { PaymentTransactionModel } from './models/PaymentTransactionModel.js'
       DailyOpsDayModel,
       UserDeviceModel,
       PaymentTransactionModel,
+      CommsAutomationModel,
+      CommsBroadcastModel,
     ]),
   ],
   exports: [SequelizeModule],

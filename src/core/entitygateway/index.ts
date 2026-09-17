@@ -34,6 +34,7 @@ export * from './DeliveryIssue.js'
 export * from './MealRating.js'
 export * from './AdminCustomer.js'
 export * from './Revenue.js'
+export * from './Comms.js'
 export * from './RiderIssue.js'
 export * from './DailyOpsDay.js'
 export * from './Notification.js'
@@ -88,6 +89,7 @@ import type { DeliveryIssuePersistor, DeliveryIssueLoader } from './DeliveryIssu
 import type { MealRatingPersistor, MealRatingLoader } from './MealRating.js'
 import type { AdminCustomerLoader, AdminCustomerPersistor } from './AdminCustomer.js'
 import type { RevenueLoader } from './Revenue.js'
+import type { CommsLoader, CommsPersistor } from './Comms.js'
 import type { RiderIssuePersistor } from './RiderIssue.js'
 import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
 import type { NotificationGateway } from './Notification.js'
@@ -151,6 +153,8 @@ export type Deps = {
   adminCustomerLoader: AdminCustomerLoader
   adminCustomerPersistor: AdminCustomerPersistor
   revenueLoader: RevenueLoader
+  commsLoader: CommsLoader
+  commsPersistor: CommsPersistor
   riderIssuePersistor: RiderIssuePersistor
   dailyOpsDayLoader: DailyOpsDayLoader
   dailyOpsDayPersistor: DailyOpsDayPersistor

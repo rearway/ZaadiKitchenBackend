@@ -24,8 +24,8 @@ export class AdminCommunicationController {
   constructor(@Inject(CoreS) private readonly useCases: UseCases) {}
 
   @Post('broadcast')
-  @Roles(UserRole.ADMIN, UserRole.OPS)
-  @ApiOperation({ summary: 'Send a bulk broadcast push notification to all users' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Send a bulk broadcast push notification to all users (legacy)' })
   @ApiResponse({ status: 200, description: 'Broadcast sent successfully' })
   async sendBroadcast(@Body(ValidationPipe) dto: SendBulkBroadcastDTO) {
     return this.useCases.commands.sendBulkBroadcast({
