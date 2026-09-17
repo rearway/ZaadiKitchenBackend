@@ -11,6 +11,7 @@ import type {
   CustomerHistoryDelivery,
   CustomerHistoryIssue,
 } from '../../core/entitygateway/AdminCustomer.js'
+import { normalizePlanSlug, todayKSA } from '../../core/usecases/services/revenueUtils.js'
 import {
   UserModel,
   SubscriptionModel,
@@ -45,16 +46,23 @@ export class AdminCustomerPersistenceService
   async listCustomers(params: {
     q?: string
     status?: string
+    filter?: 'new' | 'churned'
+    plan?: string
     page: number
     perPage: number
+    todayKsa?: string
   }): Promise<{ customers: CustomerListItem[]; total: number }> {
     const sequelize = UserModel.sequelize!
     const offset = (params.page - 1) * params.perPage
+    const todayKsa = params.todayKsa ?? todayKSA()
+    const todayMinus3 = this.addDays(todayKsa, -3)
 
     const conditions: string[] = ["u.role = 'CUSTOMER'"]
     const replacements: Record<string, unknown> = {
       limit: params.perPage,
       offset,
+      todayKsa,
+      todayMinus3,
     }
 
     if (params.q) {
@@ -62,9 +70,48 @@ export class AdminCustomerPersistenceService
       replacements.q = `%${params.q}%`
     }
 
-    if (params.status) {
+    const wantsChurned = params.status === 'churned' || params.filter === 'churned'
+    const wantsNew = params.filter === 'new'
+
+    if (wantsChurned) {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM (
+          SELECT DISTINCT ON (sub.user_id) sub.user_id, sub.status, sub.end_date, sub.created_at
+          FROM subscriptions sub
+          ORDER BY sub.user_id, sub.created_at DESC
+        ) latest
+        WHERE latest.user_id = u.id
+          AND latest.status = 'expired'
+          AND latest.end_date <= :todayMinus3::date
+          AND NOT EXISTS (
+            SELECT 1 FROM subscriptions s2
+            WHERE s2.user_id = latest.user_id
+              AND s2.created_at > latest.created_at
+          )
+      )`)
+    } else if (wantsNew) {
+      conditions.push(`EXISTS (
+        SELECT 1 FROM subscriptions s_new
+        WHERE s_new.user_id = u.id
+          AND s_new.start_date = :todayKsa::date
+          AND s_new.id = (
+            SELECT id FROM subscriptions sub
+            WHERE sub.user_id = u.id
+            ORDER BY sub.created_at ASC
+            LIMIT 1
+          )
+      )`)
+    } else if (params.status) {
       conditions.push('s.status = :status')
+      if (params.status === 'active' || params.status === 'paused' || params.status === 'cancelled') {
+        conditions.push('s.end_date >= :todayKsa::date')
+      }
       replacements.status = params.status
+    }
+
+    if (params.plan) {
+      conditions.push('p.slug = :planSlug')
+      replacements.planSlug = normalizePlanSlug(params.plan)
     }
 
     const whereClause = conditions.join(' AND ')
@@ -258,5 +305,11 @@ export class AdminCustomerPersistenceService
 
   async deactivateCustomer(userId: string): Promise<void> {
     await UserModel.update({ isActive: false }, { where: { id: userId } })
+  }
+
+  private addDays(dateStr: string, days: number): string {
+    const date = new Date(`${dateStr}T12:00:00Z`)
+    date.setUTCDate(date.getUTCDate() + days)
+    return date.toISOString().slice(0, 10)
   }
 }

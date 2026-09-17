@@ -47,6 +47,8 @@ export class AdminCustomersController {
     return this.useCases.queries.getAdminCustomers({
       q: query.q,
       status: query.status,
+      filter: query.filter,
+      plan: query.plan,
       page: query.page,
       perPage: query.per_page,
     })

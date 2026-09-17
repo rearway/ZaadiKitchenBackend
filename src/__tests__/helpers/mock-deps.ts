@@ -519,6 +519,22 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       deactivateCustomer: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['adminCustomerPersistor'],
 
+    revenueLoader: {
+      getSummary: jest.fn().mockResolvedValue({
+        mrrAmountSar: 0,
+        mrrPriorAmountSar: 0,
+        activeCount: 0,
+        newTodayCount: 0,
+        churnedCount: 0,
+        subscribersByPlan: [],
+        avgSkipRate: 0,
+        skipRateChange: 0,
+        saladMealPct: 0,
+      }),
+      getDailyRevenue: jest.fn().mockResolvedValue([]),
+      getAvailableRevenueMonths: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['revenueLoader'],
+
     riderIssuePersistor: {
       createRiderIssue: jest.fn().mockResolvedValue({
         id: 'rider-issue-uuid-1',

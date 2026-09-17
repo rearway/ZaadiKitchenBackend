@@ -78,8 +78,11 @@ export interface AdminCustomerLoader {
   listCustomers(params: {
     q?: string
     status?: string
+    filter?: 'new' | 'churned'
+    plan?: string
     page: number
     perPage: number
+    todayKsa?: string
   }): Promise<{ customers: CustomerListItem[]; total: number }>
 
   getCustomerDetail(userId: string): Promise<AdminCustomerDetail | null>

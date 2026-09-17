@@ -909,6 +909,58 @@
       ]
     },
     {
+      "name": "Revenue Dashboard",
+      "item": [
+        {
+          "name": "Revenue Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/revenue/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "revenue",
+                "summary"
+              ]
+            },
+            "description": "ADMIN only. Returns MRR, subscriber tiles, plan distribution, and KPI metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Daily Revenue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/revenue/daily?month=2026-09",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "revenue",
+                "daily"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "2026-09",
+                  "description": "YYYY-MM"
+                }
+              ]
+            },
+            "description": "ADMIN only. Returns Mon–Sun daily revenue for the selected month."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Customer Management",
       "item": [
         {
@@ -958,7 +1010,19 @@
                 {
                   "key": "status",
                   "value": "active",
-                  "description": "Filter by subscription status: active | paused | cancelled | expired",
+                  "description": "Filter by subscription status: active | paused | cancelled | expired | churned",
+                  "disabled": true
+                },
+                {
+                  "key": "filter",
+                  "value": "new",
+                  "description": "Special filter: new (joined today) | churned",
+                  "disabled": true
+                },
+                {
+                  "key": "plan",
+                  "value": "month",
+                  "description": "Plan slug: month | week | quarterly | try_it (weekly alias accepted)",
                   "disabled": true
                 }
               ]

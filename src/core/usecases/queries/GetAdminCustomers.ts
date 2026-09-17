@@ -3,6 +3,8 @@ import type { Deps } from '../../entitygateway/index.js'
 export interface GetAdminCustomersInput {
   q?: string
   status?: string
+  filter?: 'new' | 'churned'
+  plan?: string
   page?: number
   perPage?: number
 }
@@ -18,6 +20,8 @@ export function makeUC(deps: Deps) {
       const { customers, total } = await adminCustomerLoader.listCustomers({
         q: input.q,
         status: input.status,
+        filter: input.filter,
+        plan: input.plan,
         page,
         perPage,
       })

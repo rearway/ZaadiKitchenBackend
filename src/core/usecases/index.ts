@@ -99,6 +99,8 @@ import * as GetDeliveryLabels from './queries/GetDeliveryLabels.js'
 import * as GenerateDeliveryLabelsPdf from './queries/GenerateDeliveryLabelsPdf.js'
 import * as GenerateDeliverySheetExport from './queries/GenerateDeliverySheetExport.js'
 import * as GetDashboardStats from './queries/GetDashboardStats.js'
+import * as GetRevenueSummary from './queries/GetRevenueSummary.js'
+import * as GetRevenueDaily from './queries/GetRevenueDaily.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -696,6 +698,18 @@ export function initUseCases(deps: Deps) {
     GetDashboardStats.name,
     ...defaultWrappers
   )
+  const getRevenueSummary = wrapUC(
+    deps,
+    GetRevenueSummary.makeUC(deps),
+    GetRevenueSummary.name,
+    ...defaultWrappers
+  )
+  const getRevenueDaily = wrapUC(
+    deps,
+    GetRevenueDaily.makeUC(deps),
+    GetRevenueDaily.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -741,6 +755,8 @@ export function initUseCases(deps: Deps) {
       generateDeliveryLabelsPdf,
       generateDeliverySheetExport,
       getDashboardStats,
+      getRevenueSummary,
+      getRevenueDaily,
     },
     commands: {
       sendOtp,
