@@ -3,6 +3,7 @@ import type { Deps } from '../../entitygateway/index.js'
 import type { RiderDeliveryRow } from '../../entitygateway/DeliveryDay.js'
 import { ResourceNotFoundError } from '../../../shared/errors/index.js'
 import type { LabelMealTypeFilter } from './GetDeliveryLabels.js'
+import { todayKSA } from '../services/revenueUtils.js'
 
 export interface GenerateDeliveryLabelsPdfInput {
   date?: string
@@ -28,10 +29,6 @@ const FONT_REGULAR = path.join(ASSETS_DIR, 'fonts/Montserrat-Regular.ttf')
 const FONT_BOLD = path.join(ASSETS_DIR, 'fonts/Montserrat-Bold.ttf')
 const FONT_EXTRABOLD = path.join(ASSETS_DIR, 'fonts/Montserrat-ExtraBold.ttf')
 const LOGO_WHITE = path.join(ASSETS_DIR, 'brand/platio-logo-white.png')
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function registerFonts(doc: PDFKit.PDFDocument): void {
   doc.registerFont('Montserrat', FONT_REGULAR)
@@ -148,7 +145,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
-      const date = input.date ?? todayIsoDate()
+      const date = input.date ?? todayKSA()
       const mealType = input.mealType ?? 'all'
 
       const allRows = await deliveryDayLoader.getRiderDeliveriesByDate(

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "zk-admin-portal-001",
     "name": "Zaadi Kitchen — Admin Portal",
-    "description": "Admin and Ops portal APIs. Admin Login and Refresh Token auto-save tokens to collection variables. Tokens expire in 15 min — use Refresh Token to stay logged in.",
+    "description": "Admin and Ops portal APIs. Includes Revenue Dashboard, Comms & Broadcast, extended Customer filters, and meal photo upload. Admin Login auto-saves {{admin_access_token}}.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -554,7 +554,27 @@
                   "description": "MIME type of the photo: image/jpeg | image/png | image/webp"
                 }
               ]
-            }
+            },
+            "description": "Step 1 of 3: returns upload_url (PUT to S3) and photo_url. Step 2: PUT file to upload_url. Step 3: PATCH Update Meal with photo_url."
+          },
+          "response": []
+        },
+        {
+          "name": "Link Meal Photo (PATCH photo_url)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"photo_url\": \"https://your-bucket.s3.amazonaws.com/meals/{{meal_id}}.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/meals/{{meal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "meals", "{{meal_id}}"]
+            },
+            "description": "Step 3 after S3 upload — required for photo_url to appear on GET /admin/meals and mobile meal endpoints."
           },
           "response": []
         },
@@ -628,7 +648,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name_en\": \"Updated Name\",\n    \"kcal\": 560\n}",
+              "raw": "{\n    \"name_en\": \"Updated Name\",\n    \"kcal\": 560,\n    \"photo_url\": \"https://your-bucket.s3.amazonaws.com/meals/{{meal_id}}.jpg\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -927,7 +947,7 @@
                 "summary"
               ]
             },
-            "description": "ADMIN only. Returns MRR, subscriber tiles, plan distribution, and KPI metrics."
+            "description": "ADMIN only. Returns MRR, subscriber tiles, plan distribution, and KPI metrics.\n\nExample 200:\n{\n  \"data\": {\n    \"mrr\": { \"amount_sar\": 54200, \"change_pct\": 12.4, \"change_direction\": \"up\", \"comparison_label\": \"vs last month\" },\n    \"subscriber_counts\": { \"active\": 248, \"new_today\": 14, \"churned\": 3 },\n    \"subscribers_by_plan\": [{ \"plan_id\": \"month\", \"plan_label\": \"Month\", \"count\": 129 }],\n    \"key_metrics\": { \"avg_skip_rate\": { \"value\": 1.4, \"change\": 0.2, \"change_direction\": \"up\", \"comparison_label\": \"vs last week\" }, \"salad_meal_pct\": { \"value\": 34, \"label\": \"of active subs\" } },\n    \"as_of\": \"2026-09-17T12:00:00Z\"\n  }\n}"
           },
           "response": []
         },
@@ -954,7 +974,7 @@
                 }
               ]
             },
-            "description": "ADMIN only. Returns Mon–Sun daily revenue for the selected month."
+            "description": "ADMIN only. Mon–Sun daily revenue for selected month (Asia/Riyadh).\n\nExample 200:\n{\n  \"data\": {\n    \"month\": \"2026-09\",\n    \"month_label\": \"Sep 2026\",\n    \"days\": [{ \"date\": \"2026-09-17\", \"day_label\": \"Wed\", \"revenue_sar\": 6800, \"is_today\": true }],\n    \"available_months\": [{ \"value\": \"2026-09\", \"label\": \"Sep 2026\" }]\n  }\n}"
           },
           "response": []
         }
@@ -1026,7 +1046,84 @@
                   "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Supports q, status, filter (new|churned), plan (month|week|quarterly|try_it)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — Active",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?status=active&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "status", "value": "active" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue ACTIVE tile deep-link."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — New Today",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?filter=new&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "filter", "value": "new" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue NEW TODAY tile deep-link (Asia/Riyadh)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — Churned",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?filter=churned&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "filter", "value": "churned" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue CHURNED tile deep-link."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — By Plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?plan=month&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "plan", "value": "month", "description": "month | week | quarterly | try_it" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue plan bar deep-link."
           },
           "response": []
         },
@@ -1407,9 +1504,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "{{daily_ops_date}}",
-                  "description": "YYYY-MM-DD, defaults to today if omitted"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 },
                 {
                   "key": "status",
@@ -1556,12 +1665,46 @@
           "response": []
         },
         {
+          "name": "Get Delivery Labels (Ops)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ops/daily-ops/labels?day=today&meal_type=all",
+              "host": ["{{base_url}}"],
+              "path": ["ops", "daily-ops", "labels"],
+              "query": [
+                { "key": "day", "value": "today", "description": "today | tomorrow (Asia/Riyadh)" },
+                { "key": "meal_type", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Delivery Labels PDF (Ops)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ops/daily-ops/labels/download?day=today&meal_type=all",
+              "host": ["{{base_url}}"],
+              "path": ["ops", "daily-ops", "labels", "download"],
+              "query": [
+                { "key": "day", "value": "today", "description": "today | tomorrow (Asia/Riyadh)" },
+                { "key": "meal_type", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Delivery Labels",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/labels?date={{daily_ops_date}}&meal_type=all",
+              "raw": "{{base_url}}/admin/daily-ops/labels?day=today&meal_type=all",
               "host": [
                 "{{base_url}}"
               ],
@@ -1572,9 +1715,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "{{daily_ops_date}}",
-                  "description": "YYYY-MM-DD, defaults to today if omitted"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 },
                 {
                   "key": "meal_type",
@@ -1598,7 +1753,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/labels/download?date={{daily_ops_date}}&meal_type=all",
+              "raw": "{{base_url}}/admin/daily-ops/labels/download?day=today&meal_type=all",
               "host": [
                 "{{base_url}}"
               ],
@@ -1610,9 +1765,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "{{daily_ops_date}}",
-                  "description": "YYYY-MM-DD, defaults to today if omitted"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 },
                 {
                   "key": "meal_type",
@@ -1642,7 +1809,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/export?date={{daily_ops_date}}",
+              "raw": "{{base_url}}/admin/daily-ops/export?day=today",
               "host": [
                 "{{base_url}}"
               ],
@@ -1653,9 +1820,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "{{daily_ops_date}}",
-                  "description": "YYYY-MM-DD, defaults to today if omitted"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 }
               ]
             }
@@ -1701,7 +1880,8 @@
               "raw": "{{base_url}}/admin/comms/automations",
               "host": ["{{base_url}}"],
               "path": ["admin", "comms", "automations"]
-            }
+            },
+            "description": "ADMIN only. Push automations with is_enabled toggles.\n\nIDs: delivery_confirmed | eod_feedback | renewal_reminder | referral_reward | lapsed_reactivation"
           },
           "response": []
         },
@@ -1763,7 +1943,8 @@
               "raw": "{{base_url}}/admin/comms/broadcast",
               "host": ["{{base_url}}"],
               "path": ["admin", "comms", "broadcast"]
-            }
+            },
+            "description": "ADMIN only. Push to segment. Max 200 chars. Returns 400 SEGMENT_EMPTY if count=0.\n\nExample 200:\n{ \"data\": { \"broadcast_id\": \"...\", \"segment_id\": \"delivering_today\", \"recipient_count\": 63, \"status\": \"sent\", \"sent_at\": \"...\" } }"
           },
           "response": []
         },
@@ -1771,28 +1952,18 @@
           "name": "Send Bulk Broadcast (legacy)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}",
-                "type": "text"
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Special Offer!\",\n  \"body\": \"Get 20% off today!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/admin/communications/broadcast",
               "host": ["{{base_url}}"],
               "path": ["admin", "communications", "broadcast"]
             },
-            "description": "Legacy all-subscribers topic broadcast. Prefer POST /admin/comms/broadcast."
+            "description": "Legacy all-subscribers topic broadcast. ADMIN only. Prefer POST /admin/comms/broadcast."
           },
           "response": []
         }

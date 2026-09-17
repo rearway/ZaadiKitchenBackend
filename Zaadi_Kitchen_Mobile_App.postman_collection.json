@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "zk-mobile-app-001",
     "name": "Zaadi Kitchen — Mobile App",
-    "description": "Customer-facing mobile app APIs. Verify OTP and Refresh Token auto-save tokens to collection variables.",
+    "description": "Customer-facing mobile app APIs. Meal endpoints return photo_url/photoUrl where applicable. Verify OTP and Refresh Token auto-save tokens to collection variables.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -987,13 +987,20 @@
               ],
               "query": [
                 {
-                  "key": "month",
-                  "value": "2025-06",
-                  "description": "Optional: filter by month YYYY-MM",
+                  "key": "from",
+                  "value": "2026-09-01",
+                  "description": "Optional YYYY-MM-DD",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-09-30",
+                  "description": "Optional YYYY-MM-DD",
                   "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Each delivery item includes photo_url (nullable) resolved from the published menu."
           },
           "response": []
         },
@@ -1221,7 +1228,8 @@
                   "description": "last_30_days | last_90_days"
                 }
               ]
-            }
+            },
+            "description": "Entries include photoUrl (nullable) joined from meals."
           },
           "response": []
         },
@@ -1240,7 +1248,8 @@
                 "me",
                 "pending-ratings"
               ]
-            }
+            },
+            "description": "Each pending item includes photoUrl (nullable)."
           },
           "response": []
         },
@@ -1389,7 +1398,8 @@
                 "home",
                 "this-week"
               ]
-            }
+            },
+            "description": "Home strip cards include photo_url on each meal card."
           },
           "response": []
         }
@@ -1435,7 +1445,8 @@
                   "value": "all"
                 }
               ]
-            }
+            },
+            "description": "Day cards in this_week/next_week include photo_url on each meal."
           },
           "response": []
         },
@@ -1453,7 +1464,8 @@
                 "meals",
                 "{{meal_id}}"
               ]
-            }
+            },
+            "description": "Meal detail for bottom sheet. Includes photo_url (nullable), macros, key_ingredients, delivery_date."
           },
           "response": []
         },

@@ -33,6 +33,7 @@ import {
   GetDeliveryLabelsQueryDTO,
 } from './dto/index.js'
 import { UserRole } from '../../codecs/enums.js'
+import { resolveDeliveryDayFilter } from '../../core/usecases/services/deliveryDayFilterUtils.js'
 
 interface AuthenticatedStaff {
   id: string
@@ -52,7 +53,16 @@ export class AdminDailyOpsController {
   @ApiResponse({ status: 200 })
   @HandleErrors('get-admin-daily-ops')
   async getDailyOps(@Query(ValidationPipe) query: GetDailyOpsQueryDTO) {
-    return this.useCases.queries.getDailyOps({ date: query.date, role: 'admin' })
+    const resolved = resolveDeliveryDayFilter(
+      {
+        day: query.day,
+        delivery_date: query.delivery_date,
+        date: query.date,
+      },
+      new Date(),
+      { restrictToTodayTomorrow: false }
+    )
+    return this.useCases.queries.getDailyOps({ date: resolved.date, role: 'admin' })
   }
 
   @Post('pipeline/advance')
@@ -79,8 +89,17 @@ export class AdminDailyOpsController {
   @ApiResponse({ status: 200 })
   @HandleErrors('get-daily-ops-issues')
   async getIssues(@Query(ValidationPipe) query: GetDailyOpsQueryDTO) {
+    const resolved = resolveDeliveryDayFilter(
+      {
+        day: query.day,
+        delivery_date: query.delivery_date,
+        date: query.date,
+      },
+      new Date(),
+      { restrictToTodayTomorrow: false }
+    )
     const result = await this.useCases.queries.getDailyOps({
-      date: query.date,
+      date: resolved.date,
       role: 'admin',
       issuesStatus: query.status,
     })
@@ -131,11 +150,22 @@ export class AdminDailyOpsController {
   @ApiResponse({ status: 200 })
   @HandleErrors('get-delivery-labels')
   async getLabels(@Query(ValidationPipe) query: GetDeliveryLabelsQueryDTO) {
-    return this.useCases.queries.getDeliveryLabels({
+    const resolved = resolveDeliveryDayFilter({
+      day: query.day,
+      delivery_date: query.delivery_date,
       date: query.date,
+    })
+    const result = await this.useCases.queries.getDeliveryLabels({
+      date: resolved.date,
       mealType: query.meal_type,
       areaId: query.area_id,
     })
+    return {
+      ...result,
+      date: resolved.date,
+      date_label: resolved.date_label,
+      day: resolved.day,
+    }
   }
 
   @Get('labels/download')
@@ -147,8 +177,13 @@ export class AdminDailyOpsController {
     @Query(ValidationPipe) query: GetDeliveryLabelsQueryDTO,
     @Res({ passthrough: true }) res: Response
   ) {
-    const { buffer, filename } = await this.useCases.queries.generateDeliveryLabelsPdf({
+    const resolved = resolveDeliveryDayFilter({
+      day: query.day,
+      delivery_date: query.delivery_date,
       date: query.date,
+    })
+    const { buffer, filename } = await this.useCases.queries.generateDeliveryLabelsPdf({
+      date: resolved.date,
       mealType: query.meal_type,
       areaId: query.area_id,
       labelId: query.label_id,
@@ -162,15 +197,20 @@ export class AdminDailyOpsController {
 
   @Get('export')
   @Roles(UserRole.ADMIN, UserRole.OPS)
-  @ApiOperation({ summary: "Export today's delivery sheet as an XLSX spreadsheet" })
+  @ApiOperation({ summary: "Export a delivery sheet as XLSX (today or tomorrow via day filter)" })
   @ApiResponse({ status: 200 })
   @HandleErrors('export-delivery-sheet')
   async exportDeliverySheet(
     @Query(ValidationPipe) query: GetDailyOpsQueryDTO,
     @Res({ passthrough: true }) res: Response
   ) {
-    const { buffer, filename } = await this.useCases.queries.generateDeliverySheetExport({
+    const resolved = resolveDeliveryDayFilter({
+      day: query.day,
+      delivery_date: query.delivery_date,
       date: query.date,
+    })
+    const { buffer, filename } = await this.useCases.queries.generateDeliverySheetExport({
+      date: resolved.date,
     })
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -2,6 +2,7 @@
   "info": {
     "_postman_id": "aa123456-7890-abcd-ef12-34567890abcd",
     "name": "Zaadi Kitchen API",
+    "description": "Combined API collection. Includes Revenue Dashboard, Comms & Broadcast, extended customer filters, and meal photo_url on mobile endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -1147,7 +1148,8 @@
                   "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Each delivery item includes photo_url (nullable) resolved from the published menu."
           },
           "response": []
         },
@@ -1345,6 +1347,78 @@
                 "subscriptions",
                 "me",
                 "meal-type"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/history?page=1&per_page=20&period=last_30_days",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                {
+                  "key": "period",
+                  "value": "last_30_days",
+                  "description": "last_30_days | last_90_days"
+                }
+              ]
+            },
+            "description": "Entries include photoUrl (nullable) joined from meals."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Ratings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/pending-ratings",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "pending-ratings"]
+            },
+            "description": "Each pending item includes photoUrl (nullable)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submitted Ratings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/ratings?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "me", "ratings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
               ]
             }
           },
@@ -1640,6 +1714,33 @@
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal Photo Upload URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/meals/{{meal_id}}/photo-upload-url?content_type=image%2Fjpeg",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "meals", "{{meal_id}}", "photo-upload-url"],
+              "query": [
+                {
+                  "key": "content_type",
+                  "value": "image/jpeg",
+                  "description": "image/jpeg | image/png | image/webp"
+                }
+              ]
+            },
+            "description": "Step 1: returns upload_url (PUT to S3) and photo_url. Step 2: PUT file. Step 3: PATCH meal with photo_url."
           },
           "response": []
         },
@@ -2195,6 +2296,52 @@
           "response": []
         },
         {
+          "name": "Get Delivery Labels (Ops)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ops/daily-ops/labels?day=today&meal_type=all",
+              "host": ["{{base_url}}"],
+              "path": ["ops", "daily-ops", "labels"],
+              "query": [
+                { "key": "day", "value": "today", "description": "today | tomorrow" },
+                { "key": "meal_type", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Delivery Labels PDF (Ops)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ops/daily-ops/labels/download?day=today&meal_type=all",
+              "host": ["{{base_url}}"],
+              "path": ["ops", "daily-ops", "labels", "download"],
+              "query": [
+                { "key": "day", "value": "today", "description": "today | tomorrow" },
+                { "key": "meal_type", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Delivery Labels",
           "request": {
             "method": "GET",
@@ -2206,7 +2353,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/labels?date=your-date-yyyy-mm-dd&meal_type=all",
+              "raw": "{{base_url}}/admin/daily-ops/labels?day=today&meal_type=all",
               "host": [
                 "{{base_url}}"
               ],
@@ -2217,9 +2364,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "your-date-yyyy-mm-dd",
-                  "description": "Optional, defaults to today"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 },
                 {
                   "key": "meal_type",
@@ -2243,7 +2402,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/labels/download?date=your-date-yyyy-mm-dd&meal_type=all",
+              "raw": "{{base_url}}/admin/daily-ops/labels/download?day=today&meal_type=all",
               "host": [
                 "{{base_url}}"
               ],
@@ -2255,9 +2414,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "your-date-yyyy-mm-dd",
-                  "description": "Optional, defaults to today"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 },
                 {
                   "key": "meal_type",
@@ -2281,7 +2452,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/daily-ops/export?date=your-date-yyyy-mm-dd",
+              "raw": "{{base_url}}/admin/daily-ops/export?day=today",
               "host": [
                 "{{base_url}}"
               ],
@@ -2292,9 +2463,21 @@
               ],
               "query": [
                 {
+                  "key": "day",
+                  "value": "today",
+                  "description": "today | tomorrow (Asia/Riyadh). Default: today."
+                },
+                {
+                  "key": "delivery_date",
+                  "value": "2026-09-18",
+                  "description": "Optional YYYY-MM-DD. Wins over day. Must be today or tomorrow.",
+                  "disabled": true
+                },
+                {
                   "key": "date",
                   "value": "your-date-yyyy-mm-dd",
-                  "description": "Optional, defaults to today"
+                  "description": "Legacy alias for delivery_date",
+                  "disabled": true
                 }
               ]
             }
@@ -2349,7 +2532,8 @@
                 "home",
                 "this-week"
               ]
-            }
+            },
+            "description": "Home strip cards include photo_url on each meal card."
           },
           "response": []
         }
@@ -2407,7 +2591,8 @@
                   "value": "all"
                 }
               ]
-            }
+            },
+            "description": "Day cards in this_week/next_week include photo_url on each meal."
           },
           "response": []
         },
@@ -2431,7 +2616,8 @@
                 "meals",
                 "{{meal_id}}"
               ]
-            }
+            },
+            "description": "Meal detail for bottom sheet. Includes photo_url (nullable), macros, key_ingredients, delivery_date."
           },
           "response": []
         }
@@ -2461,13 +2647,11 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/devices/register",
+              "raw": "{{base_url}}/devices/register",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "api",
-                "v1",
                 "devices",
                 "register"
               ]
@@ -2478,41 +2662,331 @@
       ]
     },
     {
-      "name": "Admin Communications",
+      "name": "Revenue Dashboard",
       "item": [
         {
-          "name": "Send Bulk Broadcast",
+          "name": "Revenue Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/revenue/summary",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "revenue", "summary"]
+            },
+            "description": "ADMIN only. MRR, subscriber tiles, plan distribution, KPI metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Daily Revenue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/revenue/daily?month=2026-09",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "revenue", "daily"],
+              "query": [
+                { "key": "month", "value": "2026-09", "description": "YYYY-MM" }
+              ]
+            },
+            "description": "ADMIN only. Mon–Sun daily revenue for selected month (Asia/Riyadh)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Customer Management",
+      "item": [
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "active | paused | cancelled | expired | churned",
+                  "disabled": true
+                },
+                {
+                  "key": "filter",
+                  "value": "new",
+                  "description": "new (joined today) | churned",
+                  "disabled": true
+                },
+                {
+                  "key": "plan",
+                  "value": "month",
+                  "description": "month | week | quarterly | try_it",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — Active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?status=active&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "status", "value": "active" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue ACTIVE tile deep-link."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — New Today",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?filter=new&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "filter", "value": "new" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue NEW TODAY tile deep-link (Asia/Riyadh)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — Churned",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?filter=churned&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "filter", "value": "churned" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue CHURNED tile deep-link."
+          },
+          "response": []
+        },
+        {
+          "name": "List Customers — By Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/customers?plan=month&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "customers"],
+              "query": [
+                { "key": "plan", "value": "month" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Revenue plan bar deep-link."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comms & Broadcast",
+      "item": [
+        {
+          "name": "List Automations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/automations",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "automations"]
+            },
+            "description": "ADMIN only. IDs: delivery_confirmed | eod_feedback | renewal_reminder | referral_reward | lapsed_reactivation"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Automation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_enabled\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/comms/automations/delivery_confirmed",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "automations", "delivery_confirmed"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Broadcast Segments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast/segments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast", "segments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Segment Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast/segments/delivering_today/count",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast", "segments", "delivering_today", "count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Broadcast",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"segment_id\": \"delivering_today\",\n  \"message\": \"Your lunch is on the way! Expected delivery between 12:00–1:00 PM.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/comms/broadcast",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "comms", "broadcast"]
+            },
+            "description": "ADMIN only. Push to segment. Max 200 chars."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Bulk Broadcast (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
                 "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Special Offer!\",\n  \"body\": \"Get 20% off today!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/communications/broadcast",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "communications",
-                "broadcast"
-              ]
-            }
+              "raw": "{{base_url}}/admin/communications/broadcast",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "communications", "broadcast"]
+            },
+            "description": "Legacy all-subscribers topic broadcast. ADMIN only."
           },
           "response": []
         }

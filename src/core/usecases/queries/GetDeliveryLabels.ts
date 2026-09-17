@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { RiderDeliveryRow } from '../../entitygateway/DeliveryDay.js'
+import { todayKSA } from '../services/revenueUtils.js'
 
 export type LabelMealTypeFilter = 'all' | 'executive' | 'salad'
 
@@ -7,10 +8,6 @@ export interface GetDeliveryLabelsInput {
   date?: string
   mealType?: LabelMealTypeFilter
   areaId?: string
-}
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10)
 }
 
 function mealLabel(mealType: LabelMealTypeFilter): string {
@@ -22,7 +19,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
-      const date = input.date ?? todayIsoDate()
+      const date = input.date ?? todayKSA()
       const mealType = input.mealType ?? 'all'
 
       const allRows = await deliveryDayLoader.getRiderDeliveriesByDate(date, input.areaId)

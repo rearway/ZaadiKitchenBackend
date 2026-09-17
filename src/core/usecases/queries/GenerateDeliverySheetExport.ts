@@ -1,4 +1,5 @@
 import type { Deps } from '../../entitygateway/index.js'
+import { todayKSA } from '../services/revenueUtils.js'
 
 export interface GenerateDeliverySheetExportInput {
   date?: string
@@ -9,10 +10,6 @@ export interface GenerateDeliverySheetExportOutput {
   filename: string
 }
 
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 export function makeUC(deps: Deps) {
   return async function generateDeliverySheetExport(
     input: GenerateDeliverySheetExportInput
@@ -20,7 +17,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
-      const date = input.date ?? todayIsoDate()
+      const date = input.date ?? todayKSA()
       const rows = await deliveryDayLoader.getRiderDeliveriesByDate(date)
 
       // Dynamic import to keep xlsx out of the core compilation path (same pattern as ImportMeals.ts)
