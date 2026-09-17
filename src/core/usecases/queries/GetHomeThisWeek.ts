@@ -13,6 +13,7 @@ export interface GetHomeThisWeekOutput {
     meal_type: string
     kcal: number
     emoji: string
+    photo_url: string | null
     delivery_date: string
     day_label: string
     card_state: 'today' | 'upcoming' | 'skipped' | 'past' | 'browse_only' | 'past_greyed'
@@ -99,6 +100,7 @@ export function makeUC(deps: Deps) {
             meal_type: meal.mealType,
             kcal: meal.kcal,
             emoji: meal.emoji,
+            photo_url: meal.photoUrl ?? null,
             delivery_date: slot.deliveryDate,
             day_label: isToday ? 'TODAY' : dayAbbr,
             card_state,

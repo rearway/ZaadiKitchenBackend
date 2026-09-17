@@ -71,6 +71,19 @@ describe('GetHomeThisWeek', () => {
     jest.useRealTimers()
   })
 
+  it('includes photo_url from the assigned menu meal', async () => {
+    const meal = makeMeal({ photoUrl: 'https://cdn.example.com/meals/chicken.jpg' })
+    const deps = makeDeps({
+      slots: [makeSlot(UPCOMING, meal)],
+      days: [makeDeliveryDay({ date: UPCOMING, status: 'scheduled' })],
+    })
+    const getHomeThisWeek = makeUC(deps)
+
+    const result = await getHomeThisWeek({ userId: 'user-uuid-1' })
+
+    expect(result.cards[0].photo_url).toBe('https://cdn.example.com/meals/chicken.jpg')
+  })
+
   it('marks a skipped upcoming day as skipped with Undo CTA', async () => {
     const meal = makeMeal()
     const deps = makeDeps({

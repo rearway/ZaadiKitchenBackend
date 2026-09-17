@@ -10,6 +10,7 @@ export interface DeliveryItem {
   date: string
   label: string
   meal_name: string | null
+  photo_url: string | null
   meal_type: string
   status: string
   skippable: boolean
@@ -59,7 +60,7 @@ export function makeUC(deps: Deps) {
   return async function getSubscriptionDeliveries(
     input: GetSubscriptionDeliveriesInput
   ): Promise<GetSubscriptionDeliveriesOutput> {
-    const { logger, subscriptionLoader, deliveryDayLoader } = deps
+    const { logger, subscriptionLoader, deliveryDayLoader, menuWeekLoader } = deps
     try {
       const { userId } = input
       const subscription =
@@ -78,6 +79,21 @@ export function makeUC(deps: Deps) {
           to: input.to,
         }
       )
+
+      const photoByDateAndType = new Map<string, string | null>()
+      if (days.length > 0) {
+        const from = input.from ?? days[0].date
+        const to = input.to ?? days[days.length - 1].date
+        const slots = await menuWeekLoader.getMenuForDateRange(from, to)
+        for (const slot of slots) {
+          if (slot.meal) {
+            photoByDateAndType.set(
+              `${slot.deliveryDate}:${slot.mealType}`,
+              slot.meal.photoUrl ?? null
+            )
+          }
+        }
+      }
 
       const today = new Date()
       const skipLimitReached =
@@ -110,6 +126,7 @@ export function makeUC(deps: Deps) {
           date: day.date,
           label: formatShortLabel(dayDate, today),
           meal_name: day.mealName ?? null,
+          photo_url: photoByDateAndType.get(`${day.date}:${day.mealType}`) ?? null,
           meal_type: day.mealType,
           status: day.status,
           skippable,

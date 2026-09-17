@@ -117,6 +117,7 @@ export class SubscriptionPersistenceService
       date: string
       meal_type: string
       meal_name: string | null
+      photo_url: string | null
       kcal: number | null
       status: string
       stars: number | null
@@ -126,6 +127,7 @@ export class SubscriptionPersistenceService
               dd.date,
               dd.meal_type,
               dd.meal_name,
+              m.photo_url,
               m.kcal,
               dd.status,
               mr.stars,
@@ -148,6 +150,7 @@ export class SubscriptionPersistenceService
       date: r.date,
       mealType: r.meal_type,
       mealName: r.meal_name,
+      photoUrl: r.photo_url ?? null,
       kcal: r.kcal,
       status: r.status,
       stars: r.stars,

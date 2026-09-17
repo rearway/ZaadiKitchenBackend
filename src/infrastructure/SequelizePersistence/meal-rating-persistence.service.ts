@@ -11,7 +11,8 @@ export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
               m.name_en as meal_name_en,
               m.meal_type,
               m.kcal,
-              m.emoji
+              m.emoji,
+              m.photo_url
        FROM delivery_days dd
        INNER JOIN menu_slots ms
          ON ms.delivery_date = dd.date
@@ -63,6 +64,7 @@ export class MealRatingPersistenceService
       meal_type: string
       kcal: number
       emoji: string
+      photo_url: string | null
     }>(
       PENDING_RATING_DAYS_SQL,
       {
@@ -79,6 +81,7 @@ export class MealRatingPersistenceService
       mealType: r.meal_type,
       kcal: r.kcal,
       emoji: r.emoji,
+      photoUrl: r.photo_url ?? null,
     }))
   }
 

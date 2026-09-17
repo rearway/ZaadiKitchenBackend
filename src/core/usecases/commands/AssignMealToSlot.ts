@@ -21,6 +21,7 @@ export interface AssignMealToSlotOutput {
     meal_id: string
     name_en: string
     kcal: number
+    photo_url: string | null
   }
   week_fill_status: {
     filled_slots: number
@@ -77,7 +78,12 @@ export function makeUC(deps: Deps) {
         slot_id: slot.id,
         meal_type: slot.mealType,
         delivery_date: slot.deliveryDate,
-        meal: { meal_id: meal.id, name_en: meal.nameEn, kcal: meal.kcal },
+        meal: {
+          meal_id: meal.id,
+          name_en: meal.nameEn,
+          kcal: meal.kcal,
+          photo_url: meal.photoUrl ?? null,
+        },
         week_fill_status: {
           filled_slots: filledSlots,
           total_slots: allSlots.length,

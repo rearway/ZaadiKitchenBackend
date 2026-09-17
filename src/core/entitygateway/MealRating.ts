@@ -8,6 +8,7 @@ export interface PendingRatingDay {
   mealType: string
   kcal: number
   emoji: string
+  photoUrl: string | null
 }
 
 export interface MealRatingPersistor {

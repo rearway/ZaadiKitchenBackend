@@ -28,6 +28,7 @@ describe('GetPendingRatings', () => {
         mealType: 'executive',
         kcal: 320,
         emoji: '🍗',
+        photoUrl: null,
       },
     ]
     const deps = buildDeps({

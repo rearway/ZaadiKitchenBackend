@@ -47,6 +47,7 @@ export interface DeliveryHistoryEntry {
   date: string
   mealType: string
   mealName: string | null
+  photoUrl: string | null
   kcal: number | null
   status: string
   stars: number | null

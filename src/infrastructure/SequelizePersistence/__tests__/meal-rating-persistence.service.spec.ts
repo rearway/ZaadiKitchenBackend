@@ -16,6 +16,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.delivery_date = dd.date')
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.meal_type::text = dd.meal_type::text')
     expect(PENDING_RATING_DAYS_SQL).not.toContain('ms.meal_type = dd.meal_type')
+    expect(PENDING_RATING_DAYS_SQL).toContain('m.photo_url')
   })
 
   it('maps delivered unrated days from the query result', async () => {
@@ -28,6 +29,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
         meal_type: 'executive',
         kcal: 320,
         emoji: '🍗',
+        photo_url: 'https://cdn.example.com/meals/chicken.jpg',
       },
     ])
     Object.defineProperty(DeliveryDayModel, 'sequelize', {
@@ -53,6 +55,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
         mealType: 'executive',
         kcal: 320,
         emoji: '🍗',
+        photoUrl: 'https://cdn.example.com/meals/chicken.jpg',
       },
     ])
   })
