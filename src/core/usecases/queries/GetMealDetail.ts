@@ -12,6 +12,7 @@ export interface GetMealDetailOutput {
   name_ar?: string
   meal_type: string
   emoji: string
+  photo_url: string | null
   kcal: number
   macros: {
     protein_g?: number
@@ -44,6 +45,7 @@ export function makeUC(deps: Deps) {
         name_ar: meal.nameAr,
         meal_type: meal.mealType,
         emoji: meal.emoji,
+        photo_url: meal.photoUrl ?? null,
         kcal: meal.kcal,
         macros: {
           protein_g: meal.proteinG,
