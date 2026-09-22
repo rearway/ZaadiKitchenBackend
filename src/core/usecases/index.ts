@@ -46,6 +46,7 @@ import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
+import * as DeleteAccount from './commands/DeleteAccount.js'
 import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
 import * as MarkDeliveryDelivered from './commands/MarkDeliveryDelivered.js'
 import * as ReportRiderIssue from './commands/ReportRiderIssue.js'
@@ -391,6 +392,12 @@ export function initUseCases(deps: Deps) {
     deps,
     DeactivateCustomer.makeUC(deps),
     DeactivateCustomer.name,
+    ...defaultWrappers
+  )
+  const deleteAccount = wrapUC(
+    deps,
+    DeleteAccount.makeUC(deps),
+    DeleteAccount.name,
     ...defaultWrappers
   )
   const adminCreditWallet = wrapUC(
@@ -842,6 +849,7 @@ export function initUseCases(deps: Deps) {
       submitDeliveryIssue,
       submitMealRating,
       deactivateCustomer,
+      deleteAccount,
       adminCreditWallet,
       markDeliveryDelivered,
       reportRiderIssue,

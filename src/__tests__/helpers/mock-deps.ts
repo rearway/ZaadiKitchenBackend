@@ -243,6 +243,8 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     userPersistor: {
       createUser: jest.fn().mockResolvedValue(makeUser()),
       updateUser: jest.fn().mockResolvedValue(makeUser()),
+      deleteUser: jest.fn().mockResolvedValue(undefined),
+      anonymizeAccountForDeletion: jest.fn().mockResolvedValue(makeUser()),
     } as unknown as Deps['userPersistor'],
 
     otpSessionLoader: {
@@ -598,6 +600,8 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     userDevicePersistor: {
       upsertDevice: jest.fn().mockResolvedValue(null),
+      deactivateDevice: jest.fn().mockResolvedValue(undefined),
+      deactivateAllDevicesForUser: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['userDevicePersistor'],
 
     paymentTransactionLoader: {

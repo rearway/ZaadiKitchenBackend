@@ -5,6 +5,7 @@ export type AuditLogAction =
   | 'resume_subscription'
   | 'cancel_subscription'
   | 'expire_subscription'
+  | 'delete_account'
 
 export interface AuditLog {
   id: string

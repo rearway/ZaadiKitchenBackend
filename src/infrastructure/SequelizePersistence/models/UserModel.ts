@@ -56,6 +56,10 @@ export class UserModel extends Model {
   declare isActive: boolean
 
   @AllowNull(true)
+  @Column(DataType.DATE)
+  declare deletedAt: Date | null
+
+  @AllowNull(true)
   @Unique
   @Column(DataType.STRING(20))
   declare referralCode: string | null

@@ -28,4 +28,5 @@ export interface UserPersistor {
   createUser(request: CreateUserRequest): Promise<User>
   updateUser(userId: string, updates: UpdateUserRequest): Promise<User>
   deleteUser(userId: string): Promise<void>
+  anonymizeAccountForDeletion(userId: string): Promise<User>
 }

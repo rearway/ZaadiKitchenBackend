@@ -30,6 +30,7 @@ import {
   UpdateLanguageDTO,
   SaveDeliveryLocationDTO,
   UpdateDeliveryLocationDTO,
+  DeleteAccountDTO,
 } from './dto/index.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -206,5 +207,24 @@ export class UserController {
   @HandleErrors('get-referral-user')
   async getReferral(@CurrentUser() user: UserWithoutPassword) {
     return this.useCases.queries.getReferral({ userId: user.id })
+  }
+
+  @Post('me/delete-account')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete and anonymize the current user account (CUSTOMER or DRIVER)',
+  })
+  @ApiResponse({ status: 200, description: 'Account deleted' })
+  @ApiResponse({ status: 400, description: 'Confirmation required' })
+  @ApiResponse({ status: 403, description: 'Not allowed for Admin/Ops' })
+  @HandleErrors('delete-account')
+  async deleteAccount(
+    @Body(ValidationPipe) dto: DeleteAccountDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.deleteAccount({
+      userId: user.id,
+      confirm: dto.confirm,
+    })
   }
 }

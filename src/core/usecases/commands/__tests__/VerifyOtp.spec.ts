@@ -234,4 +234,40 @@ describe('VerifyOtp', () => {
 
     expect(result.data.user.onboardingComplete).toBe(false)
   })
+
+  describe('Play Store review accounts', () => {
+    const envBackup = { ...process.env }
+
+    afterEach(() => {
+      process.env = { ...envBackup }
+    })
+
+    it('accepts the fixed review code without an active OTP session', async () => {
+      process.env.OTP_REVIEW_ENABLED = 'true'
+      process.env.OTP_REVIEW_ACCOUNTS = '+966500000102:1234'
+
+      const driver = makeUser({ phone: '+966500000102', role: 'DRIVER' })
+      const deps = buildDeps({
+        otpSessionLoader: {
+          getActiveSession: jest.fn().mockResolvedValue(null),
+          getLockedSession: jest.fn().mockResolvedValue(null),
+          getRecentAttemptCount: jest.fn().mockResolvedValue(0),
+        },
+        userLoader: {
+          getUserById: jest.fn().mockResolvedValue(driver),
+          getUserByPhone: jest.fn().mockResolvedValue(driver),
+          getUserByEmail: jest.fn().mockResolvedValue(driver),
+        },
+      })
+      const verifyOtp = makeUC(deps)
+
+      const result = await verifyOtp({
+        phone: '+966500000102',
+        code: '1234',
+      })
+
+      expect(result.data.user.role).toBe('DRIVER')
+      expect(deps.otpSessionPersistor.markVerified).not.toHaveBeenCalled()
+    })
+  })
 })

@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { Deps } from '../../entitygateway/index.js'
 import { UserRole } from '../../../codecs/enums.js'
 import { UserWithoutPassword } from '../../entities/index.js'
+import { getReviewOtpCode } from '../services/otpReviewUtils.js'
 
 export interface VerifyOtpInput {
   phone: string
@@ -43,34 +44,40 @@ export function makeUC(deps: Deps) {
 
     try {
       const { phone, code, userAgent, ipAddress } = input
+      const reviewFixedCode = getReviewOtpCode(phone)
+      const reviewCodeAccepted = reviewFixedCode !== null && code === reviewFixedCode
 
       // Get active OTP session
       const session = await otpSessionLoader.getActiveSession(phone)
 
-      if (!session) {
-        const { OtpExpiredError } =
-          await import('../../../shared/errors/index.js')
-        throw new OtpExpiredError()
+      if (!reviewCodeAccepted) {
+        if (!session) {
+          const { OtpExpiredError } =
+            await import('../../../shared/errors/index.js')
+          throw new OtpExpiredError()
+        }
+
+        // Check if OTP matches
+        if (session.code !== code) {
+          await otpSessionPersistor.incrementAttempt(session.id)
+
+          const { OtpInvalidError } =
+            await import('../../../shared/errors/index.js')
+          throw new OtpInvalidError()
+        }
+
+        // Check if OTP has expired
+        if (new Date() > session.expiresAt) {
+          const { OtpExpiredError } =
+            await import('../../../shared/errors/index.js')
+          throw new OtpExpiredError()
+        }
+
+        // Mark OTP as verified
+        await otpSessionPersistor.markVerified(session.id)
+      } else if (session) {
+        await otpSessionPersistor.markVerified(session.id)
       }
-
-      // Check if OTP matches
-      if (session.code !== code) {
-        await otpSessionPersistor.incrementAttempt(session.id)
-
-        const { OtpInvalidError } =
-          await import('../../../shared/errors/index.js')
-        throw new OtpInvalidError()
-      }
-
-      // Check if OTP has expired
-      if (new Date() > session.expiresAt) {
-        const { OtpExpiredError } =
-          await import('../../../shared/errors/index.js')
-        throw new OtpExpiredError()
-      }
-
-      // Mark OTP as verified
-      await otpSessionPersistor.markVerified(session.id)
 
       // Look up existing user
       let user = await userLoader.getUserByPhone(phone)

@@ -42,6 +42,10 @@ export class UserDevicePersistenceService
     )
   }
 
+  async deactivateAllDevicesForUser(userId: string): Promise<void> {
+    await UserDeviceModel.update({ isActive: false }, { where: { userId } })
+  }
+
   private toEntity(model: UserDeviceModel): UserDevice {
     return {
       id: model.id,

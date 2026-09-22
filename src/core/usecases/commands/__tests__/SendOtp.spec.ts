@@ -144,4 +144,27 @@ describe('SendOtp', () => {
     expect(result.message).toBe('OTP sent successfully')
     expect(deps.otpSessionPersistor.lockPhone).not.toHaveBeenCalled()
   })
+
+  describe('Play Store review accounts', () => {
+    const envBackup = { ...process.env }
+
+    afterEach(() => {
+      process.env = { ...envBackup }
+    })
+
+    it('uses a fixed OTP code for configured review phones', async () => {
+      process.env.OTP_REVIEW_ENABLED = 'true'
+      process.env.OTP_REVIEW_ACCOUNTS = '+966500000101:1234'
+
+      const deps = buildDeps()
+      const sendOtp = makeUC(deps)
+
+      const result = await sendOtp({ phone: '+966500000101', channel: 'sms' })
+
+      expect(result.data.otpCode).toBe('1234')
+      expect(deps.otpSessionPersistor.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: '+966500000101', code: '1234' })
+      )
+    })
+  })
 })

@@ -13,4 +13,5 @@ export interface UserDevicePersistor {
     subscriptionArn: string
   ): Promise<UserDevice>
   deactivateDevice(endpointArn: string): Promise<void>
+  deactivateAllDevicesForUser(userId: string): Promise<void>
 }

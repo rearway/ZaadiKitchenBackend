@@ -49,7 +49,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"phone\": \"+966500000001\",\n    \"channel\": \"whatsapp\"\n}",
+              "raw": "{\n    \"phone\": \"+966500000101\",\n    \"channel\": \"whatsapp\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -99,7 +99,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"phone\": \"+966500000001\",\n    \"code\": \"1234\"\n}",
+              "raw": "{\n    \"phone\": \"+966500000101\",\n    \"code\": \"1234\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -239,6 +239,29 @@
                 "profile"
               ]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"confirm\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/delete-account",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "delete-account"]
+            },
+            "description": "Permanently deletes and anonymizes the account (Play Store). Revokes tokens — clear access_token after success."
           },
           "response": []
         },

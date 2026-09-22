@@ -1,4 +1,8 @@
 import { Deps } from '../../entitygateway/index.js'
+import {
+  getReviewOtpCode,
+  isReviewPhone,
+} from '../services/otpReviewUtils.js'
 
 export interface SendOtpInput {
   phone: string
@@ -27,6 +31,8 @@ export function makeUC(deps: Deps) {
 
     try {
       const { phone, channel } = input
+      const reviewFixedCode = getReviewOtpCode(phone)
+      const isReviewAccount = isReviewPhone(phone)
 
       // // Validate phone format (Saudi: +966XXXXXXXXX)
       // const phoneRegex = /^\+966[0-9]{9}$/
@@ -40,7 +46,7 @@ export function makeUC(deps: Deps) {
 
       // Check if phone is locked out
       const lockedSession = await otpSessionLoader.getLockedSession(phone)
-      if (lockedSession && lockedSession.lockedUntil) {
+      if (!isReviewAccount && lockedSession && lockedSession.lockedUntil) {
         const now = new Date()
         if (lockedSession.lockedUntil > now) {
           const remainingMs =
@@ -63,7 +69,7 @@ export function makeUC(deps: Deps) {
         windowMinutes
       )
 
-      if (recentCount >= maxAttempts) {
+      if (!isReviewAccount && recentCount >= maxAttempts) {
         // Lock the phone for 30 minutes
         const lockDurationMinutes = 30
         const lockedUntil = new Date(
@@ -79,8 +85,9 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      // Generate 4-digit OTP
-      const code = Math.floor(1000 + Math.random() * 9000).toString()
+      // Generate 4-digit OTP (fixed for Play Store review accounts when enabled)
+      const code =
+        reviewFixedCode ?? Math.floor(1000 + Math.random() * 9000).toString()
 
       // OTP expires in 120 seconds
       const expirySeconds = 120
@@ -110,7 +117,7 @@ export function makeUC(deps: Deps) {
           phone,
           channel,
           expiresInSeconds: expirySeconds,
-          ...(skipOtp && { otpCode: code }),
+          ...((skipOtp || isReviewAccount) && { otpCode: code }),
         },
       }
     } catch (error) {

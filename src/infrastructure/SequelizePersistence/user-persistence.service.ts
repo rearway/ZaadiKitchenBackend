@@ -55,6 +55,30 @@ export class UserPersistenceService implements UserLoader, UserPersistor {
     }
   }
 
+  async anonymizeAccountForDeletion(userId: string): Promise<User> {
+    const model = await UserModel.findByPk(userId)
+    if (!model) {
+      throw new Error(`User with id '${userId}' not found`)
+    }
+
+    const deletedAt = new Date()
+    const tombstonePhone = `deleted:${userId}`
+    const tombstoneEmail = `deleted+${userId}@deleted.local`
+
+    await model.update({
+      phone: tombstonePhone,
+      email: tombstoneEmail,
+      password: null,
+      fullName: 'Deleted User',
+      pushNotificationToken: null,
+      referralCode: null,
+      isActive: false,
+      deletedAt,
+    })
+
+    return this.toEntity(model)
+  }
+
   private toEntity(model: UserModel): User {
     return {
       id: model.id,
@@ -66,6 +90,7 @@ export class UserPersistenceService implements UserLoader, UserPersistor {
       languagePreference: model.languagePreference as 'EN' | 'AR',
       pushNotificationToken: model.pushNotificationToken || undefined,
       isActive: model.isActive,
+      deletedAt: model.deletedAt ?? undefined,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

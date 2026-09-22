@@ -10,6 +10,7 @@ export interface User {
   languagePreference: 'EN' | 'AR'
   pushNotificationToken?: string
   isActive: boolean
+  deletedAt?: Date
   createdAt: Date
   updatedAt: Date
 }
