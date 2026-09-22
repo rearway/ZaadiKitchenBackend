@@ -1309,6 +1309,39 @@
           "response": []
         },
         {
+          "name": "Delete Account (Driver)",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{rider_access_token}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"confirm\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/delete-account",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "delete-account"]
+            },
+            "description": "Same endpoint as customer app. Anonymizes driver account and revokes tokens. Use a test driver only — not Play Store review account in prod."
+          },
+          "response": []
+        },
+        {
           "name": "Get My Deliveries",
           "auth": {
             "type": "bearer",

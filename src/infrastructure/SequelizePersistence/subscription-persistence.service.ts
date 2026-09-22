@@ -16,6 +16,7 @@ import {
   DeliveryDayStatus,
 } from '../../core/entities/DeliveryDay.js'
 import { SubscriptionModel, DeliveryDayModel } from './models/index.js'
+import { resolveMealPhotoUrl } from '../../core/usecases/services/mealPhotoUtils.js'
 
 @Injectable()
 export class SubscriptionPersistenceService
@@ -117,6 +118,7 @@ export class SubscriptionPersistenceService
       date: string
       meal_type: string
       meal_name: string | null
+      meal_id: string | null
       photo_url: string | null
       kcal: number | null
       status: string
@@ -126,14 +128,22 @@ export class SubscriptionPersistenceService
       `SELECT dd.id as delivery_day_id,
               dd.date,
               dd.meal_type,
-              dd.meal_name,
+              COALESCE(m.name_en, dd.meal_name) as meal_name,
+              m.id as meal_id,
               m.photo_url,
               m.kcal,
               dd.status,
               mr.stars,
               mr.tags
        FROM delivery_days dd
-       LEFT JOIN meals m ON m.name_en = dd.meal_name
+       LEFT JOIN menu_slots ms
+         ON ms.delivery_date = dd.date
+        AND ms.meal_type::text = dd.meal_type::text
+       LEFT JOIN menu_weeks mw
+         ON mw.id = ms.week_id
+        AND mw.date_from <= dd.date
+        AND mw.date_to >= dd.date
+       LEFT JOIN meals m ON m.id = ms.meal_id
        LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
        WHERE dd.user_id = :userId
          AND dd.status IN ('delivered', 'skipped') ${dateFilter}
@@ -150,7 +160,7 @@ export class SubscriptionPersistenceService
       date: r.date,
       mealType: r.meal_type,
       mealName: r.meal_name,
-      photoUrl: r.photo_url ?? null,
+      photoUrl: resolveMealPhotoUrl(r.photo_url, r.meal_id),
       kcal: r.kcal,
       status: r.status,
       stars: r.stars,

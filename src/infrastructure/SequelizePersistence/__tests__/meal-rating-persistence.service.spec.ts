@@ -59,4 +59,30 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
       },
     ])
   })
+
+  it('resolves photoUrl from meal id when photo_url is null', async () => {
+    process.env.S3_BUCKET_NAME = 'test-bucket'
+    const query = jest.fn().mockResolvedValue([
+      {
+        delivery_day_id: 'dd-uuid-2',
+        delivery_date: '2026-09-22',
+        meal_id: 'meal-uuid-2',
+        meal_name_en: 'Salmon Fillet with Quinoa',
+        meal_type: 'executive',
+        kcal: 560,
+        emoji: '🐟',
+        photo_url: null,
+      },
+    ])
+    Object.defineProperty(DeliveryDayModel, 'sequelize', {
+      configurable: true,
+      value: { query },
+    })
+
+    const result = await service.getPendingRatingDays('user-uuid-1', 'sub-uuid-1', 5)
+
+    expect(result[0].photoUrl).toBe(
+      'https://test-bucket.s3.ap-south-1.amazonaws.com/meals/meal-uuid-2/photo.jpeg'
+    )
+  })
 })

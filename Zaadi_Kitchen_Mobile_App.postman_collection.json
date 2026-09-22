@@ -261,7 +261,7 @@
               "host": ["{{base_url}}"],
               "path": ["users", "me", "delete-account"]
             },
-            "description": "Permanently deletes and anonymizes the account (Play Store). Revokes tokens — clear access_token after success."
+            "description": "Permanently deletes and anonymizes the account (Play Store). Cancels subscription if active. Revokes refresh tokens — clear access_token locally after success.\n\nPOST body: { \"confirm\": true }"
           },
           "response": []
         },

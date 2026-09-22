@@ -1,6 +1,6 @@
 # Account deletion (Play Store / privacy)
 
-Public landing page should link here and mirror this policy. In-app: **Profile → Delete account** calls the API below.
+Public landing page should link here and mirror this policy. In-app: **Profile** tab → **Account** section (above Sign out) → **Delete account**.
 
 ## API
 
@@ -54,6 +54,8 @@ After success, all refresh tokens are revoked; the client should clear local tok
 - Audit log entries (including `delete_account`).
 
 ## Landing page copy (suggested URL: `/account-deletion`)
+
+Full brief for marketing site (footer link + page copy, Play-aligned): **`docs/LANDING_PAGE_ACCOUNT_DELETION_HANDOFF.md`**
 
 1. Explain steps above (delete in app or contact support if unable to log in).
 2. Link to privacy policy.

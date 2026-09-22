@@ -278,6 +278,35 @@
           "response": []
         },
         {
+          "name": "Delete Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"confirm\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/delete-account",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "delete-account"]
+            },
+            "description": "CUSTOMER or DRIVER. Anonymizes profile PII, cancels subscription, revokes tokens. Body confirm must be true.\n\nExample 200:\n{ \"message\": \"Account deleted successfully\", \"data\": { \"deleted_at\": \"...\", \"subscription_cancelled\": true } }"
+          },
+          "response": []
+        },
+        {
           "name": "Update Language Preference",
           "request": {
             "method": "PATCH",

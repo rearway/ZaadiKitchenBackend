@@ -18,7 +18,7 @@ export function makeUC(deps: Deps) {
   return async function getMealPhotoUploadUrl(
     input: GetMealPhotoUploadUrlInput
   ): Promise<GetMealPhotoUploadUrlOutput> {
-    const { logger, mealLoader, storageGateway } = deps
+    const { logger, mealLoader, mealPersistor, storageGateway } = deps
     try {
       const { mealId, contentType } = input
 
@@ -39,6 +39,10 @@ export function makeUC(deps: Deps) {
       const key = `meals/${mealId}/photo.${ext}`
       const uploadUrl = await storageGateway.getPresignedUploadUrl(key, contentType, PRESIGN_EXPIRY_SECONDS)
       const photoUrl = storageGateway.getPublicUrl(key)
+
+      if (meal.photoUrl !== photoUrl) {
+        await mealPersistor.updateMeal(mealId, { photoUrl })
+      }
 
       return {
         upload_url: uploadUrl,

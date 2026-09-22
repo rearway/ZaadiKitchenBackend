@@ -4,6 +4,7 @@ import { MealRatingPersistor, MealRatingLoader, PendingRatingDay } from '../../c
 import { MealRating } from '../../core/entities/MealRating.js'
 import { MealRatingModel } from './models/MealRatingModel.js'
 import { DeliveryDayModel } from './models/DeliveryDayModel.js'
+import { resolveMealPhotoUrl } from '../../core/usecases/services/mealPhotoUtils.js'
 
 export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
               dd.date as delivery_date,
@@ -81,7 +82,7 @@ export class MealRatingPersistenceService
       mealType: r.meal_type,
       kcal: r.kcal,
       emoji: r.emoji,
-      photoUrl: r.photo_url ?? null,
+      photoUrl: resolveMealPhotoUrl(r.photo_url, r.meal_id),
     }))
   }
 
