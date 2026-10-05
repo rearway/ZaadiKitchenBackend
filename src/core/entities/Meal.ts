@@ -11,6 +11,7 @@ export interface Meal {
   keyIngredients?: string[]
   emoji: string
   status: 'draft' | 'active'
+  erpCode: string
   photoUrl?: string
   activatedAt?: Date
   lastServed?: string

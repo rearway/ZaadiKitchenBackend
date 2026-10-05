@@ -613,6 +613,13 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       createTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'INITIATED' }),
       updateTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'SUCCESS' }),
     } as unknown as Deps['paymentTransactionPersistor'],
+
+    erpIntegrationLoader: {
+      getMenus: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
+      getCustomers: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
+      getPayments: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
+      getDailyOrders: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
+    } as unknown as Deps['erpIntegrationLoader'],
   }
 
   return { ...base, ...overrides }

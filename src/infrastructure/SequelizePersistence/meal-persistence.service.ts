@@ -9,6 +9,7 @@ import type {
 } from '../../core/entitygateway/Meal.js'
 import type { Meal } from '../../core/entities/Meal.js'
 import { MealModel, MenuSlotModel } from './models/index.js'
+import { generateMealErpCode } from '../../core/usecases/services/erpCodeUtils.js'
 
 @Injectable()
 export class MealPersistenceService implements MealLoader, MealPersistor {
@@ -113,8 +114,19 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       }))
   }
 
+  private async nextUniqueMealErpCode(): Promise<string> {
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const erpCode = generateMealErpCode()
+      const existing = await MealModel.findOne({ where: { erpCode } })
+      if (!existing) return erpCode
+    }
+    throw new Error('Failed to generate unique meal erp_code')
+  }
+
   async createMeal(input: CreateMealInput): Promise<Meal> {
+    const erpCode = await this.nextUniqueMealErpCode()
     const model = await MealModel.create({
+      erpCode,
       nameEn: input.nameEn,
       nameAr: input.nameAr ?? null,
       mealType: input.mealType,
@@ -224,6 +236,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       keyIngredients: model.keyIngredients ?? undefined,
       emoji: model.emoji,
       status: model.status,
+      erpCode: model.erpCode,
       photoUrl: model.photoUrl ?? undefined,
       activatedAt: model.activatedAt ?? undefined,
       lastServed: model.lastServed ?? undefined,

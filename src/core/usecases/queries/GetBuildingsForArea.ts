@@ -24,7 +24,7 @@ export function makeUC(deps: Deps) {
       const { areaId, query } = input
 
       const area = await deliveryAreaLoader.getAreaById(areaId)
-      if (!area || area.status !== 'active') {
+      if (!area) {
         const { ResourceNotFoundError } =
           await import('../../../shared/errors/index.js')
         throw new ResourceNotFoundError('Area', areaId)

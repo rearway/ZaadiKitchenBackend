@@ -31,6 +31,7 @@ import {
   NotificationS,
   UserDevicePersistenceS,
   PaymentTransactionPersistenceS,
+  ErpIntegrationPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
@@ -64,6 +65,7 @@ import { ConsoleNotificationService } from '../infrastructure/Notification/conso
 import { SnsNotificationService } from '../infrastructure/SNSNotification/sns-notification.service.js'
 import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
 import { PaymentTransactionPersistenceService } from '../infrastructure/SequelizePersistence/payment-transaction-persistence.service.js'
+import { ErpIntegrationPersistenceService } from '../infrastructure/SequelizePersistence/erp-integration-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
@@ -104,6 +106,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
     { provide: UserDevicePersistenceS, useClass: UserDevicePersistenceService },
     { provide: PaymentTransactionPersistenceS, useClass: PaymentTransactionPersistenceService },
+    { provide: ErpIntegrationPersistenceS, useClass: ErpIntegrationPersistenceService },
 
     // External services
     {

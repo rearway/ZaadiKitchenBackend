@@ -39,6 +39,7 @@ export * from './RiderIssue.js'
 export * from './DailyOpsDay.js'
 export * from './Notification.js'
 export * from './UserDevice.js'
+export * from './ErpIntegration.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -95,6 +96,7 @@ import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
 import type { NotificationGateway } from './Notification.js'
 import type { UserDeviceLoader, UserDevicePersistor } from './UserDevice.js'
 import type { PaymentTransactionLoader, PaymentTransactionPersistor } from './PaymentTransaction.js'
+import type { ErpIntegrationLoader } from './ErpIntegration.js'
 
 export type Deps = {
   logger: Logger
@@ -163,4 +165,5 @@ export type Deps = {
   userDevicePersistor: UserDevicePersistor
   paymentTransactionLoader: PaymentTransactionLoader
   paymentTransactionPersistor: PaymentTransactionPersistor
+  erpIntegrationLoader: ErpIntegrationLoader
 }

@@ -64,6 +64,11 @@ export class UserModel extends Model {
   @Column(DataType.STRING(20))
   declare referralCode: string | null
 
+  @AllowNull(true)
+  @Unique
+  @Column(DataType.STRING(10))
+  declare erpCustomerCode: string | null
+
   @CreatedAt
   declare createdAt: Date
 

@@ -107,6 +107,10 @@ import * as GetRevenueDaily from './queries/GetRevenueDaily.js'
 import * as GetCommsAutomations from './queries/GetCommsAutomations.js'
 import * as GetBroadcastSegments from './queries/GetBroadcastSegments.js'
 import * as GetBroadcastSegmentCount from './queries/GetBroadcastSegmentCount.js'
+import * as GetErpMenus from './queries/GetErpMenus.js'
+import * as GetErpCustomers from './queries/GetErpCustomers.js'
+import * as GetErpPayments from './queries/GetErpPayments.js'
+import * as GetErpDailyOrders from './queries/GetErpDailyOrders.js'
 
 export function initUseCases(deps: Deps) {
   // Auth commands
@@ -752,6 +756,30 @@ export function initUseCases(deps: Deps) {
     GetBroadcastSegmentCount.name,
     ...defaultWrappers
   )
+  const getErpMenus = wrapUC(
+    deps,
+    GetErpMenus.makeUC(deps),
+    GetErpMenus.name,
+    ...defaultWrappers
+  )
+  const getErpCustomers = wrapUC(
+    deps,
+    GetErpCustomers.makeUC(deps),
+    GetErpCustomers.name,
+    ...defaultWrappers
+  )
+  const getErpPayments = wrapUC(
+    deps,
+    GetErpPayments.makeUC(deps),
+    GetErpPayments.name,
+    ...defaultWrappers
+  )
+  const getErpDailyOrders = wrapUC(
+    deps,
+    GetErpDailyOrders.makeUC(deps),
+    GetErpDailyOrders.name,
+    ...defaultWrappers
+  )
 
   return {
     queries: {
@@ -802,6 +830,10 @@ export function initUseCases(deps: Deps) {
       getCommsAutomations,
       getBroadcastSegments,
       getBroadcastSegmentCount,
+      getErpMenus,
+      getErpCustomers,
+      getErpPayments,
+      getErpDailyOrders,
     },
     commands: {
       sendOtp,

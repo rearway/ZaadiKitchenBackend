@@ -63,6 +63,10 @@ export class MealModel extends Model {
   @Column(DataType.ENUM('draft', 'active'))
   declare status: 'draft' | 'active'
 
+  @AllowNull(false)
+  @Column(DataType.STRING(10))
+  declare erpCode: string
+
   @AllowNull(true)
   @Column(DataType.STRING)
   declare photoUrl: string | null

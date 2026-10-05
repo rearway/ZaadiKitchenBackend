@@ -19,6 +19,7 @@ function makeMeal(overrides: Partial<Meal> = {}): Meal {
     kcal: 320,
     emoji: '🍗',
     status: 'active',
+    erpCode: 'MK3F9A',
     timesServed: 0,
     createdAt: new Date(),
     updatedAt: new Date(),

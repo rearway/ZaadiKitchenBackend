@@ -9,6 +9,7 @@ import {
   UpdateUserRequest,
 } from '../../core/entitygateway/User.js'
 import { UserModel } from './models/index.js'
+import { generateCustomerErpCode } from '../../core/usecases/services/erpCodeUtils.js'
 
 @Injectable()
 export class UserPersistenceService implements UserLoader, UserPersistor {
@@ -27,7 +28,20 @@ export class UserPersistenceService implements UserLoader, UserPersistor {
     return model ? this.toEntity(model) : null
   }
 
+  private async nextUniqueCustomerErpCode(): Promise<string> {
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const erpCustomerCode = generateCustomerErpCode()
+      const existing = await UserModel.findOne({ where: { erpCustomerCode } })
+      if (!existing) return erpCustomerCode
+    }
+    throw new Error('Failed to generate unique erp_customer_code')
+  }
+
   async createUser(request: CreateUserRequest): Promise<User> {
+    const erpCustomerCode =
+      request.role === UserRole.CUSTOMER
+        ? await this.nextUniqueCustomerErpCode()
+        : null
     const model = await UserModel.create({
       phone: request.phone || null,
       email: request.email || null,
@@ -35,6 +49,7 @@ export class UserPersistenceService implements UserLoader, UserPersistor {
       fullName: request.fullName,
       role: request.role,
       languagePreference: request.languagePreference || 'EN',
+      erpCustomerCode,
     })
     return this.toEntity(model)
   }
@@ -90,6 +105,7 @@ export class UserPersistenceService implements UserLoader, UserPersistor {
       languagePreference: model.languagePreference as 'EN' | 'AR',
       pushNotificationToken: model.pushNotificationToken || undefined,
       isActive: model.isActive,
+      erpCustomerCode: model.erpCustomerCode ?? undefined,
       deletedAt: model.deletedAt ?? undefined,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
