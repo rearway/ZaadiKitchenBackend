@@ -37,6 +37,7 @@ Use these for hands-on testing; they track the live route map:
 - `Zaadi_Kitchen_Mobile_App.postman_collection.json` — customer app
 - `Zaadi_Kitchen_Admin_Portal.postman_collection.json` — admin & ops
 - `Zaadi_Kitchen_API.postman_collection.json` — combined
+- `Zaadi_Kitchen_ERP_Integration.postman_collection.json` — ERP / Platio (API key only)
 
 Set collection variables `base_url` to `https://devapi.zaadikitchen.com/api/v1` (no trailing slash).
 

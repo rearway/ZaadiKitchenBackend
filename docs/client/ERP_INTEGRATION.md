@@ -141,4 +141,11 @@ Assigned automatically for new meals and customers; existing rows backfilled via
 
 ## Postman
 
-Collection variable: `erp_api_key`. Set `base_url` to your API host + `/api/v1`.
+Import **`Zaadi_Kitchen_ERP_Integration.postman_collection.json`** from the repo root.
+
+Collection variables:
+
+| Variable | Example |
+|----------|---------|
+| `base_url` | `https://devapi.zaadikitchen.com/api/v1` |
+| `erp_api_key` | value of server `ERP_API_KEY` |

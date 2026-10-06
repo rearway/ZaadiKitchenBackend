@@ -3020,111 +3020,6 @@
           "response": []
         }
       ]
-    },
-    {
-      "name": "ERP Integration",
-      "item": [
-        {
-          "name": "GET ERP Menus",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "ApiKey {{erp_api_key}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/integrations/erp/menus?offset=0&limit=50",
-              "host": ["{{base_url}}"],
-              "path": ["integrations", "erp", "menus"],
-              "query": [
-                { "key": "offset", "value": "0" },
-                { "key": "limit", "value": "50" }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "GET ERP Customers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "ApiKey {{erp_api_key}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/integrations/erp/customers?offset=0&limit=50",
-              "host": ["{{base_url}}"],
-              "path": ["integrations", "erp", "customers"],
-              "query": [
-                { "key": "offset", "value": "0" },
-                { "key": "limit", "value": "50" }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "POST ERP Payments",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "ApiKey {{erp_api_key}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"dateFrom\": \"01/10/2026\",\n  \"dateTo\": \"31/10/2026\",\n  \"offset\": 0,\n  \"limit\": 50\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/integrations/erp/payments",
-              "host": ["{{base_url}}"],
-              "path": ["integrations", "erp", "payments"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "POST ERP Daily Orders",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "ApiKey {{erp_api_key}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"date\": \"06/10/2026\",\n  \"offset\": 0,\n  \"limit\": 50\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/integrations/erp/daily-orders",
-              "host": ["{{base_url}}"],
-              "path": ["integrations", "erp", "daily-orders"]
-            }
-          },
-          "response": []
-        }
-      ]
     }
   ],
   "event": [
@@ -3206,11 +3101,6 @@
     {
       "key": "issue_id",
       "value": "your-issue-uuid",
-      "type": "string"
-    },
-    {
-      "key": "erp_api_key",
-      "value": "your-erp-api-key",
       "type": "string"
     }
   ]

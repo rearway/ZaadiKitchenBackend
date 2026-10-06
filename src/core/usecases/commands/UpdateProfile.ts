@@ -16,14 +16,14 @@ export function makeUC(deps: Deps) {
   return async function updateProfile(
     input: UpdateProfileInput
   ): Promise<UpdateProfileOutput> {
-    const { logger, userPersistor, referralPersistor } = deps
+    const { logger, userLoader, userPersistor, referralPersistor } = deps
     try {
       const { userId, fullName, email } = input
+      const { ValidationError } =
+        await import('../../../shared/errors/index.js')
 
       // Basic validation
       if (fullName && fullName.length < 2) {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
         throw new ValidationError('Name must be at least 2 characters', {
           fields: { name: 'Name must be at least 2 characters' },
         })
@@ -32,10 +32,15 @@ export function makeUC(deps: Deps) {
       if (email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
-          const { ValidationError } =
-            await import('../../../shared/errors/index.js')
           throw new ValidationError('Email format is invalid', {
             fields: { email: 'Email format is invalid' },
+          })
+        }
+
+        const existingWithEmail = await userLoader.getUserByEmail(email)
+        if (existingWithEmail && existingWithEmail.id !== userId) {
+          throw new ValidationError('This email is already registered', {
+            fields: { email: 'This email is already registered' },
           })
         }
       }
