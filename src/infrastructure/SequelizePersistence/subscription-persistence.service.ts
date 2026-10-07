@@ -316,6 +316,19 @@ export class SubscriptionPersistenceService
     return count
   }
 
+  async deleteScheduledDeliveryDaysOutsideDates(
+    subscriptionId: string,
+    allowedDates: string[]
+  ): Promise<void> {
+    await DeliveryDayModel.destroy({
+      where: {
+        subscriptionId,
+        status: 'scheduled',
+        date: { [Op.notIn]: allowedDates },
+      },
+    })
+  }
+
   async updateMealTypeForSubscription(
     subscriptionId: string,
     mealType: 'executive' | 'salad',

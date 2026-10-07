@@ -49,6 +49,16 @@ export class SubscriptionsController {
     return this.useCases.queries.getSubscription({ userId: user.id })
   }
 
+  @Get('me/plan-change-options')
+  @ApiOperation({
+    summary: 'Allowed plan upgrade targets for active subscription',
+  })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-plan-change-options')
+  async getPlanChangeOptions(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.queries.getPlanChangeOptions({ userId: user.id })
+  }
+
   @Get('me/deliveries')
   @ApiOperation({ summary: 'Get subscription delivery days' })
   @ApiQuery({ name: 'from', required: false, type: String })

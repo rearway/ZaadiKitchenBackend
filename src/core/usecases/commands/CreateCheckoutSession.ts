@@ -1,5 +1,10 @@
 import { Deps } from '../../entitygateway/index.js'
 import { MealType } from '../../entities/index.js'
+import {
+  assertCanPromote,
+  computePromotionAmounts,
+  normalizePlanSlug,
+} from '../services/planPromotionUtils.js'
 
 export interface CreateCheckoutSessionInput {
   userId: string
@@ -19,13 +24,23 @@ export interface CreateCheckoutSessionOutput {
   promo_attempt_count: number
   promo_locked: boolean
   expires_at: string
+  promotion: boolean
+  prior_plan_credit_sar: number | null
+  current_plan_id: string | null
 }
 
 export function makeUC(deps: Deps) {
   return async function createCheckoutSession(
     input: CreateCheckoutSessionInput
   ): Promise<CreateCheckoutSessionOutput> {
-    const { logger, planLoader, walletLoader, checkoutSessionPersistor } = deps
+    const {
+      logger,
+      planLoader,
+      walletLoader,
+      checkoutSessionPersistor,
+      subscriptionLoader,
+      orderLoader,
+    } = deps
     try {
       const { userId, planId, mealType } = input
 
@@ -36,11 +51,66 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Plan', planId)
       }
 
-      const walletBalance = await walletLoader.getBalanceByUserId(userId)
-      const walletCredit = Math.min(walletBalance, plan.priceSar)
-      const totalDue = plan.priceSar - walletCredit
+      const existingSub =
+        await subscriptionLoader.getActiveSubscriptionByUserId(userId)
 
-      // Expire any existing active session
+      let promotionSubscriptionId: string | null = null
+      let priorPlanCreditSar: number | null = null
+      let currentPlanId: string | null = null
+      let isPromotion = false
+      let basePriceSar = plan.priceSar
+
+      if (existingSub) {
+        if (existingSub.status !== 'active') {
+          const { ActiveSubscriptionCheckoutBlockedError } =
+            await import('../../../shared/errors/index.js')
+          throw new ActiveSubscriptionCheckoutBlockedError(
+            'Checkout is only available for plan upgrades while your subscription is active, or after your plan has expired.'
+          )
+        }
+
+        const currentPlan = await planLoader.getPlanById(existingSub.planId)
+        if (!currentPlan) {
+          const { ResourceNotFoundError } =
+            await import('../../../shared/errors/index.js')
+          throw new ResourceNotFoundError('Plan', existingSub.planId)
+        }
+
+        currentPlanId = currentPlan.slug
+        assertCanPromote(currentPlan.slug, planId)
+
+        const priorOrder = await orderLoader.getOrderById(existingSub.orderId)
+        if (!priorOrder) {
+          const { ResourceNotFoundError } =
+            await import('../../../shared/errors/index.js')
+          throw new ResourceNotFoundError('Order', existingSub.orderId)
+        }
+
+        isPromotion = true
+        promotionSubscriptionId = existingSub.id
+        priorPlanCreditSar = Number(priorOrder.totalPaidSar)
+        basePriceSar = plan.priceSar
+      }
+
+      const walletBalance = await walletLoader.getBalanceByUserId(userId)
+
+      let walletCreditSar: number
+      let totalDueSar: number
+
+      if (isPromotion && priorPlanCreditSar != null) {
+        const amounts = computePromotionAmounts({
+          newPlanPriceSar: plan.priceSar,
+          priorPlanCreditSar,
+          walletBalanceSar: walletBalance,
+        })
+        priorPlanCreditSar = amounts.priorPlanCreditSar
+        walletCreditSar = amounts.walletCreditSar
+        totalDueSar = amounts.totalDueSar
+      } else {
+        walletCreditSar = Math.min(walletBalance, plan.priceSar)
+        totalDueSar = plan.priceSar - walletCreditSar
+      }
+
       await checkoutSessionPersistor.expireAllUserSessions(userId)
 
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
@@ -49,20 +119,22 @@ export function makeUC(deps: Deps) {
         userId,
         planId: plan.id,
         mealType,
-        basePriceSar: plan.priceSar,
-        walletCreditSar: walletCredit,
+        basePriceSar,
+        walletCreditSar,
         promoDiscountSar: 0,
-        totalDueSar: totalDue,
+        totalDueSar,
         promoCode: null,
         promoAttemptCount: 0,
         promoLocked: false,
         status: 'active',
         expiresAt,
+        promotionSubscriptionId,
+        priorPlanCreditSar,
       })
 
       return {
         session_id: session.id,
-        plan_id: planId,
+        plan_id: normalizePlanSlug(planId),
         meal_type: session.mealType,
         base_price_sar: session.basePriceSar,
         wallet_credit_sar: session.walletCreditSar,
@@ -72,6 +144,9 @@ export function makeUC(deps: Deps) {
         promo_attempt_count: session.promoAttemptCount,
         promo_locked: session.promoLocked,
         expires_at: session.expiresAt.toISOString(),
+        promotion: isPromotion,
+        prior_plan_credit_sar: priorPlanCreditSar,
+        current_plan_id: currentPlanId,
       }
     } catch (error) {
       logger.error(

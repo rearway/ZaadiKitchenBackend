@@ -76,4 +76,8 @@ export interface DeliveryDayPersistor {
     fromDate: string,
     specificDates?: string[]
   ): Promise<void>
+  deleteScheduledDeliveryDaysOutsideDates(
+    subscriptionId: string,
+    allowedDates: string[]
+  ): Promise<void>
 }

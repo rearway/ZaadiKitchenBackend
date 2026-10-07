@@ -241,3 +241,30 @@ export class ActivationRequiresConfirmationError extends BaseError {
     )
   }
 }
+
+export class SamePlanNotAllowedError extends BaseError {
+  constructor() {
+    super(
+      'SAME_PLAN_NOT_ALLOWED',
+      422,
+      'You already have an active subscription on this plan. Choose a higher plan to upgrade.'
+    )
+  }
+}
+
+export class PlanPromotionNotAllowedError extends BaseError {
+  constructor(fromPlan: string, toPlan: string) {
+    super(
+      'PLAN_PROMOTION_NOT_ALLOWED',
+      422,
+      `Cannot change from ${fromPlan} to ${toPlan}. Only upgrades to a higher plan tier are allowed.`,
+      { from_plan: fromPlan, to_plan: toPlan }
+    )
+  }
+}
+
+export class ActiveSubscriptionCheckoutBlockedError extends BaseError {
+  constructor(message = 'You already have a subscription. Upgrade to a higher plan or wait until it expires to purchase again.') {
+    super('ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED', 422, message)
+  }
+}

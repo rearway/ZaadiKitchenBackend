@@ -1143,6 +1143,31 @@
           "response": []
         },
         {
+          "name": "Get Plan Change Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/plan-change-options",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "plan-change-options"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Subscription Deliveries",
           "request": {
             "method": "GET",

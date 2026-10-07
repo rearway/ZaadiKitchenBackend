@@ -36,6 +36,9 @@ describe('CreateCheckoutSession', () => {
     expect(result.promo_discount_sar).toBe(0)
     expect(result.promo_code).toBeNull()
     expect(result.promo_locked).toBe(false)
+    expect(result.promotion).toBe(false)
+    expect(result.prior_plan_credit_sar).toBeNull()
+    expect(result.current_plan_id).toBeNull()
   })
 
   it('auto-applies full wallet credit when balance is less than plan price', async () => {

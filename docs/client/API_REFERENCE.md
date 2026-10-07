@@ -163,6 +163,7 @@ The `operation` field maps to the server handler name for support correlation.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/subscriptions/me` | JWT | Current subscription summary |
+| GET | `/subscriptions/me/plan-change-options` | JWT | Allowed upgrade plan slugs (active sub only). See [PLAN_PROMOTION.md](./PLAN_PROMOTION.md). |
 | GET | `/subscriptions/me/deliveries` | JWT | Calendar (`from`, `to`) |
 | POST | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Skip a day |
 | DELETE | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Undo skip (before cutoff) |

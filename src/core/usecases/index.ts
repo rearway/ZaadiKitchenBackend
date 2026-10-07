@@ -78,6 +78,7 @@ import * as GetDeliveryStartDates from './queries/GetDeliveryStartDates.js'
 import * as GetPaymentMethods from './queries/GetPaymentMethods.js'
 import * as GetOrder from './queries/GetOrder.js'
 import * as GetSubscription from './queries/GetSubscription.js'
+import * as GetPlanChangeOptions from './queries/GetPlanChangeOptions.js'
 import * as GetSubscriptionDeliveries from './queries/GetSubscriptionDeliveries.js'
 import * as GetWallet from './queries/GetWallet.js'
 import * as GetWalletTransactions from './queries/GetWalletTransactions.js'
@@ -580,6 +581,12 @@ export function initUseCases(deps: Deps) {
     GetSubscription.name,
     ...defaultWrappers
   )
+  const getPlanChangeOptions = wrapUC(
+    deps,
+    GetPlanChangeOptions.makeUC(deps),
+    GetPlanChangeOptions.name,
+    ...defaultWrappers
+  )
   const getSubscriptionDeliveries = wrapUC(
     deps,
     GetSubscriptionDeliveries.makeUC(deps),
@@ -798,6 +805,7 @@ export function initUseCases(deps: Deps) {
       getPaymentMethods,
       getOrder,
       getSubscription,
+      getPlanChangeOptions,
       getSubscriptionDeliveries,
       getWallet,
       getWalletTransactions,

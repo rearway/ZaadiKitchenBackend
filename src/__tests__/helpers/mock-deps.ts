@@ -85,6 +85,8 @@ export const makeCheckoutSession = (overrides: Record<string, unknown> = {}) => 
   promoLocked: false,
   status: 'active' as const,
   expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+  promotionSubscriptionId: null as string | null,
+  priorPlanCreditSar: null as number | null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -397,6 +399,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       markDeliveryDelivered: jest.fn().mockResolvedValue(makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })),
       bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
       updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
+      deleteScheduledDeliveryDaysOutsideDates: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryDayPersistor'],
 
     publicHolidayLoader: {

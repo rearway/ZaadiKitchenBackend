@@ -94,6 +94,11 @@ export class CheckoutSessionPersistenceService
       promoLocked: model.promoLocked,
       status: model.status,
       expiresAt: model.expiresAt,
+      promotionSubscriptionId: model.promotionSubscriptionId ?? null,
+      priorPlanCreditSar:
+        model.priorPlanCreditSar != null
+          ? Number(model.priorPlanCreditSar)
+          : null,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

@@ -70,6 +70,14 @@ export class CheckoutSessionModel extends Model {
   @Column(DataType.DATE)
   declare expiresAt: Date
 
+  @AllowNull(true)
+  @Column(DataType.UUID)
+  declare promotionSubscriptionId: string | null
+
+  @AllowNull(true)
+  @Column(DataType.DECIMAL(10, 2))
+  declare priorPlanCreditSar: number | null
+
   @CreatedAt
   declare createdAt: Date
 

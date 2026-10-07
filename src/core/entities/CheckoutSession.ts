@@ -15,6 +15,8 @@ export interface CheckoutSession {
   promoLocked: boolean
   status: CheckoutSessionStatus
   expiresAt: Date
+  promotionSubscriptionId?: string | null
+  priorPlanCreditSar?: number | null
   createdAt: Date
   updatedAt: Date
 }
