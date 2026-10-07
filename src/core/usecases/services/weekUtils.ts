@@ -109,11 +109,16 @@ export function formatWeekRangeLabel(dateFrom: string, dateTo: string): string {
  * Cutoff = 18:00 AST (UTC+3) the day before delivery.
  */
 export function getSkipCutoffTimestamp(deliveryDate: string): Date {
-  const delivery = new Date(deliveryDate)
+  const delivery = new Date(deliveryDate + 'T00:00:00Z')
   const dayBefore = new Date(delivery)
-  dayBefore.setDate(delivery.getDate() - 1)
-  // 18:00 AST = 15:00 UTC
-  return new Date(Date.UTC(dayBefore.getFullYear(), dayBefore.getMonth(), dayBefore.getDate(), 15, 0, 0))
+  dayBefore.setUTCDate(dayBefore.getUTCDate() - 1)
+  dayBefore.setUTCHours(15, 0, 0, 0) // 18:00 KSA = 15:00 UTC
+  return dayBefore
+}
+
+/** Compare YYYY-MM-DD strings lexicographically (valid for ISO dates). */
+export function compareDateStrings(a: string, b: string): number {
+  return a.localeCompare(b)
 }
 
 /**

@@ -1,4 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
+import { isAfterSkipCutoff } from '../services/weekUtils.js'
 
 export interface GetSubscriptionDeliveriesInput {
   userId: string
@@ -48,14 +49,6 @@ function formatShortLabel(date: Date, today: Date): string {
   return isToday ? `${dateStr} · Today` : dateStr
 }
 
-// Cutoff is 6 PM KSA (UTC+3) = 15:00 UTC the day before delivery
-function isPastCutoff(deliveryDateStr: string): boolean {
-  const [y, m, d] = deliveryDateStr.split('-').map(Number)
-  // Day before delivery at 15:00 UTC (6 PM KSA)
-  const cutoff = new Date(Date.UTC(y, m - 1, d - 1, 15, 0, 0))
-  return new Date() > cutoff
-}
-
 export function makeUC(deps: Deps) {
   return async function getSubscriptionDeliveries(
     input: GetSubscriptionDeliveriesInput
@@ -101,7 +94,7 @@ export function makeUC(deps: Deps) {
 
       const deliveries: DeliveryItem[] = days.map(day => {
         const dayDate = new Date(day.date + 'T00:00:00Z')
-        const pastCutoff = isPastCutoff(day.date)
+        const pastCutoff = isAfterSkipCutoff(day.date)
         let skippable = false
         let skip_reason: string | undefined
         let undoable: boolean | undefined

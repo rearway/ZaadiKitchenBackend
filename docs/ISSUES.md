@@ -38,25 +38,7 @@ if (session.code !== code) { ... throw new OtpInvalidError() }
 
 ### H2 — Skip/Undo-Skip cutoff breaks on 1st of month
 
-**Files:**
-- `src/core/usecases/commands/SkipDelivery.ts:17–19`
-- `src/core/usecases/commands/UndoSkipDelivery.ts:15–18`
-
-**Spec says:** Cutoff is 6 PM Riyadh time (AST, UTC+3) on the day before delivery.
-
-**Code does:** Both use `new Date(Date.UTC(y, m - 1, d - 1, 15, 0, 0))`. When `d = 1` (delivery on the 1st of a month), `d - 1 = 0`, and JavaScript's `Date.UTC` underflows to the last day of the prior month, producing a completely wrong cutoff date.
-
-**Fix:** Construct the delivery date as a proper Date object and subtract one day using `setUTCDate`:
-
-```ts
-function isPastCutoff(deliveryDateStr: string): boolean {
-  const delivery = new Date(deliveryDateStr + 'T00:00:00Z')
-  const cutoff = new Date(delivery)
-  cutoff.setUTCDate(cutoff.getUTCDate() - 1)
-  cutoff.setUTCHours(15, 0, 0, 0) // 15:00 UTC = 18:00 KSA
-  return new Date() > cutoff
-}
-```
+**Status:** **Fixed** — `getSkipCutoffTimestamp` in `weekUtils.ts` uses UTC date arithmetic; `SkipDelivery`, `UndoSkipDelivery`, and `GetSubscriptionDeliveries` use `isAfterSkipCutoff`.
 
 ---
 
@@ -143,18 +125,7 @@ const reward = Math.round(plan.priceSar * 0.1 * 100) / 100
 
 ### M2 — Pause does not validate `startDate` is in the future
 
-**File:** `src/core/usecases/commands/PauseSubscription.ts:54–64`
-
-**Spec says:** The calendar only allows future dates to be selected for a pause.
-
-**Code does:** No check that `startDate >= today`. A client could submit a past date and retroactively mark historical delivery days as paused.
-
-**Fix:** Add a guard before processing:
-
-```ts
-const today = new Date().toISOString().split('T')[0]
-if (startDate < today) throw new ValidationError('Pause start date must be today or in the future')
-```
+**Status:** **Fixed** — `PauseSubscription` validates `startDate >= todayKSA()`, `startDate >= subscription.startDate`, `endDate >= startDate`, and `endDate <= subscription.endDate`.
 
 ---
 

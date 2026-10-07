@@ -14,6 +14,7 @@
 | [DATABASE_DESIGN.md](./DATABASE_DESIGN.md) | PostgreSQL schema, entity relationships, ER diagrams, table dictionary |
 | [API_REFERENCE.md](./API_REFERENCE.md) | REST API catalog, authentication, roles, environments, error format |
 | [ERP_INTEGRATION.md](./ERP_INTEGRATION.md) | ERP / Platio integration (API key, 4 read endpoints) |
+| [MEAL_OPTIONS_PROPOSAL.md](./MEAL_OPTIONS_PROPOSAL.md) | **Proposal:** up to 3 Executive + 3 Salad per day, admin default, customer meal selection (UI/API plan + impact + effort) |
 
 ---
 

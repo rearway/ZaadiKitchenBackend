@@ -1,4 +1,6 @@
 import { Deps } from '../../entitygateway/index.js'
+import { todayKSA } from '../services/revenueUtils.js'
+import { compareDateStrings } from '../services/weekUtils.js'
 
 export interface PauseSubscriptionInput {
   userId: string
@@ -51,7 +53,46 @@ export function makeUC(deps: Deps) {
         throw new ValidationError('Only active subscriptions can be paused.')
       }
 
+      const { ValidationError } =
+        await import('../../../shared/errors/index.js')
+
+      if (compareDateStrings(endDate, startDate) < 0) {
+        throw new ValidationError('Pause end date must be on or after the start date.', {
+          fields: { end_date: 'Pause end date must be on or after the start date.' },
+        })
+      }
+
+      const today = todayKSA()
+      if (compareDateStrings(startDate, today) < 0) {
+        throw new ValidationError('Pause start date must be today or later.', {
+          fields: { start_date: 'Pause start date must be today or later.' },
+        })
+      }
+
+      if (compareDateStrings(startDate, subscription.startDate) < 0) {
+        throw new ValidationError(
+          'Pause cannot start before your plan start date.',
+          {
+            fields: {
+              start_date: `Your plan starts on ${subscription.startDate}. Choose a pause start date on or after that day.`,
+            },
+          }
+        )
+      }
+
+      if (compareDateStrings(endDate, subscription.endDate) > 0) {
+        throw new ValidationError(
+          'Pause end date cannot be after your plan end date.',
+          {
+            fields: { end_date: `Your plan ends on ${subscription.endDate}.` },
+          }
+        )
+      }
+
       const requestedDays = daysBetween(startDate, endDate)
+      if (requestedDays < 1) {
+        throw new ValidationError('Invalid pause date range.')
+      }
       const pauseDaysRemaining =
         subscription.pauseDaysAllowed - subscription.pauseDaysUsed
 

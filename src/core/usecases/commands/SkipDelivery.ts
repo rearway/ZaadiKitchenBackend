@@ -1,4 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
+import { isAfterSkipCutoff } from '../services/weekUtils.js'
 
 export interface SkipDeliveryInput {
   userId: string
@@ -11,12 +12,6 @@ export interface SkipDeliveryOutput {
   undoable: boolean
   skip_days_used: number
   skip_days_remaining: number
-}
-
-function isPastCutoff(deliveryDateStr: string): boolean {
-  const [y, m, d] = deliveryDateStr.split('-').map(Number)
-  const cutoff = new Date(Date.UTC(y, m - 1, d - 1, 15, 0, 0))
-  return new Date() > cutoff
 }
 
 export function makeUC(deps: Deps) {
@@ -42,7 +37,7 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Subscription')
       }
 
-      if (isPastCutoff(deliveryDate)) {
+      if (isAfterSkipCutoff(deliveryDate)) {
         const { PastCutoffError } =
           await import('../../../shared/errors/index.js')
         throw new PastCutoffError()
