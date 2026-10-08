@@ -14,6 +14,7 @@ type SkipReason =
   | 'subscription_expired'
   | 'subscription_cancelled'
   | 'already_skipped'
+  | 'meal_type_mismatch'
   | null
 
 type CardState = 'today' | 'upcoming' | 'past' | 'skipped'
@@ -103,7 +104,12 @@ export function makeUC(deps: Deps) {
         } else if (subStatus === 'paused') {
           skip_reason = 'subscription_paused'
         } else if (subStatus === 'active') {
-          if (isSkipped) {
+          const slotMatchesSubscription =
+            slot.meal.mealType === sub!.mealType
+          if (!slotMatchesSubscription) {
+            skip_available = false
+            skip_reason = 'meal_type_mismatch'
+          } else if (isSkipped) {
             skip_available = false
             skip_reason = 'already_skipped'
           } else if (isPast) {

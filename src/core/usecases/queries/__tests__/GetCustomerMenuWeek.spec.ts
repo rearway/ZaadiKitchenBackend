@@ -142,6 +142,37 @@ describe('GetCustomerMenuWeek', () => {
     })
   })
 
+  it('disables skip when menu card meal type does not match subscription', async () => {
+    const deps = makeDeps({
+      sub: makeSubscription({ mealType: 'salad' }),
+      slots: [
+        makeSlot(UPCOMING, makeMeal({ mealType: 'executive' })),
+        makeSlot(UPCOMING, makeMeal({ id: 'meal-salad', mealType: 'salad' })),
+      ],
+      days: [
+        makeDeliveryDay({ date: UPCOMING, status: 'scheduled', mealType: 'salad' }),
+      ],
+    })
+    const getCustomerMenuWeek = makeUC(deps)
+
+    const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
+    const execCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
+    )
+    const saladCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    )
+
+    expect(execCard).toMatchObject({
+      skip_available: false,
+      skip_reason: 'meal_type_mismatch',
+    })
+    expect(saladCard).toMatchObject({
+      skip_available: true,
+      skip_reason: null,
+    })
+  })
+
   it('does not treat skipped days as skipped when the subscription is paused', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ status: 'paused' }),
