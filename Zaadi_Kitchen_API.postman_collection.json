@@ -1138,7 +1138,8 @@
                 "subscriptions",
                 "me"
               ]
-            }
+            },
+            "description": "Skip/pause flex — docs/client/SKIP_PAUSE_API_UI.md. New: pause_scheduled, paused_days[], skip_pause_days_*, unified skip/pause counters. days_remaining = meal days left."
           },
           "response": []
         },
@@ -1203,7 +1204,7 @@
                 }
               ]
             },
-            "description": "Each delivery item includes photo_url (nullable) resolved from the published menu."
+            "description": "Per delivery: skip_available, skippable (deprecated), undoable, is_skipped, skip_reason. skip_limit_reached at root. See SKIP_PAUSE_API_UI.md."
           },
           "response": []
         },
@@ -1239,7 +1240,8 @@
                 "2025-05-06",
                 "skip"
               ]
-            }
+            },
+            "description": "Flex pool skip_days_used/remaining; optional makeup_date."
           },
           "response": []
         },
@@ -1266,7 +1268,8 @@
                 "2025-05-06",
                 "skip"
               ]
-            }
+            },
+            "description": "Refunds one flex day; restores scheduled."
           },
           "response": []
         },
@@ -1300,7 +1303,8 @@
                 "me",
                 "pause"
               ]
-            }
+            },
+            "description": "Schedules pause; status often active + pause_scheduled until start cutoff. Working-day charge. See SKIP_PAUSE_API_UI.md."
           },
           "response": []
         },
@@ -1326,7 +1330,8 @@
                 "pause",
                 "cancel"
               ]
-            }
+            },
+            "description": "NEW — POST, no body. Cancel scheduled pause before start cutoff."
           },
           "response": []
         },
@@ -1360,7 +1365,8 @@
                 "me",
                 "resume"
               ]
-            }
+            },
+            "description": "Only when status paused. resume_date from tomorrow+. Returns lapsed_days, new_end_date, flex fields."
           },
           "response": []
         },
@@ -2588,7 +2594,8 @@
               "path": [
                 "home"
               ]
-            }
+            },
+            "description": "subscription: pause_scheduled, skip_pause_days_remaining (see SKIP_PAUSE_API_UI.md)."
           },
           "response": []
         },
@@ -2613,7 +2620,7 @@
                 "this-week"
               ]
             },
-            "description": "Home strip cards include photo_url on each meal card."
+            "description": "Cards: skip_available, undoable, is_skipped, skip_reason; CTAs Skip/Undo/Browse only."
           },
           "response": []
         }
@@ -2672,7 +2679,7 @@
                 }
               ]
             },
-            "description": "Day cards in this_week/next_week include photo_url on each meal."
+            "description": "Day cards: skip flags + card_state skipped when is_skipped."
           },
           "response": []
         },
@@ -2688,16 +2695,23 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/meals/{{meal_id}}",
+              "raw": "{{base_url}}/meals/{{meal_id}}?delivery_date=2026-06-05",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "meals",
                 "{{meal_id}}"
+              ],
+              "query": [
+                {
+                  "key": "delivery_date",
+                  "value": "2026-06-05",
+                  "description": "Use same date as menu/home card for skip flags"
+                }
               ]
             },
-            "description": "Meal detail for bottom sheet. Includes photo_url (nullable), macros, key_ingredients, delivery_date."
+            "description": "Query delivery_date recommended. Response includes skip_available, undoable, is_skipped, skip_reason."
           },
           "response": []
         }

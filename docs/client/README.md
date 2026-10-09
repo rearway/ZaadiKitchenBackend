@@ -17,6 +17,7 @@
 | [MEAL_OPTIONS_PROPOSAL.md](./MEAL_OPTIONS_PROPOSAL.md) | **Proposal:** up to 3 Executive + 3 Salad per day, admin default, customer meal selection (UI/API plan + impact + effort) |
 | [PLAN_PROMOTION.md](./PLAN_PROMOTION.md) | Plan upgrade tiers, checkout credit, delivery anchor rules |
 | [SKIP_PAUSE_FLEX.md](./SKIP_PAUSE_FLEX.md) | Shared skip/pause allowance, day flags, pause schedule/cancel/resume |
+| [SKIP_PAUSE_API_UI.md](./SKIP_PAUSE_API_UI.md) | **UI handoff:** new/changed JSON fields and examples |
 
 ---
 

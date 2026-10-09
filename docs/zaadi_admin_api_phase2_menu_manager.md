@@ -660,6 +660,8 @@ Bulk-imports meals from an XLSX file. All imported meals are saved as `draft`. P
 | Error code | Endpoint | Description |
 |---|---|---|
 | `MEAL_ALREADY_USED` | POST .../slots/:slot_id/assign | Meal already in another slot of the same week |
+| `MEAL_TYPE_SLOT_MISMATCH` | POST .../slots/:slot_id/assign | Meal type (executive/salad) does not match the slot |
+| `DAY_MEAL_TYPE_ALREADY_ASSIGNED` | POST .../slots/:slot_id/assign | That delivery day already has a meal for this type (max 1 executive + 1 salad per day) |
 | `MEAL_IS_DRAFT` | POST .../slots/:slot_id/assign | Cannot assign a draft meal to a week slot |
 | `WEEK_NOT_COMPLETE` | POST .../publish | Not all 10 slots are filled |
 | `WEEK_ALREADY_PUBLISHED` | POST .../publish | Week is already published |

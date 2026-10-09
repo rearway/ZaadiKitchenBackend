@@ -989,7 +989,8 @@
                 "subscriptions",
                 "me"
               ]
-            }
+            },
+            "description": "Skip/pause flex (see docs/client/SKIP_PAUSE_API_UI.md).\n\nNew/changed fields: pause_scheduled, paused_days[], pause_ceiling_date, skip_pause_days_* (unified pool with skip_days_* / pause_days_*). days_remaining = meal days left (same as remaining_count).\n\nAfter scheduling pause, status may still be active until pause-start cutoff."
           },
           "response": []
         },
@@ -1042,7 +1043,7 @@
                 }
               ]
             },
-            "description": "Each delivery item includes photo_url (nullable) resolved from the published menu."
+            "description": "Each delivery includes photo_url. Per row: skip_available (prefer over skippable), undoable, is_skipped, skip_reason. Top-level skip_limit_reached. See SKIP_PAUSE_API_UI.md."
           },
           "response": []
         },
@@ -1072,7 +1073,8 @@
                 "2025-06-05",
                 "skip"
               ]
-            }
+            },
+            "description": "No body. 200: date, status skipped, undoable, skip_days_used/remaining (flex pool), makeup_date if extended. Cutoff 6 PM KSA day before delivery."
           },
           "response": []
         },
@@ -1093,7 +1095,8 @@
                 "2025-06-05",
                 "skip"
               ]
-            }
+            },
+            "description": "Restores scheduled; refunds one flex day; removes makeup day if any."
           },
           "response": []
         },
@@ -1152,7 +1155,8 @@
                 "me",
                 "pause"
               ]
-            }
+            },
+            "description": "Body: start_date, end_date. Schedules one pause window; status usually stays active with pause_scheduled true until start cutoff. Charges working days (Sun–Thu). Response: paused_days[], unified skip_pause_days_remaining. See SKIP_PAUSE_API_UI.md."
           },
           "response": []
         },
@@ -1172,7 +1176,8 @@
                 "pause",
                 "cancel"
               ]
-            }
+            },
+            "description": "NEW — no body. Only before pause-start cutoff. Refunds flex working days reserved for the window. 400 if pause already started (use resume)."
           },
           "response": []
         },
@@ -1183,7 +1188,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "",
+              "raw": "{\n    \"resume_date\": \"2026-06-15\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1200,7 +1205,8 @@
                 "me",
                 "resume"
               ]
-            }
+            },
+            "description": "When status is paused. resume_date >= tomorrow (KSA), <= paused_until. Returns flex refund fields, lapsed_days, new_end_date."
           },
           "response": []
         },
@@ -1442,7 +1448,8 @@
               "path": [
                 "home"
               ]
-            }
+            },
+            "description": "subscription blob: pause_scheduled, unified skip_pause_days_remaining when active/paused. See SKIP_PAUSE_API_UI.md."
           },
           "response": []
         },
@@ -1461,7 +1468,7 @@
                 "this-week"
               ]
             },
-            "description": "Home strip cards include photo_url on each meal card."
+            "description": "Each card: skip_available, undoable, is_skipped, skip_reason; CTA Skip/Undo/Browse only. Paused sub → browse_only."
           },
           "response": []
         }
@@ -1508,7 +1515,7 @@
                 }
               ]
             },
-            "description": "Day cards in this_week/next_week include photo_url on each meal."
+            "description": "Day cards: skip_available, undoable, is_skipped, skip_reason, card_state (skipped when is_skipped)."
           },
           "response": []
         },
@@ -1518,16 +1525,23 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/meals/{{meal_id}}",
+              "raw": "{{base_url}}/meals/{{meal_id}}?delivery_date=2026-06-05",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "meals",
                 "{{meal_id}}"
+              ],
+              "query": [
+                {
+                  "key": "delivery_date",
+                  "value": "2026-06-05",
+                  "description": "Required for correct skip flags on that day"
+                }
               ]
             },
-            "description": "Meal detail for bottom sheet. Includes photo_url (nullable), macros, key_ingredients, delivery_date."
+            "description": "Pass delivery_date from the card. Adds skip_available, undoable, is_skipped, skip_reason."
           },
           "response": []
         },

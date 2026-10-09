@@ -4,6 +4,8 @@ import {
   MealIsDraftError,
   MealAlreadyUsedInWeekError,
   SlotNotEditableError,
+  MealTypeSlotMismatchError,
+  DayMealTypeAlreadyAssignedError,
 } from '../../../shared/errors/domain.errors.js'
 import { getDayLabel } from '../services/weekUtils.js'
 
@@ -54,6 +56,25 @@ export function makeUC(deps: Deps) {
 
       if (meal.status === 'draft') throw new MealIsDraftError()
 
+      if (meal.mealType !== slot.mealType) {
+        throw new MealTypeSlotMismatchError(meal.mealType, slot.mealType)
+      }
+
+      const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
+      const anotherSameTypeOnDay = allSlots.find(
+        s =>
+          s.deliveryDate === slot.deliveryDate &&
+          s.mealType === meal.mealType &&
+          s.id !== slot.id &&
+          !!s.mealId
+      )
+      if (anotherSameTypeOnDay) {
+        throw new DayMealTypeAlreadyAssignedError(
+          meal.mealType,
+          slot.deliveryDate
+        )
+      }
+
       // Check uniqueness within the week
       const mealsInWeek = await menuWeekLoader.getMealsInWeek(input.weekId)
       const duplicate = mealsInWeek.find(
@@ -70,9 +91,9 @@ export function makeUC(deps: Deps) {
 
       await menuWeekPersistor.assignMealToSlot(input.slotId, input.mealId)
 
-      // Recompute fill status
-      const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-      const filledSlots = allSlots.filter(s => s.mealId).length
+      const slotsAfterAssign =
+        await menuWeekLoader.getSlotsByWeekId(input.weekId)
+      const filledSlots = slotsAfterAssign.filter(s => s.mealId).length
 
       return {
         slot_id: slot.id,
@@ -86,7 +107,7 @@ export function makeUC(deps: Deps) {
         },
         week_fill_status: {
           filled_slots: filledSlots,
-          total_slots: allSlots.length,
+          total_slots: slotsAfterAssign.length,
           publish_ready: filledSlots === allSlots.length,
         },
       }

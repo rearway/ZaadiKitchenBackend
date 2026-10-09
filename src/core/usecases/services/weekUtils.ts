@@ -67,18 +67,21 @@ export function getSaudiWorkWeekBounds(referenceDate: Date): SaudiWeekBounds {
   }
 }
 
+function addDaysYmdUtc(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
 /**
- * Returns bounds for the next Saudi work week after the given reference date.
+ * Returns the Saudi work week immediately after {@link getSaudiWorkWeekBounds}
+ * for the same reference date (always +7 days from that week's Sunday).
  */
 export function getNextSaudiWorkWeekBounds(referenceDate: Date): SaudiWeekBounds {
-  const nextSunday = new Date(referenceDate)
-  const day = referenceDate.getDay()
-  if (day === 0) {
-    nextSunday.setDate(referenceDate.getDate() + 7)
-  } else {
-    nextSunday.setDate(referenceDate.getDate() + (7 - day))
-  }
-  return getSaudiWorkWeekBounds(nextSunday)
+  const thisWeek = getSaudiWorkWeekBounds(referenceDate)
+  const nextSundayStr = addDaysYmdUtc(thisWeek.dateFrom, 7)
+  // Midday UTC so local getDay() stays Sunday in all server timezones.
+  return getSaudiWorkWeekBounds(new Date(nextSundayStr + 'T12:00:00Z'))
 }
 
 /** Returns slot ID for a given week, date and meal type. */

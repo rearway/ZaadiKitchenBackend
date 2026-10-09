@@ -168,6 +168,31 @@ export class MealIsDraftError extends BaseError {
   }
 }
 
+export class MealTypeSlotMismatchError extends BaseError {
+  constructor(mealType: string, slotMealType: string) {
+    const label = (t: string) =>
+      t === 'salad' ? 'Salad' : t === 'executive' ? 'Executive' : t
+    super(
+      'MEAL_TYPE_SLOT_MISMATCH',
+      422,
+      `${label(mealType)} meals can only be assigned to the ${label(slotMealType)} slot for that day.`,
+      { meal_type: mealType, slot_meal_type: slotMealType }
+    )
+  }
+}
+
+export class DayMealTypeAlreadyAssignedError extends BaseError {
+  constructor(mealType: string, deliveryDate: string) {
+    const label = mealType === 'salad' ? 'Salad' : mealType === 'executive' ? 'Executive' : mealType
+    super(
+      'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
+      409,
+      `This day already has a ${label} meal assigned (${deliveryDate}). Only one ${label} per day is allowed.`,
+      { meal_type: mealType, delivery_date: deliveryDate }
+    )
+  }
+}
+
 export class WeekNotCompleteError extends BaseError {
   constructor(unfilledSlots: unknown[]) {
     super('WEEK_NOT_COMPLETE', 409, `Cannot publish. ${unfilledSlots.length} slot${unfilledSlots.length > 1 ? 's are' : ' is'} still unfilled.`, { unfilled_slots: unfilledSlots })

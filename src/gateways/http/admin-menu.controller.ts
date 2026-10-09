@@ -63,7 +63,11 @@ export class AdminMenuController {
 
   @Post('weeks/:week_id/slots/:slot_id/assign')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Assign a meal to a slot' })
+  @ApiOperation({
+    summary: 'Assign a meal to a slot',
+    description:
+      'Meal type must match slot (executive/salad). At most one executive and one salad per delivery day.',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('assign-meal-to-slot')
   async assignMeal(

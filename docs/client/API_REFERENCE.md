@@ -169,7 +169,7 @@ The `operation` field maps to the server handler name for support correlation.
 | DELETE | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Undo skip (before cutoff) |
 | PATCH | `/subscriptions/me/deliveries/:delivery_date/salad` | JWT | Toggle salad for a day |
 | POST | `/subscriptions/me/pause` | JWT | Schedule pause window (working days); stays `active` until pause-start cutoff. See [SKIP_PAUSE_FLEX.md](./SKIP_PAUSE_FLEX.md). |
-| POST | `/subscriptions/me/pause/cancel` | JWT | Cancel scheduled future pause (no body) |
+| POST | `/subscriptions/me/pause/cancel` | JWT | Cancel scheduled future pause (no body). UI field guide: [SKIP_PAUSE_API_UI.md](./SKIP_PAUSE_API_UI.md) |
 | POST | `/subscriptions/me/resume` | JWT | Resume from pause |
 | POST | `/subscriptions/me/cancel` | JWT | Cancel subscription |
 | PATCH | `/subscriptions/me/meal-type` | JWT | Change executive/salad for future days |
