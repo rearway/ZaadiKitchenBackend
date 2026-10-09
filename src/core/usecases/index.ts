@@ -28,6 +28,7 @@ import * as CreateOrder from './commands/CreateOrder.js'
 import * as SkipDelivery from './commands/SkipDelivery.js'
 import * as UndoSkipDelivery from './commands/UndoSkipDelivery.js'
 import * as PauseSubscription from './commands/PauseSubscription.js'
+import * as CancelPause from './commands/CancelPause.js'
 import * as ResumeSubscription from './commands/ResumeSubscription.js'
 import * as CancelSubscription from './commands/CancelSubscription.js'
 import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
@@ -285,6 +286,12 @@ export function initUseCases(deps: Deps) {
     deps,
     PauseSubscription.makeUC(deps),
     PauseSubscription.name,
+    ...defaultWrappers
+  )
+  const cancelPause = wrapUC(
+    deps,
+    CancelPause.makeUC(deps),
+    CancelPause.name,
     ...defaultWrappers
   )
   const resumeSubscription = wrapUC(
@@ -871,6 +878,7 @@ export function initUseCases(deps: Deps) {
       skipDelivery,
       undoSkipDelivery,
       pauseSubscription,
+      cancelPause,
       resumeSubscription,
       cancelSubscription,
       expireSubscriptions,

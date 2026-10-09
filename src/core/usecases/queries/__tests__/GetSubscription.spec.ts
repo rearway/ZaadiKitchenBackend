@@ -54,24 +54,35 @@ describe('GetSubscription', () => {
     expect(result.skip_days_remaining).toBe(56) // 66 - 10
   })
 
-  it('returns days_remaining >= 0 even when end date has passed', async () => {
-    const pastEndDate = '2020-01-01'
-    const deps = makeDepsWithSub({ endDate: pastEndDate })
+  it('sets days_remaining to remaining meal days, not calendar span to end_date', async () => {
+    const deps = makeDepsWithSub({
+      totalMealDays: 1,
+      deliveredCount: 0,
+      skippedCount: 0,
+      startDate: '2026-10-12',
+      endDate: '2026-10-12',
+    })
     const getSubscription = makeUC(deps)
 
     const result = await getSubscription(validInput)
 
-    expect(result.days_remaining).toBeGreaterThanOrEqual(0)
+    expect(result.remaining_count).toBe(1)
+    expect(result.days_remaining).toBe(1)
   })
 
-  it('returns days_remaining > 0 for a future end date', async () => {
-    const futureEndDate = '2099-12-31'
-    const deps = makeDepsWithSub({ endDate: futureEndDate })
+  it('floors days_remaining at 0 when all meals are used', async () => {
+    const deps = makeDepsWithSub({
+      totalMealDays: 1,
+      deliveredCount: 1,
+      skippedCount: 0,
+      endDate: '2020-01-01',
+    })
     const getSubscription = makeUC(deps)
 
     const result = await getSubscription(validInput)
 
-    expect(result.days_remaining).toBeGreaterThan(0)
+    expect(result.days_remaining).toBe(0)
+    expect(result.remaining_count).toBe(0)
   })
 
   it('returns paused_until from the subscription when paused', async () => {

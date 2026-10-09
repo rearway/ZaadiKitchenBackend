@@ -115,7 +115,10 @@ describe('GetHomeThisWeek', () => {
 
     expect(result.cards[0].card_state).toBe('skipped')
     expect(result.cards[0].day_label).toBe('TODAY')
-    expect(result.cards[0].action?.cta_label).toBe('Undo')
+    expect(result.cards[0].is_skipped).toBe(true)
+    // Today's delivery is past the skip/undo cutoff when viewed on the day itself.
+    expect(result.cards[0].undoable).toBe(false)
+    expect(result.cards[0].action).toBeNull()
   })
 
   it('keeps Skip CTA on a scheduled upcoming day', async () => {

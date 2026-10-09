@@ -41,8 +41,11 @@ describe('GetSubscriptionDeliveries', () => {
 
     const result = await getDeliveries({ userId: 'user-uuid-1' })
 
+    expect(result.deliveries[0].skip_available).toBe(true)
     expect(result.deliveries[0].skippable).toBe(true)
-    expect(result.deliveries[0].skip_reason).toBeUndefined()
+    expect(result.deliveries[0].skip_reason).toBeNull()
+    expect(result.deliveries[0].is_skipped).toBe(false)
+    expect(result.deliveries[0].undoable).toBe(false)
   })
 
   it('marks a scheduled past-cutoff day as not skippable with reason past_cutoff', async () => {
@@ -90,7 +93,7 @@ describe('GetSubscriptionDeliveries', () => {
     expect(result.deliveries[0].undoable).toBe(false)
   })
 
-  it('does not include undoable field for scheduled/delivered/paused days', async () => {
+  it('sets undoable false for scheduled/delivered/paused days', async () => {
     const days = [
       makeDeliveryDay({ date: FUTURE_DATE, status: 'scheduled', id: 'dd-1' }),
       makeDeliveryDay({ date: FUTURE_DATE, status: 'delivered', id: 'dd-2' }),
@@ -102,8 +105,9 @@ describe('GetSubscriptionDeliveries', () => {
     const result = await getDeliveries({ userId: 'user-uuid-1' })
 
     result.deliveries.forEach(d => {
-      expect(d.undoable).toBeUndefined()
+      expect(d.undoable).toBe(false)
     })
+    expect(result.deliveries[2].skip_reason).toBe('day_paused')
   })
 
   it('returns skip_limit_reached=false when some skip days remain', async () => {

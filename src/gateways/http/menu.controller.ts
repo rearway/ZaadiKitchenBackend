@@ -65,8 +65,16 @@ export class MenuController {
   @ApiOperation({ summary: 'Meal detail (bottom sheet + full screen)' })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-meal-detail')
-  async getMealDetail(@Param('meal_id') mealId: string) {
-    return this.useCases.queries.getMealDetail({ mealId })
+  async getMealDetail(
+    @Param('meal_id') mealId: string,
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('delivery_date') deliveryDate?: string
+  ) {
+    return this.useCases.queries.getMealDetail({
+      mealId,
+      userId: user.id,
+      deliveryDate,
+    })
   }
 
   @Post('meals/:meal_id/rating')

@@ -2,10 +2,34 @@ import { makeUC } from '../ResumeSubscription'
 import { buildDeps, makeSubscription } from '../../../../__tests__/helpers/mock-deps'
 
 describe('ResumeSubscription', () => {
-  const validInput = { userId: 'user-uuid-1', resumeDate: '2025-07-10' }
+  const PAUSE_FROM = '2099-08-12'
+  const PAUSE_UNTIL = '2099-08-20'
+  const RESUME_DATE = '2099-08-15'
+
+  beforeEach(() => {
+    jest.useFakeTimers()
+    // During pause window; resume must be tomorrow+ (2099-08-14 → earliest 2099-08-15).
+    jest.setSystemTime(new Date('2099-08-14T10:00:00Z'))
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  const validInput = { userId: 'user-uuid-1', resumeDate: RESUME_DATE }
 
   function makeDepsWithSub(subOverrides = {}) {
-    const sub = makeSubscription(subOverrides)
+    const sub = makeSubscription({
+      status: 'paused',
+      pausedFrom: PAUSE_FROM,
+      pausedUntil: PAUSE_UNTIL,
+      pauseCeilingDate: PAUSE_UNTIL,
+      startDate: '2099-08-10',
+      endDate: '2099-12-31',
+      skipDaysAllowed: 66,
+      pauseDaysAllowed: 66,
+      ...subOverrides,
+    })
     return buildDeps({
       subscriptionLoader: {
         ...buildDeps().subscriptionLoader,
@@ -13,24 +37,35 @@ describe('ResumeSubscription', () => {
       },
       subscriptionPersistor: {
         ...buildDeps().subscriptionPersistor,
-        updateSubscription: jest.fn().mockResolvedValue(undefined),
+        updateSubscription: jest.fn().mockImplementation(async (_id, patch) => ({
+          ...sub,
+          ...patch,
+        })),
       },
     })
   }
 
   it('resumes a paused subscription and returns active status', async () => {
-    const deps = makeDepsWithSub({ status: 'paused', pauseDaysUsed: 5 })
+    const deps = makeDepsWithSub({ pauseDaysUsed: 5 })
     const resumeSubscription = makeUC(deps)
 
     const result = await resumeSubscription(validInput)
 
     expect(result.status).toBe('active')
-    expect(result.resume_date).toBe('2025-07-10')
-    expect(result.pause_days_used).toBe(5)
+    expect(result.resume_date).toBe(RESUME_DATE)
+    // Partial refund of unused pause working days reduces flex used vs pre-resume value.
+    expect(result.pause_days_used).toBeLessThan(5)
   })
 
   it('clears the pause metadata on the subscription', async () => {
-    const sub = makeSubscription({ status: 'paused', pausedFrom: '2025-07-01', pausedUntil: '2025-07-09', pauseCeilingDate: '2025-07-09' })
+    const sub = makeSubscription({
+      status: 'paused',
+      pausedFrom: PAUSE_FROM,
+      pausedUntil: PAUSE_UNTIL,
+      pauseCeilingDate: PAUSE_UNTIL,
+      startDate: '2099-08-10',
+      endDate: '2099-12-31',
+    })
     const deps = buildDeps({
       subscriptionLoader: {
         ...buildDeps().subscriptionLoader,
@@ -38,7 +73,10 @@ describe('ResumeSubscription', () => {
       },
       subscriptionPersistor: {
         ...buildDeps().subscriptionPersistor,
-        updateSubscription: jest.fn().mockResolvedValue(undefined),
+        updateSubscription: jest.fn().mockImplementation(async (_id, patch) => ({
+          ...sub,
+          ...patch,
+        })),
       },
     })
     const resumeSubscription = makeUC(deps)
@@ -57,15 +95,14 @@ describe('ResumeSubscription', () => {
   })
 
   it('returns a formatted first_delivery_label for the resume date', async () => {
-    const deps = makeDepsWithSub({ status: 'paused' })
+    const deps = makeDepsWithSub()
     const resumeSubscription = makeUC(deps)
 
-    // 2025-07-10 is a Thursday
-    const result = await resumeSubscription({ userId: 'user-uuid-1', resumeDate: '2025-07-10' })
+    const result = await resumeSubscription(validInput)
 
-    expect(result.first_delivery_label).toMatch(/Thursday/)
-    expect(result.first_delivery_label).toMatch(/10/)
-    expect(result.first_delivery_label).toMatch(/Jul/)
+    expect(result.first_delivery_label).toMatch(/Saturday/)
+    expect(result.first_delivery_label).toMatch(/15/)
+    expect(result.first_delivery_label).toMatch(/Aug/)
   })
 
   it('throws ResourceNotFoundError when there is no subscription', async () => {
@@ -84,7 +121,12 @@ describe('ResumeSubscription', () => {
   })
 
   it('throws ValidationError when the subscription is active (not paused)', async () => {
-    const deps = makeDepsWithSub({ status: 'active' })
+    const deps = makeDepsWithSub({
+      status: 'active',
+      pausedFrom: null,
+      pausedUntil: null,
+      pauseCeilingDate: null,
+    })
     const resumeSubscription = makeUC(deps)
 
     await expect(resumeSubscription(validInput)).rejects.toMatchObject({

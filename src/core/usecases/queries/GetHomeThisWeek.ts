@@ -1,5 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
-import { getSaudiWorkWeekBounds, getDayLabel, isAfterSkipCutoff } from '../services/weekUtils.js'
+import { getSaudiWorkWeekBounds, getDayLabel } from '../services/weekUtils.js'
+import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface GetHomeThisWeekInput {
   userId: string
@@ -16,8 +18,18 @@ export interface GetHomeThisWeekOutput {
     photo_url: string | null
     delivery_date: string
     day_label: string
-    card_state: 'today' | 'upcoming' | 'skipped' | 'past' | 'browse_only' | 'past_greyed'
+    card_state:
+      | 'today'
+      | 'upcoming'
+      | 'skipped'
+      | 'past'
+      | 'browse_only'
+      | 'past_greyed'
     card_border: 'red' | 'default'
+    skip_available: boolean
+    undoable: boolean
+    is_skipped: boolean
+    skip_reason: string | null
     action: {
       type: string
       cta_label: string
@@ -26,18 +38,28 @@ export interface GetHomeThisWeekOutput {
 }
 
 export function makeUC(deps: Deps) {
-  return async function getHomeThisWeek(input: GetHomeThisWeekInput): Promise<GetHomeThisWeekOutput> {
-    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } = deps
+  return async function getHomeThisWeek(
+    input: GetHomeThisWeekInput
+  ): Promise<GetHomeThisWeekOutput> {
+    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } =
+      deps
 
     try {
       const now = new Date()
       const todayStr = now.toISOString().slice(0, 10)
       const bounds = getSaudiWorkWeekBounds(now)
 
-      const [sub, slots] = await Promise.all([
-        subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
-        menuWeekLoader.getMenuForDateRange(bounds.dateFrom, bounds.dateTo),
-      ])
+      let sub = await subscriptionLoader.getActiveSubscriptionByUserId(
+        input.userId
+      )
+      if (sub) {
+        sub = await ensurePauseStatus(deps, sub)
+      }
+
+      const slots = await menuWeekLoader.getMenuForDateRange(
+        bounds.dateFrom,
+        bounds.dateTo
+      )
 
       const deliveryDays = sub
         ? await deliveryDayLoader.getDeliveryDaysBySubscription(sub.id, {
@@ -57,8 +79,14 @@ export function makeUC(deps: Deps) {
           const isToday = slot.deliveryDate === todayStr
           const isPast = slot.deliveryDate < todayStr
           const dayAbbr = getDayLabel(slot.deliveryDate)
-          const dayStatus = statusByDate.get(slot.deliveryDate)
-          const isSkipped = subStatus === 'active' && dayStatus === 'skipped'
+          const dayStatus = statusByDate.get(slot.deliveryDate) ?? null
+          const flags = resolveDayActionFlags({
+            subscription: sub,
+            deliveryDate: slot.deliveryDate,
+            mealType: meal.mealType,
+            dayStatus,
+            now,
+          })
 
           let card_state: GetHomeThisWeekOutput['cards'][0]['card_state']
           let cta_label: string | null = null
@@ -67,9 +95,9 @@ export function makeUC(deps: Deps) {
           if (subStatus === 'paused') {
             card_state = 'browse_only'
             cta_label = 'Browse only'
-          } else if (isSkipped) {
+          } else if (flags.is_skipped) {
             card_state = 'skipped'
-            cta_label = 'Undo'
+            cta_label = flags.undoable ? 'Undo' : null
           } else if (isPast) {
             card_state = 'past'
             cta_label = null
@@ -79,15 +107,13 @@ export function makeUC(deps: Deps) {
             card_state = 'upcoming'
           }
 
-          if (subStatus === 'active' && !isPast && !isSkipped && card_state !== 'browse_only') {
-            const skipUsed = sub!.skipDaysUsed
-            const skipAllowed = sub!.skipDaysAllowed
-            const cutoffPassed = isAfterSkipCutoff(slot.deliveryDate, now)
-            if (!cutoffPassed && skipUsed < skipAllowed) {
-              cta_label = 'Skip →'
-            } else {
-              cta_label = null
-            }
+          if (
+            subStatus === 'active' &&
+            !isPast &&
+            !flags.is_skipped &&
+            card_state !== 'browse_only'
+          ) {
+            cta_label = flags.skip_available ? 'Skip →' : null
           } else if (subStatus === 'none' || subStatus === undefined) {
             cta_label = 'Subscribe →'
           } else if (subStatus === 'expired' || subStatus === 'cancelled') {
@@ -105,9 +131,11 @@ export function makeUC(deps: Deps) {
             day_label: isToday ? 'TODAY' : dayAbbr,
             card_state,
             card_border: (isToday ? 'red' : 'default') as 'red' | 'default',
-            action: cta_label
-              ? { type: action_type, cta_label }
-              : null,
+            skip_available: flags.skip_available,
+            undoable: flags.undoable,
+            is_skipped: flags.is_skipped,
+            skip_reason: flags.skip_reason,
+            action: cta_label ? { type: action_type, cta_label } : null,
           }
         })
 
@@ -116,7 +144,10 @@ export function makeUC(deps: Deps) {
         cards,
       }
     } catch (error) {
-      logger.error('GetHomeThisWeek failed', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'GetHomeThisWeek failed',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }

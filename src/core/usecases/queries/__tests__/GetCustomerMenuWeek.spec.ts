@@ -86,6 +86,8 @@ describe('GetCustomerMenuWeek', () => {
     expect(card).toMatchObject({
       card_state: 'skipped',
       skip_available: false,
+      is_skipped: true,
+      undoable: true,
       skip_reason: 'already_skipped',
     })
   })

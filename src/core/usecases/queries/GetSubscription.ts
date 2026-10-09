@@ -1,4 +1,10 @@
 import { Deps } from '../../entitygateway/index.js'
+import { flexAllowanceFields, listWorkingDaysInRange } from '../services/flexDays.js'
+import {
+  ensurePauseStatus,
+  isPauseScheduled,
+} from '../services/ensurePauseStatus.js'
+import { addDaysUtc, toYYYYMMDD } from '../services/deliveryScheduleUtils.js'
 
 export interface GetSubscriptionInput {
   userId: string
@@ -22,18 +28,30 @@ export interface GetSubscriptionOutput {
   skip_days_remaining: number
   pause_days_allowed: number
   pause_days_used: number
+  pause_days_remaining: number
+  skip_pause_days_allowed: number
+  skip_pause_days_used: number
+  skip_pause_days_remaining: number
+  pause_scheduled: boolean
+  paused_from: string | null
   paused_until: string | null
   pause_ceiling_date: string | null
+  paused_days: string[]
 }
 
 export function makeUC(deps: Deps) {
   return async function getSubscription(
     input: GetSubscriptionInput
   ): Promise<GetSubscriptionOutput> {
-    const { logger, subscriptionLoader, planLoader } = deps
+    const {
+      logger,
+      subscriptionLoader,
+      planLoader,
+      publicHolidayLoader,
+    } = deps
     try {
       const { userId } = input
-      const subscription =
+      let subscription =
         await subscriptionLoader.getActiveSubscriptionByUserId(userId)
 
       if (!subscription) {
@@ -42,20 +60,36 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Subscription')
       }
 
-      const plan = await planLoader.getPlanById(subscription.planId)
-      const remainingCount =
-        subscription.totalMealDays -
-        subscription.deliveredCount -
-        subscription.skippedCount
+      subscription = await ensurePauseStatus(deps, subscription)
 
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const endDate = new Date(subscription.endDate)
-      endDate.setHours(0, 0, 0, 0)
-      const daysRemaining = Math.max(
+      const plan = await planLoader.getPlanById(subscription.planId)
+      const remainingCount = Math.max(
         0,
-        Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        subscription.totalMealDays -
+          subscription.deliveredCount -
+          subscription.skippedCount
       )
+
+      const flex = flexAllowanceFields(subscription)
+      const pauseScheduled = isPauseScheduled(subscription)
+
+      let pausedDays: string[] = []
+      if (subscription.pausedFrom && subscription.pausedUntil) {
+        const holidayTo = toYYYYMMDD(
+          addDaysUtc(new Date(subscription.pausedUntil + 'T00:00:00Z'), 1)
+        )
+        const holidays = new Set(
+          await publicHolidayLoader.getHolidayDates(
+            subscription.pausedFrom,
+            holidayTo
+          )
+        )
+        pausedDays = listWorkingDaysInRange(
+          subscription.pausedFrom,
+          subscription.pausedUntil,
+          holidays
+        )
+      }
 
       return {
         subscription_id: subscription.id,
@@ -67,17 +101,15 @@ export function makeUC(deps: Deps) {
         delivered_count: subscription.deliveredCount,
         skipped_count: subscription.skippedCount,
         remaining_count: remainingCount,
-        days_remaining: daysRemaining,
+        days_remaining: remainingCount,
         start_date: subscription.startDate,
         end_date: subscription.endDate,
-        skip_days_allowed: subscription.skipDaysAllowed,
-        skip_days_used: subscription.skipDaysUsed,
-        skip_days_remaining:
-          subscription.skipDaysAllowed - subscription.skipDaysUsed,
-        pause_days_allowed: subscription.pauseDaysAllowed,
-        pause_days_used: subscription.pauseDaysUsed,
+        ...flex,
+        pause_scheduled: pauseScheduled,
+        paused_from: subscription.pausedFrom ?? null,
         paused_until: subscription.pausedUntil ?? null,
         pause_ceiling_date: subscription.pauseCeilingDate ?? null,
+        paused_days: pausedDays,
       }
     } catch (error) {
       logger.error(

@@ -168,7 +168,8 @@ The `operation` field maps to the server handler name for support correlation.
 | POST | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Skip a day |
 | DELETE | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Undo skip (before cutoff) |
 | PATCH | `/subscriptions/me/deliveries/:delivery_date/salad` | JWT | Toggle salad for a day |
-| POST | `/subscriptions/me/pause` | JWT | Pause subscription (date range) |
+| POST | `/subscriptions/me/pause` | JWT | Schedule pause window (working days); stays `active` until pause-start cutoff. See [SKIP_PAUSE_FLEX.md](./SKIP_PAUSE_FLEX.md). |
+| POST | `/subscriptions/me/pause/cancel` | JWT | Cancel scheduled future pause (no body) |
 | POST | `/subscriptions/me/resume` | JWT | Resume from pause |
 | POST | `/subscriptions/me/cancel` | JWT | Cancel subscription |
 | PATCH | `/subscriptions/me/meal-type` | JWT | Change executive/salad for future days |
@@ -187,7 +188,7 @@ The `operation` field maps to the server handler name for support correlation.
 | GET | `/home/this-week` | JWT | This week meal cards |
 | GET | `/menu` | JWT | Customer menu (published weeks) |
 | GET | `/menu/week` | JWT | Week sections (this + next) |
-| GET | `/meals/:meal_id` | JWT | Meal detail |
+| GET | `/meals/:meal_id` | JWT | Meal detail (`?delivery_date=` optional); includes skip flags |
 | POST | `/meals/:meal_id/rating` | JWT | Submit rating for a delivery day |
 
 ---

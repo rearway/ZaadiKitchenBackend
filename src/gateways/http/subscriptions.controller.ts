@@ -126,8 +126,11 @@ export class SubscriptionsController {
 
   @Post('me/pause')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Pause subscription' })
-  @ApiResponse({ status: 200, description: 'Paused' })
+  @ApiOperation({
+    summary:
+      'Schedule a pause window (stays active until pause-start cutoff; one pause at a time)',
+  })
+  @ApiResponse({ status: 200, description: 'Pause scheduled' })
   @HandleErrors('pause-subscription')
   async pause(
     @Body() dto: PauseSubscriptionDTO,
@@ -138,6 +141,18 @@ export class SubscriptionsController {
       startDate: dto.start_date,
       endDate: dto.end_date,
     })
+  }
+
+  @Post('me/pause/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Cancel a scheduled future pause (only before pause-start cutoff)',
+  })
+  @ApiResponse({ status: 200, description: 'Pause cancelled' })
+  @HandleErrors('cancel-pause')
+  async cancelPause(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.commands.cancelPause({ userId: user.id })
   }
 
   @Post('me/resume')

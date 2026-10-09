@@ -1,6 +1,11 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { Subscription } from '../../entities/Subscription.js'
 import type { Plan } from '../../entities/Plan.js'
+import { getFlexDaysRemaining } from '../services/flexDays.js'
+import {
+  ensurePauseStatus,
+  isPauseScheduled,
+} from '../services/ensurePauseStatus.js'
 
 export interface GetHomeInput {
   userId: string
@@ -69,9 +74,10 @@ function buildBanner(
   }
 
   if (status === 'active' && sub) {
-    const daysRemaining = Math.max(0, Math.ceil(
-      (new Date(sub.endDate).getTime() - Date.now()) / 86400000
-    ))
+    const daysRemaining = Math.max(
+      0,
+      sub.totalMealDays - sub.deliveredCount - sub.skippedCount
+    )
     const locationLabel = location
       ? `📍 ${location.buildingName}${location.floor ? ' · ' + location.floor : ''}`
       : null
@@ -204,15 +210,17 @@ export function makeUC(deps: Deps) {
     const { logger, userLoader, subscriptionLoader, deliveryLocationLoader, deliveryAreaLoader, walletLoader, planLoader } = deps
 
     try {
-      const [user, sub, plans] = await Promise.all([
+      const [user, rawSub, plans] = await Promise.all([
         userLoader.getUserById(input.userId),
         subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
         planLoader.getActivePlans(),
       ])
 
+      const sub = rawSub ? await ensurePauseStatus(deps, rawSub) : null
       const status = getSubscriptionStatus(sub)
       const needsLocation = status === 'active'
       const needsWallet = status === 'active' || status === 'expired'
+      const flexRemaining = sub ? getFlexDaysRemaining(sub) : 0
 
       const [location, walletBalance] = await Promise.all([
         needsLocation ? deliveryLocationLoader.getPrimaryLocationByUserId(input.userId) : Promise.resolve(null),
@@ -230,11 +238,18 @@ export function makeUC(deps: Deps) {
               subscription_id: sub.id,
               plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
               meal_type: sub.mealType,
-              days_remaining: Math.max(0, Math.ceil((new Date(sub.endDate).getTime() - Date.now()) / 86400000)),
+              days_remaining: Math.max(
+                0,
+                sub.totalMealDays - sub.deliveredCount - sub.skippedCount
+              ),
               end_date: sub.endDate,
               end_date_label: formatEndDateLabel(sub.endDate),
-              skip_days_remaining: Math.max(0, sub.skipDaysAllowed - sub.skipDaysUsed),
-              pause_days_remaining: Math.max(0, sub.pauseDaysAllowed - sub.pauseDaysUsed),
+              skip_days_remaining: flexRemaining,
+              pause_days_remaining: flexRemaining,
+              skip_pause_days_remaining: flexRemaining,
+              pause_scheduled: isPauseScheduled(sub),
+              paused_from: sub.pausedFrom,
+              paused_until: sub.pausedUntil,
             }
           : status === 'paused'
           ? {
@@ -242,10 +257,15 @@ export function makeUC(deps: Deps) {
               plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
               meal_type: sub.mealType,
               paused_since: sub.pausedFrom,
+              paused_from: sub.pausedFrom,
+              paused_until: sub.pausedUntil,
               days_frozen: sub.pausedFrom
                 ? Math.ceil((Date.now() - new Date(sub.pausedFrom).getTime()) / 86400000)
                 : 0,
               pause_ceiling_date: sub.pauseCeilingDate,
+              skip_days_remaining: flexRemaining,
+              pause_days_remaining: flexRemaining,
+              skip_pause_days_remaining: flexRemaining,
             }
           : {
               plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,

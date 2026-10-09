@@ -19,10 +19,15 @@ describe('PauseSubscription', () => {
     return d.toISOString().slice(0, 10)
   }
 
+  /** Working days in START–END (Sun–Thu only): Wed 12, Thu 13, Sun 16. */
+  const WORKING_DAYS_IN_RANGE = 3
+
   function makeActiveDeps(subOverrides = {}, days: ReturnType<typeof makeDeliveryDay>[] = []) {
     const sub = makeSubscription({
       status: 'active',
+      skipDaysAllowed: 66,
       pauseDaysAllowed: 66,
+      skipDaysUsed: 0,
       pauseDaysUsed: 0,
       startDate: planStart,
       endDate: planEnd,
@@ -43,31 +48,35 @@ describe('PauseSubscription', () => {
       },
       subscriptionPersistor: {
         ...buildDeps().subscriptionPersistor,
-        updateSubscription: jest.fn().mockResolvedValue(undefined),
+        updateSubscription: jest.fn().mockImplementation((_id, updates) =>
+          Promise.resolve({ ...sub, ...updates })
+        ),
       },
     })
   }
 
-  it('pauses an active subscription for the requested date range', async () => {
+  it('schedules a pause while subscription stays active until start cutoff', async () => {
     const deps = makeActiveDeps()
     const pauseSubscription = makeUC(deps)
 
     const result = await pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })
 
-    expect(result.status).toBe('paused')
+    expect(result.status).toBe('active')
+    expect(result.pause_scheduled).toBe(true)
     expect(result.paused_from).toBe(START)
     expect(result.paused_until).toBe(END)
     expect(result.pause_ceiling_date).toBe(END)
   })
 
-  it('calculates pause days inclusively (start and end both count)', async () => {
+  it('charges flex pool by working days in range (not calendar days)', async () => {
     const deps = makeActiveDeps()
     const pauseSubscription = makeUC(deps)
 
     const result = await pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })
 
-    expect(result.pause_days_used).toBe(5)
-    expect(result.pause_days_remaining).toBe(61) // 66 - 5
+    expect(result.pause_days_used).toBe(WORKING_DAYS_IN_RANGE)
+    expect(result.pause_days_remaining).toBe(66 - WORKING_DAYS_IN_RANGE)
+    expect(result.skip_days_used).toBe(WORKING_DAYS_IN_RANGE)
   })
 
   it('marks scheduled delivery days in the range as paused', async () => {
@@ -117,11 +126,12 @@ describe('PauseSubscription', () => {
     expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
       sub.id,
       expect.objectContaining({
-        status: 'paused',
+        status: 'active',
         pausedFrom: START,
         pausedUntil: END,
         pauseCeilingDate: END,
-        pauseDaysUsed: 15, // 10 existing + 5 new
+        pauseDaysUsed: 10 + WORKING_DAYS_IN_RANGE,
+        skipDaysUsed: 10 + WORKING_DAYS_IN_RANGE,
       })
     )
   })
@@ -173,8 +183,13 @@ describe('PauseSubscription', () => {
     expect(deps.subscriptionPersistor.updateSubscription).not.toHaveBeenCalled()
   })
 
-  it('allows pausing when requested days exactly equal remaining allowance', async () => {
-    const deps = makeActiveDeps({ pauseDaysAllowed: 5, pauseDaysUsed: 0 })
+  it('allows pausing when requested working days exactly equal remaining allowance', async () => {
+    const deps = makeActiveDeps({
+      skipDaysAllowed: WORKING_DAYS_IN_RANGE,
+      pauseDaysAllowed: WORKING_DAYS_IN_RANGE,
+      pauseDaysUsed: 0,
+      skipDaysUsed: 0,
+    })
     const pauseSubscription = makeUC(deps)
 
     const result = await pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })
@@ -280,7 +295,8 @@ describe('PauseSubscription', () => {
       endDate: futureOnOrAfterPlanStart(2),
     })
 
-    expect(result.status).toBe('paused')
+    expect(result.status).toBe('active')
+    expect(result.pause_scheduled).toBe(true)
     expect(result.paused_from).toBe(planStart)
   })
 })

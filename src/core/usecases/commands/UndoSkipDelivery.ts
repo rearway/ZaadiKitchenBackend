@@ -1,5 +1,11 @@
 import { Deps } from '../../entitygateway/index.js'
 import { isAfterSkipCutoff } from '../services/weekUtils.js'
+import {
+  flexUsedUpdate,
+  getFlexDaysAllowed,
+  getFlexDaysUsed,
+} from '../services/flexDays.js'
+import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface UndoSkipDeliveryInput {
   userId: string
@@ -23,17 +29,19 @@ export function makeUC(deps: Deps) {
       subscriptionPersistor,
       deliveryDayLoader,
       deliveryDayPersistor,
+      auditLogLoader,
     } = deps
     try {
       const { userId, deliveryDate } = input
 
-      const subscription =
+      let subscription =
         await subscriptionLoader.getActiveSubscriptionByUserId(userId)
       if (!subscription) {
         const { ResourceNotFoundError } =
           await import('../../../shared/errors/index.js')
         throw new ResourceNotFoundError('Subscription')
       }
+      subscription = await ensurePauseStatus(deps, subscription)
 
       if (isAfterSkipCutoff(deliveryDate)) {
         const { PastCutoffError } =
@@ -55,17 +63,59 @@ export function makeUC(deps: Deps) {
 
       await deliveryDayPersistor.updateDeliveryDayStatus(day.id, 'scheduled')
 
-      const newSkipDaysUsed = Math.max(0, subscription.skipDaysUsed - 1)
+      // Remove makeup day created when this date was skipped (if still scheduled).
+      const auditLogs = await auditLogLoader.getAuditLogsBySubscription(
+        subscription.id
+      )
+      const skipAudit = auditLogs.find(
+        log =>
+          log.action === 'skip_delivery' &&
+          (log.metadata as { date?: string } | null)?.date === deliveryDate
+      )
+      const makeupDate =
+        (skipAudit?.metadata as { makeup_date?: string | null } | null)
+          ?.makeup_date ?? null
+
+      let newEndDate = subscription.endDate
+      let newTotalMealDays = subscription.totalMealDays
+
+      if (makeupDate) {
+        const allDays = await deliveryDayLoader.getDeliveryDaysBySubscription(
+          subscription.id
+        )
+        const makeupDay = allDays.find(
+          d => d.date === makeupDate && d.status === 'scheduled'
+        )
+        if (makeupDay) {
+          const keepDates = allDays
+            .filter(d => d.date !== makeupDate)
+            .map(d => d.date)
+          await deliveryDayPersistor.deleteScheduledDeliveryDaysOutsideDates(
+            subscription.id,
+            keepDates
+          )
+          newTotalMealDays = Math.max(1, subscription.totalMealDays - 1)
+          const remainingDates = keepDates.filter(d => d !== makeupDate)
+          newEndDate =
+            remainingDates.length > 0
+              ? remainingDates.reduce((a, b) => (a > b ? a : b))
+              : deliveryDate
+        }
+      }
+
+      const newFlexUsed = Math.max(0, getFlexDaysUsed(subscription) - 1)
       await subscriptionPersistor.updateSubscription(subscription.id, {
-        skipDaysUsed: newSkipDaysUsed,
+        ...flexUsedUpdate(newFlexUsed),
         skippedCount: Math.max(0, subscription.skippedCount - 1),
+        endDate: newEndDate,
+        totalMealDays: newTotalMealDays,
       })
 
       return {
         date: deliveryDate,
         status: 'scheduled',
-        skip_days_used: newSkipDaysUsed,
-        skip_days_remaining: subscription.skipDaysAllowed - newSkipDaysUsed,
+        skip_days_used: newFlexUsed,
+        skip_days_remaining: getFlexDaysAllowed(subscription) - newFlexUsed,
       }
     } catch (error) {
       logger.error(

@@ -1,5 +1,7 @@
 import { Deps } from '../../entitygateway/index.js'
-import { isAfterSkipCutoff } from '../services/weekUtils.js'
+import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import { getFlexDaysRemaining } from '../services/flexDays.js'
+import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface GetSubscriptionDeliveriesInput {
   userId: string
@@ -14,9 +16,12 @@ export interface DeliveryItem {
   photo_url: string | null
   meal_type: string
   status: string
+  skip_available: boolean
+  /** @deprecated Prefer skip_available */
   skippable: boolean
-  skip_reason?: string
-  undoable?: boolean
+  skip_reason: string | null
+  undoable: boolean
+  is_skipped: boolean
 }
 
 export interface GetSubscriptionDeliveriesOutput {
@@ -53,10 +58,11 @@ export function makeUC(deps: Deps) {
   return async function getSubscriptionDeliveries(
     input: GetSubscriptionDeliveriesInput
   ): Promise<GetSubscriptionDeliveriesOutput> {
-    const { logger, subscriptionLoader, deliveryDayLoader, menuWeekLoader } = deps
+    const { logger, subscriptionLoader, deliveryDayLoader, menuWeekLoader } =
+      deps
     try {
       const { userId } = input
-      const subscription =
+      let subscription =
         await subscriptionLoader.getActiveSubscriptionByUserId(userId)
 
       if (!subscription) {
@@ -64,6 +70,7 @@ export function makeUC(deps: Deps) {
           await import('../../../shared/errors/index.js')
         throw new ResourceNotFoundError('Subscription')
       }
+      subscription = await ensurePauseStatus(deps, subscription)
 
       const days = await deliveryDayLoader.getDeliveryDaysBySubscription(
         subscription.id,
@@ -89,42 +96,30 @@ export function makeUC(deps: Deps) {
       }
 
       const today = new Date()
-      const skipLimitReached =
-        subscription.skipDaysUsed >= subscription.skipDaysAllowed
+      const skipLimitReached = getFlexDaysRemaining(subscription) <= 0
 
       const deliveries: DeliveryItem[] = days.map(day => {
         const dayDate = new Date(day.date + 'T00:00:00Z')
-        const pastCutoff = isAfterSkipCutoff(day.date)
-        let skippable = false
-        let skip_reason: string | undefined
-        let undoable: boolean | undefined
-
-        if (day.status === 'skipped') {
-          skippable = false
-          skip_reason = 'already_skipped'
-          undoable = !pastCutoff
-        } else if (day.status === 'scheduled') {
-          if (pastCutoff) {
-            skippable = false
-            skip_reason = 'past_cutoff'
-          } else if (skipLimitReached) {
-            skippable = false
-            skip_reason = 'skip_limit_reached'
-          } else {
-            skippable = true
-          }
-        }
+        const flags = resolveDayActionFlags({
+          subscription,
+          deliveryDate: day.date,
+          mealType: day.mealType,
+          dayStatus: day.status,
+        })
 
         return {
           date: day.date,
           label: formatShortLabel(dayDate, today),
           meal_name: day.mealName ?? null,
-          photo_url: photoByDateAndType.get(`${day.date}:${day.mealType}`) ?? null,
+          photo_url:
+            photoByDateAndType.get(`${day.date}:${day.mealType}`) ?? null,
           meal_type: day.mealType,
           status: day.status,
-          skippable,
-          ...(skip_reason ? { skip_reason } : {}),
-          ...(undoable !== undefined ? { undoable } : {}),
+          skip_available: flags.skip_available,
+          skippable: flags.skip_available,
+          skip_reason: flags.skip_reason,
+          undoable: flags.undoable,
+          is_skipped: flags.is_skipped,
         }
       })
 

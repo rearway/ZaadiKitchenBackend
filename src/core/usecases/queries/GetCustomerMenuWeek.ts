@@ -1,21 +1,17 @@
 import type { Deps } from '../../entitygateway/index.js'
-import { getSaudiWorkWeekBounds, getNextSaudiWorkWeekBounds, getDayLabel, formatWeekRangeLabel, isAfterSkipCutoff } from '../services/weekUtils.js'
+import {
+  getSaudiWorkWeekBounds,
+  getNextSaudiWorkWeekBounds,
+  getDayLabel,
+  formatWeekRangeLabel,
+} from '../services/weekUtils.js'
+import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface GetCustomerMenuWeekInput {
   userId: string
   mealType?: 'all' | 'executive' | 'salad'
 }
-
-type SkipReason =
-  | 'past_cutoff'
-  | 'skip_limit_reached'
-  | 'not_subscribed'
-  | 'subscription_paused'
-  | 'subscription_expired'
-  | 'subscription_cancelled'
-  | 'already_skipped'
-  | 'meal_type_mismatch'
-  | null
 
 type CardState = 'today' | 'upcoming' | 'past' | 'skipped'
 
@@ -31,7 +27,9 @@ interface MealCard {
   card_state: CardState
   is_today: boolean
   skip_available: boolean
-  skip_reason: SkipReason
+  undoable: boolean
+  is_skipped: boolean
+  skip_reason: string | null
 }
 
 interface WeekSection {
@@ -53,8 +51,11 @@ function buildDayLabel(deliveryDate: string, isToday: boolean): string {
 }
 
 export function makeUC(deps: Deps) {
-  return async function getCustomerMenuWeek(input: GetCustomerMenuWeekInput): Promise<GetCustomerMenuWeekOutput> {
-    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } = deps
+  return async function getCustomerMenuWeek(
+    input: GetCustomerMenuWeekInput
+  ): Promise<GetCustomerMenuWeekOutput> {
+    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } =
+      deps
 
     try {
       const now = new Date()
@@ -62,10 +63,17 @@ export function makeUC(deps: Deps) {
       const thisWeek = getSaudiWorkWeekBounds(now)
       const nextWeek = getNextSaudiWorkWeekBounds(now)
 
-      const [sub, allSlots] = await Promise.all([
-        subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
-        menuWeekLoader.getMenuForDateRange(thisWeek.dateFrom, nextWeek.dateTo),
-      ])
+      let sub = await subscriptionLoader.getActiveSubscriptionByUserId(
+        input.userId
+      )
+      if (sub) {
+        sub = await ensurePauseStatus(deps, sub)
+      }
+
+      const allSlots = await menuWeekLoader.getMenuForDateRange(
+        thisWeek.dateFrom,
+        nextWeek.dateTo
+      )
 
       const deliveryDays = sub
         ? await deliveryDayLoader.getDeliveryDaysBySubscription(sub.id, {
@@ -75,53 +83,33 @@ export function makeUC(deps: Deps) {
         : []
       const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
 
-      const subStatus = sub?.status ?? null
       const mealTypeFilter = input.mealType ?? 'all'
 
       const toCard = (slot: (typeof allSlots)[0]): MealCard | null => {
         if (!slot.meal) return null
-        if (mealTypeFilter !== 'all' && slot.meal.mealType !== mealTypeFilter) return null
+        if (
+          mealTypeFilter !== 'all' &&
+          slot.meal.mealType !== mealTypeFilter
+        ) {
+          return null
+        }
 
         const isToday = slot.deliveryDate === todayStr
         const isPast = slot.deliveryDate < todayStr
-        const isSkipped = subStatus === 'active' && statusByDate.get(slot.deliveryDate) === 'skipped'
+        const dayStatus = statusByDate.get(slot.deliveryDate) ?? null
+        const flags = resolveDayActionFlags({
+          subscription: sub,
+          deliveryDate: slot.deliveryDate,
+          mealType: slot.meal.mealType,
+          dayStatus,
+          now,
+        })
 
         let card_state: CardState
-        if (isSkipped) card_state = 'skipped'
+        if (flags.is_skipped) card_state = 'skipped'
         else if (isPast) card_state = 'past'
         else if (isToday) card_state = 'today'
         else card_state = 'upcoming'
-
-        let skip_available = false
-        let skip_reason: SkipReason = null
-
-        if (!subStatus || subStatus === null) {
-          skip_reason = 'not_subscribed'
-        } else if (subStatus === 'expired') {
-          skip_reason = 'subscription_expired'
-        } else if (subStatus === 'cancelled') {
-          skip_reason = 'subscription_cancelled'
-        } else if (subStatus === 'paused') {
-          skip_reason = 'subscription_paused'
-        } else if (subStatus === 'active') {
-          const slotMatchesSubscription =
-            slot.meal.mealType === sub!.mealType
-          if (!slotMatchesSubscription) {
-            skip_available = false
-            skip_reason = 'meal_type_mismatch'
-          } else if (isSkipped) {
-            skip_available = false
-            skip_reason = 'already_skipped'
-          } else if (isPast) {
-            skip_reason = 'past_cutoff'
-          } else if (isAfterSkipCutoff(slot.deliveryDate, now)) {
-            skip_reason = 'past_cutoff'
-          } else if (sub!.skipDaysUsed >= sub!.skipDaysAllowed) {
-            skip_reason = 'skip_limit_reached'
-          } else {
-            skip_available = true
-          }
-        }
 
         return {
           meal_id: slot.meal.id,
@@ -134,19 +122,29 @@ export function makeUC(deps: Deps) {
           day_label: buildDayLabel(slot.deliveryDate, isToday),
           card_state,
           is_today: isToday,
-          skip_available,
-          skip_reason,
+          skip_available: flags.skip_available,
+          undoable: flags.undoable,
+          is_skipped: flags.is_skipped,
+          skip_reason: flags.skip_reason,
         }
       }
 
       const thisWeekSlots = allSlots
-        .filter(s => s.deliveryDate >= thisWeek.dateFrom && s.deliveryDate <= thisWeek.dateTo)
+        .filter(
+          s =>
+            s.deliveryDate >= thisWeek.dateFrom &&
+            s.deliveryDate <= thisWeek.dateTo
+        )
         .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
         .map(toCard)
         .filter((c): c is MealCard => c !== null)
 
       const nextWeekSlots = allSlots
-        .filter(s => s.deliveryDate >= nextWeek.dateFrom && s.deliveryDate <= nextWeek.dateTo)
+        .filter(
+          s =>
+            s.deliveryDate >= nextWeek.dateFrom &&
+            s.deliveryDate <= nextWeek.dateTo
+        )
         .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
         .map(toCard)
         .filter((c): c is MealCard => c !== null)
@@ -166,7 +164,10 @@ export function makeUC(deps: Deps) {
         },
       }
     } catch (error) {
-      logger.error('GetCustomerMenuWeek failed', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'GetCustomerMenuWeek failed',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }

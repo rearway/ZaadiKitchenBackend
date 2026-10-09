@@ -12,8 +12,16 @@ const PAST_DATE = '2020-01-06' // Monday in the past — cutoff long passed
 
 describe('SkipDelivery', () => {
   function makeDepsWithSub(subOverrides = {}, dayOverrides = {}) {
-    const sub = makeSubscription(subOverrides)
-    const day = makeDeliveryDay({ subscriptionId: sub.id, date: FAR_FUTURE_DATE, ...dayOverrides })
+    const sub = makeSubscription({
+      endDate: FAR_FUTURE_DATE,
+      totalMealDays: 22,
+      ...subOverrides,
+    })
+    const day = makeDeliveryDay({
+      subscriptionId: sub.id,
+      date: FAR_FUTURE_DATE,
+      ...dayOverrides,
+    })
 
     return buildDeps({
       subscriptionLoader: {
@@ -27,10 +35,23 @@ describe('SkipDelivery', () => {
       deliveryDayPersistor: {
         ...buildDeps().deliveryDayPersistor,
         updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
+        bulkCreateDeliveryDays: jest.fn().mockImplementation(async days =>
+          days.map((d: Record<string, unknown>, i: number) =>
+            makeDeliveryDay({ id: `makeup-${i}`, ...d })
+          )
+        ),
       },
       subscriptionPersistor: {
         ...buildDeps().subscriptionPersistor,
         updateSubscription: jest.fn().mockResolvedValue(undefined),
+      },
+      publicHolidayLoader: {
+        ...buildDeps().publicHolidayLoader,
+        getHolidayDates: jest.fn().mockResolvedValue([]),
+      },
+      auditLogPersistor: {
+        ...buildDeps().auditLogPersistor,
+        createAuditLog: jest.fn().mockResolvedValue({}),
       },
     })
   }
@@ -46,28 +67,13 @@ describe('SkipDelivery', () => {
     expect(result.undoable).toBe(true)
     expect(result.skip_days_used).toBe(1)
     expect(result.skip_days_remaining).toBe(65)
+    expect(result.makeup_date).toBeTruthy()
   })
 
   it('updates the delivery day status to skipped', async () => {
+    const deps = makeDepsWithSub()
     const day = makeDeliveryDay({ id: 'dd-abc', date: FAR_FUTURE_DATE })
-    const deps = buildDeps({
-      subscriptionLoader: {
-        ...buildDeps().subscriptionLoader,
-        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(makeSubscription()),
-      },
-      deliveryDayLoader: {
-        ...buildDeps().deliveryDayLoader,
-        getDeliveryDayByDate: jest.fn().mockResolvedValue(day),
-      },
-      deliveryDayPersistor: {
-        ...buildDeps().deliveryDayPersistor,
-        updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
-      },
-      subscriptionPersistor: {
-        ...buildDeps().subscriptionPersistor,
-        updateSubscription: jest.fn().mockResolvedValue(undefined),
-      },
-    })
+    ;(deps.deliveryDayLoader.getDeliveryDayByDate as jest.Mock).mockResolvedValue(day)
     const skipDelivery = makeUC(deps)
 
     await skipDelivery({ userId: 'user-uuid-1', deliveryDate: FAR_FUTURE_DATE })
@@ -75,34 +81,48 @@ describe('SkipDelivery', () => {
     expect(deps.deliveryDayPersistor.updateDeliveryDayStatus).toHaveBeenCalledWith('dd-abc', 'skipped')
   })
 
-  it('increments both skipDaysUsed and skippedCount on the subscription', async () => {
-    const sub = makeSubscription({ skipDaysUsed: 3, skippedCount: 3 })
-    const deps = buildDeps({
-      subscriptionLoader: {
-        ...buildDeps().subscriptionLoader,
-        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
-      },
-      deliveryDayLoader: {
-        ...buildDeps().deliveryDayLoader,
-        getDeliveryDayByDate: jest.fn().mockResolvedValue(makeDeliveryDay({ date: FAR_FUTURE_DATE })),
-      },
-      deliveryDayPersistor: {
-        ...buildDeps().deliveryDayPersistor,
-        updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
-      },
-      subscriptionPersistor: {
-        ...buildDeps().subscriptionPersistor,
-        updateSubscription: jest.fn().mockResolvedValue(undefined),
-      },
+  it('rolls a try_it skip forward to the next working day', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-10-08T10:00:00Z')) // before Oct 12 cutoff
+
+    const tryItDate = '2026-10-12' // Monday
+    const deps = makeDepsWithSub({
+      skipDaysUsed: 0,
+      skipDaysAllowed: 1,
+      skippedCount: 0,
+      totalMealDays: 1,
+      endDate: tryItDate,
+      mealType: 'executive',
     })
+    ;(deps.deliveryDayLoader.getDeliveryDayByDate as jest.Mock).mockResolvedValue(
+      makeDeliveryDay({ date: tryItDate, status: 'scheduled' })
+    )
     const skipDelivery = makeUC(deps)
 
-    await skipDelivery({ userId: 'user-uuid-1', deliveryDate: FAR_FUTURE_DATE })
+    const result = await skipDelivery({ userId: 'user-uuid-1', deliveryDate: tryItDate })
 
-    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
-      sub.id,
-      expect.objectContaining({ skipDaysUsed: 4, skippedCount: 4 })
+    // Monday → next working day Tuesday
+    expect(result.makeup_date).toBe('2026-10-13')
+    expect(deps.deliveryDayPersistor.bulkCreateDeliveryDays).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: '2026-10-13',
+          status: 'scheduled',
+          mealType: 'executive',
+        }),
+      ])
     )
+    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        skipDaysUsed: 1,
+        skippedCount: 1,
+        totalMealDays: 2,
+        endDate: '2026-10-13',
+      })
+    )
+
+    jest.useRealTimers()
   })
 
   it('throws ResourceNotFoundError when the user has no active subscription', async () => {

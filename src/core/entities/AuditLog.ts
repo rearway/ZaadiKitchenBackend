@@ -2,6 +2,7 @@ export type AuditLogAction =
   | 'skip_delivery'
   | 'undo_skip_delivery'
   | 'pause_subscription'
+  | 'cancel_pause'
   | 'resume_subscription'
   | 'cancel_subscription'
   | 'expire_subscription'

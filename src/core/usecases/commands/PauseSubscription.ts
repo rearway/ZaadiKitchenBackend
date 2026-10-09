@@ -1,6 +1,16 @@
 import { Deps } from '../../entitygateway/index.js'
 import { todayKSA } from '../services/revenueUtils.js'
-import { compareDateStrings } from '../services/weekUtils.js'
+import { compareDateStrings, isAfterSkipCutoff } from '../services/weekUtils.js'
+import {
+  countWorkingDaysInRange,
+  flexUsedUpdate,
+  getFlexDaysAllowed,
+  getFlexDaysRemaining,
+  getFlexDaysUsed,
+  listWorkingDaysInRange,
+} from '../services/flexDays.js'
+import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import { addDaysUtc, toYYYYMMDD } from '../services/deliveryScheduleUtils.js'
 
 export interface PauseSubscriptionInput {
   userId: string
@@ -14,14 +24,13 @@ export interface PauseSubscriptionOutput {
   paused_from: string
   paused_until: string
   pause_ceiling_date: string
+  pause_scheduled: boolean
+  paused_days: string[]
   pause_days_used: number
   pause_days_remaining: number
-}
-
-function daysBetween(from: string, to: string): number {
-  const a = new Date(from + 'T00:00:00Z')
-  const b = new Date(to + 'T00:00:00Z')
-  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  skip_days_used: number
+  skip_days_remaining: number
+  skip_pause_days_remaining: number
 }
 
 export function makeUC(deps: Deps) {
@@ -35,31 +44,44 @@ export function makeUC(deps: Deps) {
       deliveryDayLoader,
       deliveryDayPersistor,
       auditLogPersistor,
+      publicHolidayLoader,
     } = deps
     try {
       const { userId, startDate, endDate } = input
 
-      const subscription =
+      let subscription =
         await subscriptionLoader.getActiveSubscriptionByUserId(userId)
       if (!subscription) {
         const { ResourceNotFoundError } =
           await import('../../../shared/errors/index.js')
         throw new ResourceNotFoundError('Subscription')
       }
-
-      if (subscription.status !== 'active') {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError('Only active subscriptions can be paused.')
-      }
+      subscription = await ensurePauseStatus(deps, subscription)
 
       const { ValidationError } =
         await import('../../../shared/errors/index.js')
 
+      if (subscription.status !== 'active') {
+        throw new ValidationError(
+          'Only active subscriptions can schedule a pause.'
+        )
+      }
+
+      if (subscription.pausedFrom && subscription.pausedUntil) {
+        throw new ValidationError(
+          'You already have a pause scheduled. Cancel it before scheduling another.'
+        )
+      }
+
       if (compareDateStrings(endDate, startDate) < 0) {
-        throw new ValidationError('Pause end date must be on or after the start date.', {
-          fields: { end_date: 'Pause end date must be on or after the start date.' },
-        })
+        throw new ValidationError(
+          'Pause end date must be on or after the start date.',
+          {
+            fields: {
+              end_date: 'Pause end date must be on or after the start date.',
+            },
+          }
+        )
       }
 
       const today = todayKSA()
@@ -89,28 +111,50 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      const requestedDays = daysBetween(startDate, endDate)
-      if (requestedDays < 1) {
-        throw new ValidationError('Invalid pause date range.')
+      if (isAfterSkipCutoff(startDate)) {
+        throw new ValidationError(
+          'The cutoff for the pause start day has passed. Choose a later start date.',
+          {
+            fields: {
+              start_date:
+                'The cutoff (6 PM KSA the day before) has passed for this date.',
+            },
+          }
+        )
       }
-      const pauseDaysRemaining =
-        subscription.pauseDaysAllowed - subscription.pauseDaysUsed
 
-      if (requestedDays > pauseDaysRemaining) {
+      const holidayTo = toYYYYMMDD(
+        addDaysUtc(new Date(endDate + 'T00:00:00Z'), 1)
+      )
+      const holidayDates = new Set(
+        await publicHolidayLoader.getHolidayDates(startDate, holidayTo)
+      )
+
+      const workingDays = listWorkingDaysInRange(
+        startDate,
+        endDate,
+        holidayDates
+      )
+      const requestedWorkingDays = workingDays.length
+      if (requestedWorkingDays < 1) {
+        throw new ValidationError(
+          'Pause range must include at least one working day (Sun–Thu).'
+        )
+      }
+
+      const flexRemaining = getFlexDaysRemaining(subscription)
+      if (requestedWorkingDays > flexRemaining) {
         const { PauseLimitExceededError } =
           await import('../../../shared/errors/index.js')
         throw new PauseLimitExceededError({
-          pause_days_remaining: pauseDaysRemaining,
+          pause_days_remaining: flexRemaining,
+          skip_pause_days_remaining: flexRemaining,
         })
       }
 
-      // Mark delivery days in range as paused
       const days = await deliveryDayLoader.getDeliveryDaysBySubscription(
         subscription.id,
-        {
-          from: startDate,
-          to: endDate,
-        }
+        { from: startDate, to: endDate }
       )
       for (const day of days) {
         if (day.status === 'scheduled') {
@@ -118,31 +162,44 @@ export function makeUC(deps: Deps) {
         }
       }
 
-      const newPauseDaysUsed = subscription.pauseDaysUsed + requestedDays
-
-      await subscriptionPersistor.updateSubscription(subscription.id, {
-        status: 'paused',
-        pausedFrom: startDate,
-        pausedUntil: endDate,
-        pauseCeilingDate: endDate,
-        pauseDaysUsed: newPauseDaysUsed,
-      })
+      const newFlexUsed = getFlexDaysUsed(subscription) + requestedWorkingDays
+      // Stay active until pause-start cutoff; ensurePauseStatus will flip later.
+      const updated = await subscriptionPersistor.updateSubscription(
+        subscription.id,
+        {
+          status: 'active',
+          pausedFrom: startDate,
+          pausedUntil: endDate,
+          pauseCeilingDate: endDate,
+          ...flexUsedUpdate(newFlexUsed),
+        }
+      )
 
       await auditLogPersistor.createAuditLog({
         userId,
         subscriptionId: subscription.id,
         action: 'pause_subscription',
-        metadata: { paused_from: startDate, paused_until: endDate },
+        metadata: {
+          paused_from: startDate,
+          paused_until: endDate,
+          working_days: requestedWorkingDays,
+        },
       })
 
+      const remaining = getFlexDaysAllowed(subscription) - newFlexUsed
       return {
-        subscription_id: subscription.id,
-        status: 'paused',
+        subscription_id: updated?.id ?? subscription.id,
+        status: updated?.status ?? 'active',
         paused_from: startDate,
         paused_until: endDate,
         pause_ceiling_date: endDate,
-        pause_days_used: newPauseDaysUsed,
-        pause_days_remaining: subscription.pauseDaysAllowed - newPauseDaysUsed,
+        pause_scheduled: true,
+        paused_days: workingDays,
+        pause_days_used: newFlexUsed,
+        pause_days_remaining: remaining,
+        skip_days_used: newFlexUsed,
+        skip_days_remaining: remaining,
+        skip_pause_days_remaining: remaining,
       }
     } catch (error) {
       logger.error(

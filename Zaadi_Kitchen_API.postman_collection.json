@@ -1305,6 +1305,32 @@
           "response": []
         },
         {
+          "name": "Cancel Scheduled Pause",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/pause/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "pause",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Resume Subscription",
           "request": {
             "method": "POST",
