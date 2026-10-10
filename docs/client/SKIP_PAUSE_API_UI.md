@@ -48,7 +48,7 @@ Present on **deliveries**, **menu/week cards**, **home/this-week cards**, **meal
 | `is_skipped` | boolean | Skipped styling when `true` |
 | `skip_reason` | string \| null | Tooltip / disabled state when skip blocked; `null` if skip allowed |
 
-`skip_reason` values: `past_cutoff`, `skip_limit_reached`, `not_subscribed`, `subscription_paused`, `subscription_expired`, `subscription_cancelled`, `already_skipped`, `meal_type_mismatch`, `day_paused`.
+`skip_reason` values: `past_cutoff`, `skip_limit_reached`, `not_subscribed`, `subscription_paused`, `subscription_expired`, `subscription_cancelled` (cancelled **after** `end_date` only — in-cycle cancel behaves like active for skip/pause), `already_skipped`, `meal_type_mismatch`, `day_paused`.
 
 **Deliveries only:** `skippable` is deprecated — mirror of `skip_available`.
 

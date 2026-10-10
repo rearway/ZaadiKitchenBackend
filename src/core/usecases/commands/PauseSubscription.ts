@@ -10,6 +10,7 @@ import {
   listWorkingDaysInRange,
 } from '../services/flexDays.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import { canUseSkipAndPause } from '../services/subscriptionServicePeriod.js'
 import { addDaysUtc, toYYYYMMDD } from '../services/deliveryScheduleUtils.js'
 
 export interface PauseSubscriptionInput {
@@ -61,7 +62,7 @@ export function makeUC(deps: Deps) {
       const { ValidationError } =
         await import('../../../shared/errors/index.js')
 
-      if (subscription.status !== 'active') {
+      if (!canUseSkipAndPause(subscription)) {
         throw new ValidationError(
           'Only active subscriptions can schedule a pause.'
         )
@@ -167,7 +168,8 @@ export function makeUC(deps: Deps) {
       const updated = await subscriptionPersistor.updateSubscription(
         subscription.id,
         {
-          status: 'active',
+          status:
+            subscription.status === 'cancelled' ? 'cancelled' : 'active',
           pausedFrom: startDate,
           pausedUntil: endDate,
           pauseCeilingDate: endDate,

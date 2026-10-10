@@ -62,7 +62,7 @@ export class SubscriptionPersistenceService
       { status: 'expired' },
       {
         where: {
-          status: ['active', 'paused'],
+          status: ['active', 'paused', 'cancelled'],
           endDate: { [Op.lt]: beforeDate },
         },
       }

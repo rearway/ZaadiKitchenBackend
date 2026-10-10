@@ -1,6 +1,7 @@
 import type { Subscription } from '../../entities/Subscription.js'
 import { isAfterSkipCutoff } from './weekUtils.js'
 import { getFlexDaysRemaining } from './flexDays.js'
+import { isSubscriptionInServicePeriod } from './subscriptionServicePeriod.js'
 
 export type DaySkipReason =
   | 'past_cutoff'
@@ -67,7 +68,7 @@ export function resolveDayActionFlags(
     }
   }
 
-  if (sub.status === 'cancelled') {
+  if (sub.status === 'cancelled' && !isSubscriptionInServicePeriod(sub)) {
     return {
       skip_available: false,
       undoable: false,

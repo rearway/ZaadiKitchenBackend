@@ -141,7 +141,7 @@ export const makeSubscription = (overrides: Record<string, unknown> = {}) => ({
   deliveredCount: 0,
   skippedCount: 0,
   startDate: '2025-06-01',
-  endDate: '2025-07-01',
+  endDate: '2099-12-31',
   skipDaysAllowed: 66,
   skipDaysUsed: 0,
   pauseDaysAllowed: 66,

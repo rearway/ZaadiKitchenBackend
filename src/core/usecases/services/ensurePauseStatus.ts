@@ -1,6 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { Subscription } from '../../entities/Subscription.js'
 import { isAfterSkipCutoff } from './weekUtils.js'
+import { canEnterScheduledPause } from './subscriptionServicePeriod.js'
 
 /**
  * If an active subscription has a scheduled pause whose start-day cutoff
@@ -12,7 +13,7 @@ export async function ensurePauseStatus(
   now: Date = new Date()
 ): Promise<Subscription> {
   if (
-    subscription.status !== 'active' ||
+    !canEnterScheduledPause(subscription) ||
     !subscription.pausedFrom ||
     !subscription.pausedUntil
   ) {
@@ -20,6 +21,10 @@ export async function ensurePauseStatus(
   }
 
   if (!isAfterSkipCutoff(subscription.pausedFrom, now)) {
+    return subscription
+  }
+
+  if (subscription.status === 'cancelled') {
     return subscription
   }
 
@@ -31,7 +36,7 @@ export async function ensurePauseStatus(
 /** True when pause is scheduled but start cutoff has not passed yet. */
 export function isPauseScheduled(sub: Subscription, now: Date = new Date()): boolean {
   return (
-    sub.status === 'active' &&
+    canEnterScheduledPause(sub) &&
     !!sub.pausedFrom &&
     !!sub.pausedUntil &&
     !isAfterSkipCutoff(sub.pausedFrom, now)

@@ -13,6 +13,7 @@ import {
   getFlexDaysUsed,
 } from '../services/flexDays.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import { canUseSkipAndPause } from '../services/subscriptionServicePeriod.js'
 
 export interface SkipDeliveryInput {
   userId: string
@@ -53,10 +54,12 @@ export function makeUC(deps: Deps) {
       }
       subscription = await ensurePauseStatus(deps, subscription)
 
-      if (subscription.status !== 'active') {
+      if (!canUseSkipAndPause(subscription)) {
         const { ValidationError } =
           await import('../../../shared/errors/index.js')
-        throw new ValidationError('Only active subscriptions can skip deliveries.')
+        throw new ValidationError(
+          'Only active subscriptions can skip deliveries.'
+        )
       }
 
       if (isAfterSkipCutoff(deliveryDate)) {

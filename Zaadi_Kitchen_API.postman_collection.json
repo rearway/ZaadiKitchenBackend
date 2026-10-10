@@ -1607,7 +1607,8 @@
                   "value": "20"
                 }
               ]
-            }
+            },
+            "description": "Confirmed orders only. `category: subscription_payment`, `type: debit`, `payment_method_label`, `label` (plan · month), `amount_sar`."
           },
           "response": []
         },
@@ -1642,7 +1643,8 @@
                   "value": "20"
                 }
               ]
-            }
+            },
+            "description": "Rewarded referrals for referrer. `category: referral_reward`, `type: credit`, `label` (Referral reward — name), `description` (date · 10% of SAR base)."
           },
           "response": []
         },

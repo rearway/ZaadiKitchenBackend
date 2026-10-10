@@ -161,11 +161,33 @@ describe('PauseSubscription', () => {
     })
   })
 
-  it('throws ValidationError when the subscription is cancelled', async () => {
-    const deps = makeActiveDeps({ status: 'cancelled' })
+  it('allows scheduling pause while cancelled but still in service period', async () => {
+    const deps = makeActiveDeps({
+      status: 'cancelled',
+      endDate: '2099-12-31',
+    })
     const pauseSubscription = makeUC(deps)
 
-    await expect(pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })).rejects.toMatchObject({
+    const result = await pauseSubscription({
+      userId: 'user-uuid-1',
+      startDate: START,
+      endDate: END,
+    })
+
+    expect(result.pause_scheduled).toBe(true)
+    expect(result.status).toBe('cancelled')
+  })
+
+  it('throws ValidationError when cancelled and past end date', async () => {
+    const deps = makeActiveDeps({
+      status: 'cancelled',
+      endDate: '2020-01-01',
+    })
+    const pauseSubscription = makeUC(deps)
+
+    await expect(
+      pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })
+    ).rejects.toMatchObject({
       errorCode: 'VALIDATION_ERROR',
       statusCode: 400,
     })
@@ -234,7 +256,7 @@ describe('PauseSubscription', () => {
   it('rejects pause start in the past', async () => {
     const deps = makeActiveDeps({
       startDate: '2020-01-01',
-      endDate: '2020-12-31',
+      endDate: '2099-12-31',
     })
     const pauseSubscription = makeUC(deps)
 

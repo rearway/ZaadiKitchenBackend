@@ -6,6 +6,10 @@ import {
   ensurePauseStatus,
   isPauseScheduled,
 } from '../services/ensurePauseStatus.js'
+import {
+  canUseSkipAndPause,
+  isSubscriptionInServicePeriod,
+} from '../services/subscriptionServicePeriod.js'
 
 export interface GetHomeInput {
   userId: string
@@ -73,7 +77,11 @@ function buildBanner(
     }
   }
 
-  if (status === 'active' && sub) {
+  if (
+    sub &&
+    (status === 'active' ||
+      (status === 'cancelled' && isSubscriptionInServicePeriod(sub)))
+  ) {
     const daysRemaining = Math.max(
       0,
       sub.totalMealDays - sub.deliveredCount - sub.skippedCount
@@ -89,6 +97,9 @@ function buildBanner(
       end_date_label: formatEndDateLabel(sub.endDate),
       location_label: locationLabel,
       location_edit_action: 'navigate_edit_location',
+      ...(status === 'cancelled'
+        ? { status_pill: 'Cancelled' as const }
+        : {}),
     }
   }
 
@@ -130,9 +141,10 @@ function buildBanner(
 }
 
 function buildQuickActions(
-  status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled'
+  status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
+  sub: Subscription | null
 ): Record<string, unknown>[] | null {
-  if (status === 'active') {
+  if (status === 'active' || (sub != null && canUseSkipAndPause(sub))) {
     return [
       {
         id: 'skip',
@@ -178,8 +190,13 @@ function buildPlans(
   status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
   sub: Subscription | null
 ) {
-  const isRenewing = status === 'expired' || status === 'cancelled'
-  const isActive = status === 'active' || status === 'paused'
+  const cancelledOutOfService =
+    status === 'cancelled' && sub != null && !isSubscriptionInServicePeriod(sub)
+  const isRenewing = status === 'expired' || cancelledOutOfService
+  const isActive =
+    status === 'active' ||
+    status === 'paused' ||
+    (status === 'cancelled' && sub != null && isSubscriptionInServicePeriod(sub))
 
   return plans.map(p => {
     const isCurrentPlan = isActive && sub?.planId === p.id
@@ -218,8 +235,12 @@ export function makeUC(deps: Deps) {
 
       const sub = rawSub ? await ensurePauseStatus(deps, rawSub) : null
       const status = getSubscriptionStatus(sub)
-      const needsLocation = status === 'active'
-      const needsWallet = status === 'active' || status === 'expired'
+      const needsLocation =
+        status === 'active' || (sub != null && canUseSkipAndPause(sub))
+      const needsWallet =
+        status === 'active' ||
+        status === 'expired' ||
+        (sub != null && canUseSkipAndPause(sub))
       const flexRemaining = sub ? getFlexDaysRemaining(sub) : 0
 
       const [location, walletBalance] = await Promise.all([
@@ -233,7 +254,8 @@ export function makeUC(deps: Deps) {
       const locEntity = location ? { ...location, areaName: area?.name } : null
 
       const subOutput = sub
-        ? status === 'active'
+        ? status === 'active' ||
+          (status === 'cancelled' && canUseSkipAndPause(sub))
           ? {
               subscription_id: sub.id,
               plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
@@ -290,7 +312,7 @@ export function makeUC(deps: Deps) {
           : null,
         wallet_balance_sar: walletBalance,
         banner: buildBanner(status, sub, firstName, locEntity),
-        quick_actions: buildQuickActions(status),
+        quick_actions: buildQuickActions(status, sub),
         plans: buildPlans(plans, status, sub),
       }
     } catch (error) {

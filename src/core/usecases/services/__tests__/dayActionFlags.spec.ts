@@ -134,4 +134,43 @@ describe('resolveDayActionFlags', () => {
       skip_reason: 'subscription_paused',
     })
   })
+
+  it('allows skip when cancelled but still in service period', () => {
+    const sub = makeSubscription({
+      status: 'cancelled',
+      mealType: 'executive',
+      endDate: '2099-12-31',
+      skipDaysUsed: 0,
+      pauseDaysUsed: 0,
+    })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'executive',
+        dayStatus: 'scheduled',
+      })
+    ).toMatchObject({
+      skip_available: true,
+      skip_reason: null,
+    })
+  })
+
+  it('blocks skip when cancelled and past end date', () => {
+    const sub = makeSubscription({
+      status: 'cancelled',
+      endDate: '2020-01-01',
+    })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'executive',
+        dayStatus: 'scheduled',
+      })
+    ).toMatchObject({
+      skip_available: false,
+      skip_reason: 'subscription_cancelled',
+    })
+  })
 })

@@ -2,6 +2,10 @@ import type { Deps } from '../../entitygateway/index.js'
 import { getSaudiWorkWeekBounds, getDayLabel } from '../services/weekUtils.js'
 import { resolveDayActionFlags } from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import {
+  canUseSkipAndPause,
+  isSubscriptionInServicePeriod,
+} from '../services/subscriptionServicePeriod.js'
 
 export interface GetHomeThisWeekInput {
   userId: string
@@ -70,6 +74,7 @@ export function makeUC(deps: Deps) {
       const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
 
       const subStatus = sub?.status ?? 'none'
+      const flexLikeActive = sub != null && canUseSkipAndPause(sub)
 
       const cards = slots
         .filter(s => s.meal && s.deliveryDate >= todayStr)
@@ -108,7 +113,7 @@ export function makeUC(deps: Deps) {
           }
 
           if (
-            subStatus === 'active' &&
+            flexLikeActive &&
             !isPast &&
             !flags.is_skipped &&
             card_state !== 'browse_only'
@@ -116,7 +121,12 @@ export function makeUC(deps: Deps) {
             cta_label = flags.skip_available ? 'Skip →' : null
           } else if (subStatus === 'none' || subStatus === undefined) {
             cta_label = 'Subscribe →'
-          } else if (subStatus === 'expired' || subStatus === 'cancelled') {
+          } else if (
+            subStatus === 'expired' ||
+            (subStatus === 'cancelled' &&
+              sub != null &&
+              !isSubscriptionInServicePeriod(sub))
+          ) {
             cta_label = 'Renew →'
           }
 
