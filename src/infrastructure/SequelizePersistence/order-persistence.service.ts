@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { OrderLoader, OrderPersistor } from '../../core/entitygateway/Order.js'
+import {
+  OrderLoader,
+  OrderPersistor,
+  type ConfirmedOrderBillingRow,
+} from '../../core/entitygateway/Order.js'
 import { Order } from '../../core/entities/Order.js'
-import { OrderModel } from './models/index.js'
+import { OrderModel, PlanModel } from './models/index.js'
 
 @Injectable()
 export class OrderPersistenceService implements OrderLoader, OrderPersistor {
@@ -23,6 +27,40 @@ export class OrderPersistenceService implements OrderLoader, OrderPersistor {
       where: { userId, promoCode: code, status: 'confirmed' },
     })
     return count > 0
+  }
+
+  async getConfirmedOrdersForBilling(
+    userId: string,
+    pagination: { page: number; perPage: number }
+  ): Promise<{ orders: ConfirmedOrderBillingRow[]; total: number }> {
+    const offset = (pagination.page - 1) * pagination.perPage
+    const { rows, count } = await OrderModel.findAndCountAll({
+      where: { userId, status: 'confirmed' },
+      order: [['createdAt', 'DESC']],
+      limit: pagination.perPage,
+      offset,
+    })
+
+    const planIds = [...new Set(rows.map(r => r.planId))]
+    const plans =
+      planIds.length > 0
+        ? await PlanModel.findAll({
+            where: { id: planIds },
+            attributes: ['id', 'name'],
+          })
+        : []
+    const planNameById = new Map(plans.map(p => [p.id, p.name]))
+
+    const orders: ConfirmedOrderBillingRow[] = rows.map(row => ({
+      orderId: row.id,
+      planName: planNameById.get(row.planId) ?? 'Plan',
+      totalPaidSar: Number(row.totalPaidSar),
+      planPriceSar: Number(row.planPriceSar),
+      paymentMethodLabel: row.paymentMethodLabel,
+      createdAt: row.createdAt,
+    }))
+
+    return { orders, total: count }
   }
 
   async createOrder(

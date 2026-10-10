@@ -199,6 +199,46 @@ export class UserController {
     })
   }
 
+  @Get('billing/payments')
+  @ApiOperation({
+    summary: 'Subscription payment history (confirmed orders) for billing screen',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-payment-transactions')
+  async getPaymentTransactions(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string
+  ) {
+    return this.useCases.queries.getPaymentTransactions({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    })
+  }
+
+  @Get('billing/referrals')
+  @ApiOperation({
+    summary: 'Referral reward credits for billing screen',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-referral-transactions')
+  async getReferralTransactions(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string
+  ) {
+    return this.useCases.queries.getReferralTransactions({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    })
+  }
+
   @Get('referral')
   @ApiOperation({
     summary: 'Get referral code and stats (alias for GET /referrals/me)',

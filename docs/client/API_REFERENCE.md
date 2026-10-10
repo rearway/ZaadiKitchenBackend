@@ -153,7 +153,9 @@ The `operation` field maps to the server handler name for support correlation.
 | GET | `/referrals/me` | JWT | User referral code & stats |
 | POST | `/referrals/validate` | JWT | Validate code at checkout |
 | GET | `/users/wallet` | JWT | Wallet balance |
-| GET | `/users/wallet/transactions` | JWT | Paginated ledger |
+| GET | `/users/wallet/transactions` | JWT | Paginated wallet ledger (credits/debits) |
+| GET | `/users/billing/payments` | JWT | Subscription payments (`category: subscription_payment`, `type: debit`) |
+| GET | `/users/billing/referrals` | JWT | Referral rewards (`category: referral_reward`, `type: credit`) |
 | GET | `/users/referral` | JWT | Referral summary (legacy/alternate shape) |
 
 ---

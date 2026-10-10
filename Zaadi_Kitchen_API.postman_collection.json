@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "aa123456-7890-abcd-ef12-34567890abcd",
     "name": "Zaadi Kitchen API",
-    "description": "Combined API collection. Includes Revenue Dashboard, Comms & Broadcast, extended customer filters, and meal photo_url on mobile endpoints.",
+    "description": "Combined API collection. Includes Revenue Dashboard, Comms & Broadcast, extended customer filters, meal photo_url on mobile endpoints, and Billing & Wallet (`/users/billing/payments`, `/users/billing/referrals`).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -1513,7 +1513,8 @@
       ]
     },
     {
-      "name": "Wallet & Referral",
+      "name": "Billing & Wallet",
+      "description": "JWT required. Billing History: merge `GET /users/wallet/transactions`, `GET /users/billing/payments`, and `GET /users/billing/referrals` by `created_at`. Pagination: `page`, `per_page` (max 50).",
       "item": [
         {
           "name": "Get Wallet Balance",
@@ -1559,6 +1560,77 @@
                 "users",
                 "wallet",
                 "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Paginated wallet ledger (`type` credit/debit, `amount_sar`, `label`, `created_at`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing — Subscription Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/billing/payments?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing — Referral Rewards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/billing/referrals?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "referrals"
               ],
               "query": [
                 {

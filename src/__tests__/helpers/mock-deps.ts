@@ -363,6 +363,9 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getOrderById: jest.fn().mockResolvedValue(null),
       getLastOrderByUserId: jest.fn().mockResolvedValue(null),
       hasUserUsedPromoCode: jest.fn().mockResolvedValue(false),
+      getConfirmedOrdersForBilling: jest
+        .fn()
+        .mockResolvedValue({ orders: [], total: 0 }),
     } as unknown as Deps['orderLoader'],
 
     orderPersistor: {
@@ -427,6 +430,9 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         totalEarnedSar: 0,
       }),
       getReferralHistory: jest.fn().mockResolvedValue([]),
+      getReferralRewardsForBilling: jest
+        .fn()
+        .mockResolvedValue({ rewards: [], total: 0 }),
       getReferralByCode: jest.fn().mockResolvedValue(null),
       hasUserBeenReferred: jest.fn().mockResolvedValue(false),
     } as unknown as Deps['referralLoader'],

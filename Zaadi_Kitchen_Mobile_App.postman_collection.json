@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "zk-mobile-app-001",
     "name": "Zaadi Kitchen — Mobile App",
-    "description": "Customer-facing mobile app APIs. Meal endpoints return photo_url/photoUrl where applicable. Verify OTP and Refresh Token auto-save tokens to collection variables.",
+    "description": "Customer-facing mobile app APIs. Meal endpoints return photo_url/photoUrl where applicable. Verify OTP and Refresh Token auto-save tokens to collection variables.\n\nBilling & Wallet: wallet balance + ledger, subscription payments, referral rewards (see folder Billing & Wallet).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -1381,7 +1381,8 @@
       ]
     },
     {
-      "name": "Wallet & Referral",
+      "name": "Billing & Wallet",
+      "description": "Billing & Wallet screen APIs. For **Billing History**, call wallet transactions, billing payments, and billing referrals; merge by `created_at` (newest first). Query: `page`, `per_page` (max 50).",
       "item": [
         {
           "name": "Get Wallet Balance",
@@ -1397,7 +1398,8 @@
                 "users",
                 "wallet"
               ]
-            }
+            },
+            "description": "Current wallet balance (SAR)."
           },
           "response": []
         },
@@ -1426,7 +1428,68 @@
                   "value": "20"
                 }
               ]
-            }
+            },
+            "description": "Wallet ledger entries (credits/debits). Response: `transactions[]` with `type`, `amount_sar`, `label`, `description`, `created_at` + `pagination`."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing — Subscription Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/billing/payments?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Confirmed subscription charges for Billing History.\n\nEach item: `category: subscription_payment`, `type: debit`, `label` e.g. \"Month Plan · Apr 2025\", `description` short date, `payment_method_label`, `amount_sar` (show as −SAR in UI)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing — Referral Rewards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/billing/referrals?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "referrals"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Referral rewards credited to wallet.\n\nEach item: `category: referral_reward`, `type: credit`, `label` e.g. \"Referral reward — Sara\", `description` e.g. \"Mar 30, 2025 · 10% of SAR 500\", `amount_sar` (show as +SAR in UI)."
           },
           "response": []
         }

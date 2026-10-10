@@ -4,6 +4,7 @@ import {
   ReferralLoader,
   ReferralPersistor,
   ReferralHistoryEntry,
+  type ReferralRewardBillingRow,
 } from '../../core/entitygateway/Referral.js'
 import { UserReferral } from '../../core/entities/UserReferral.js'
 import {
@@ -102,6 +103,61 @@ export class ReferralPersistenceService
         rewardCreditedSar: Number(r.rewardCreditedSar),
       }
     })
+  }
+
+  async getReferralRewardsForBilling(
+    userId: string,
+    pagination: { page: number; perPage: number }
+  ): Promise<{ rewards: ReferralRewardBillingRow[]; total: number }> {
+    const offset = (pagination.page - 1) * pagination.perPage
+    const { rows, count } = await UserReferralModel.findAndCountAll({
+      where: {
+        referrerUserId: userId,
+        isRewarded: true,
+        rewardCreditedSar: { [Op.gt]: 0 },
+      },
+      order: [['createdAt', 'DESC']],
+      limit: pagination.perPage,
+      offset,
+    })
+
+    if (rows.length === 0) {
+      return { rewards: [], total: count }
+    }
+
+    const referredUserIds = rows.map(r => r.referredUserId)
+    const referralCodes = rows.map(r => r.referralCode)
+
+    const [users, orders] = await Promise.all([
+      UserModel.findAll({
+        where: { id: { [Op.in]: referredUserIds } },
+        attributes: ['id', 'fullName'],
+      }),
+      OrderModel.findAll({
+        where: {
+          userId: { [Op.in]: referredUserIds },
+          promoCode: { [Op.in]: referralCodes },
+          status: 'confirmed',
+        },
+        attributes: ['userId', 'promoCode', 'planPriceSar'],
+      }),
+    ])
+
+    const userMap = new Map(users.map(u => [u.id, u.fullName ?? 'Unknown']))
+    const orderMap = new Map(
+      orders.map(o => [`${o.userId}:${o.promoCode}`, Number(o.planPriceSar)])
+    )
+
+    const rewards: ReferralRewardBillingRow[] = rows.map(r => ({
+      referralId: r.id,
+      referredUserName: userMap.get(r.referredUserId) ?? 'Unknown',
+      rewardCreditedSar: Number(r.rewardCreditedSar),
+      referredPlanPriceSar:
+        orderMap.get(`${r.referredUserId}:${r.referralCode}`) ?? 0,
+      creditedAt: r.createdAt,
+    }))
+
+    return { rewards, total: count }
   }
 
   async getReferralByCode(code: string): Promise<UserReferral | null> {
