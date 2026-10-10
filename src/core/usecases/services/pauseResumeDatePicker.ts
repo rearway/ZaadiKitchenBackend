@@ -9,6 +9,7 @@ import { isPauseScheduled } from './ensurePauseStatus.js'
 import { canUseSkipAndPause } from './subscriptionServicePeriod.js'
 import { compareDateStrings, isAfterSkipCutoff } from './weekUtils.js'
 import { todayKSA } from './revenueUtils.js'
+import { computeSuggestedResumeDate } from './pauseFrozenDays.js'
 
 export interface PauseDatePickerBounds {
   visible: boolean
@@ -23,6 +24,7 @@ export interface ResumeDatePickerBounds {
   visible: boolean
   min: string | null
   max: string | null
+  suggested_date: string | null
 }
 
 export interface PauseResumePickerState {
@@ -94,7 +96,7 @@ export function hasPauseStarted(
   return isAfterSkipCutoff(pausedFrom, now)
 }
 
-/** User may resume: subscription is paused, or pause-start cutoff has passed. */
+/** User may resume: status paused and pause-start cutoff has passed. */
 export function isPauseInEffect(
   subscription: Subscription,
   now: Date = new Date()
@@ -102,10 +104,10 @@ export function isPauseInEffect(
   if (!subscription.pausedFrom || !subscription.pausedUntil) {
     return false
   }
-  if (subscription.status === 'paused') {
-    return true
-  }
-  return hasPauseStarted(subscription.pausedFrom, now)
+  return (
+    subscription.status === 'paused' &&
+    hasPauseStarted(subscription.pausedFrom, now)
+  )
 }
 
 export function buildPauseResumePickerState(
@@ -165,6 +167,15 @@ export function buildPauseResumePickerState(
       visible: resumeVisible && resumeMin != null && resumeMax != null,
       min: resumeVisible && resumeMin != null ? resumeMin : null,
       max: resumeVisible && resumeMax != null ? resumeMax : null,
+      suggested_date:
+        resumeVisible && resumeMin != null && resumeMax != null
+          ? computeSuggestedResumeDate(
+              resumeMin,
+              resumeMax,
+              todayKSA(),
+              holidaySet
+            )
+          : null,
     },
     cancel_pause_available: pauseScheduled,
   }

@@ -10,6 +10,8 @@ import {
   canUseSkipAndPause,
   isSubscriptionInServicePeriod,
 } from '../services/subscriptionServicePeriod.js'
+import { buildPauseHomeLabels } from '../services/pauseFrozenDays.js'
+import { todayKSA } from '../services/revenueUtils.js'
 
 export interface GetHomeInput {
   userId: string
@@ -65,7 +67,8 @@ function buildBanner(
   status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
   sub: Subscription | null,
   firstName: string,
-  location: { buildingName: string; floor?: string; areaName?: string } | null
+  location: { buildingName: string; floor?: string; areaName?: string } | null,
+  pauseLabels: { days_frozen: number; pause_label: string } | null = null
 ): Record<string, unknown> {
   if (status === 'none') {
     return {
@@ -111,20 +114,11 @@ function buildBanner(
     }
   }
 
-  if (status === 'paused' && sub) {
-    const pausedSince = sub.pausedFrom ?? sub.updatedAt?.toString?.() ?? ''
-    const daysFrozen = pausedSince
-      ? Math.ceil((Date.now() - new Date(pausedSince).getTime()) / 86400000)
-      : 0
-    const pausedDate = pausedSince ? new Date(pausedSince) : null
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    const pauseLabel = pausedDate
-      ? `${daysFrozen} day${daysFrozen !== 1 ? 's' : ''} frozen · Paused ${pausedDate.getUTCDate()} ${months[pausedDate.getUTCMonth()]}`
-      : `${daysFrozen} days frozen`
+  if (status === 'paused' && sub && pauseLabels) {
     return {
       theme: 'black',
       status_pill: 'Paused',
-      pause_label: pauseLabel,
+      pause_label: pauseLabels.pause_label,
       primary_cta: { label: 'Resume →', action: 'open_resume_modal' },
     }
   }
@@ -224,7 +218,16 @@ function buildPlans(
 
 export function makeUC(deps: Deps) {
   return async function getHome(input: GetHomeInput): Promise<GetHomeOutput> {
-    const { logger, userLoader, subscriptionLoader, deliveryLocationLoader, deliveryAreaLoader, walletLoader, planLoader } = deps
+    const {
+      logger,
+      userLoader,
+      subscriptionLoader,
+      deliveryLocationLoader,
+      deliveryAreaLoader,
+      walletLoader,
+      planLoader,
+      publicHolidayLoader,
+    } = deps
 
     try {
       const [user, rawSub, plans] = await Promise.all([
@@ -235,6 +238,26 @@ export function makeUC(deps: Deps) {
 
       const sub = rawSub ? await ensurePauseStatus(deps, rawSub) : null
       const status = getSubscriptionStatus(sub)
+
+      let pauseHomeLabels: { days_frozen: number; pause_label: string } | null =
+        null
+      let pauseHolidaySet = new Set<string>()
+      if (sub?.pausedFrom && sub.pausedUntil) {
+        pauseHolidaySet = new Set(
+          await publicHolidayLoader.getHolidayDates(
+            sub.pausedFrom,
+            sub.pausedUntil
+          )
+        )
+        if (status === 'paused') {
+          pauseHomeLabels = buildPauseHomeLabels(
+            sub.pausedFrom,
+            sub.pausedUntil,
+            todayKSA(),
+            pauseHolidaySet
+          )
+        }
+      }
       const needsLocation =
         status === 'active' || (sub != null && canUseSkipAndPause(sub))
       const needsWallet =
@@ -273,7 +296,7 @@ export function makeUC(deps: Deps) {
               paused_from: sub.pausedFrom,
               paused_until: sub.pausedUntil,
             }
-          : status === 'paused'
+          : status === 'paused' && pauseHomeLabels
           ? {
               subscription_id: sub.id,
               plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
@@ -281,9 +304,7 @@ export function makeUC(deps: Deps) {
               paused_since: sub.pausedFrom,
               paused_from: sub.pausedFrom,
               paused_until: sub.pausedUntil,
-              days_frozen: sub.pausedFrom
-                ? Math.ceil((Date.now() - new Date(sub.pausedFrom).getTime()) / 86400000)
-                : 0,
+              days_frozen: pauseHomeLabels.days_frozen,
               pause_ceiling_date: sub.pauseCeilingDate,
               skip_days_remaining: flexRemaining,
               pause_days_remaining: flexRemaining,
@@ -311,7 +332,7 @@ export function makeUC(deps: Deps) {
             }
           : null,
         wallet_balance_sar: walletBalance,
-        banner: buildBanner(status, sub, firstName, locEntity),
+        banner: buildBanner(status, sub, firstName, locEntity, pauseHomeLabels),
         quick_actions: buildQuickActions(status, sub),
         plans: buildPlans(plans, status, sub),
       }

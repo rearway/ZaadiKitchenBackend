@@ -4,11 +4,11 @@ import { buildDeps, makeSubscription } from '../../../../__tests__/helpers/mock-
 describe('ResumeSubscription', () => {
   const PAUSE_FROM = '2099-08-12'
   const PAUSE_UNTIL = '2099-08-20'
-  const RESUME_DATE = '2099-08-15'
+  const RESUME_DATE = '2099-08-17'
 
   beforeEach(() => {
     jest.useFakeTimers()
-    // During pause window; resume must be tomorrow+ (2099-08-14 → earliest 2099-08-15).
+    // During pause window; resume must be after paused_from (2099-08-17 is Mon, working day).
     jest.setSystemTime(new Date('2099-08-14T10:00:00Z'))
   })
 
@@ -100,8 +100,8 @@ describe('ResumeSubscription', () => {
 
     const result = await resumeSubscription(validInput)
 
-    expect(result.first_delivery_label).toMatch(/Saturday/)
-    expect(result.first_delivery_label).toMatch(/15/)
+    expect(result.first_delivery_label).toMatch(/Monday/)
+    expect(result.first_delivery_label).toMatch(/17/)
     expect(result.first_delivery_label).toMatch(/Aug/)
   })
 
@@ -136,17 +136,18 @@ describe('ResumeSubscription', () => {
     expect(deps.subscriptionPersistor.updateSubscription).not.toHaveBeenCalled()
   })
 
-  it('allows resume when cancelled but pause has started', async () => {
-    const deps = makeDepsWithSub({ status: 'cancelled' })
+  it('rejects resume when pause has not started yet', async () => {
+    jest.setSystemTime(new Date('2099-08-10T10:00:00Z'))
+    const deps = makeDepsWithSub({
+      status: 'active',
+      pausedFrom: PAUSE_FROM,
+      pausedUntil: PAUSE_UNTIL,
+    })
     const resumeSubscription = makeUC(deps)
 
-    const result = await resumeSubscription(validInput)
-
-    expect(result.status).toBe('cancelled')
-    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ status: 'cancelled' })
-    )
+    await expect(resumeSubscription(validInput)).rejects.toMatchObject({
+      errorCode: 'VALIDATION_ERROR',
+    })
   })
 
   it('throws ValidationError when the subscription is expired', async () => {

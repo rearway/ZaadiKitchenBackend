@@ -9,12 +9,28 @@ describe('ensurePauseStatus', () => {
     jest.useRealTimers()
   })
 
-  it('returns subscription unchanged when status is not active', async () => {
-    const sub = makeSubscription({ status: 'paused', pausedFrom: PAUSE_FROM, pausedUntil: PAUSE_UNTIL })
-    const deps = buildDeps()
+  it('reverts premature paused status before pause-start cutoff', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2099-12-29T10:00:00Z'))
+    const sub = makeSubscription({
+      status: 'paused',
+      pausedFrom: PAUSE_FROM,
+      pausedUntil: PAUSE_UNTIL,
+    })
+    const deps = buildDeps({
+      subscriptionPersistor: {
+        ...buildDeps().subscriptionPersistor,
+        updateSubscription: jest
+          .fn()
+          .mockResolvedValue({ ...sub, status: 'active' }),
+      },
+    })
     const result = await ensurePauseStatus(deps, sub)
-    expect(result).toBe(sub)
-    expect(deps.subscriptionPersistor.updateSubscription).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
+      sub.id,
+      { status: 'active' }
+    )
+    expect(result.status).toBe('active')
   })
 
   it('returns subscription unchanged when pause metadata is missing', async () => {

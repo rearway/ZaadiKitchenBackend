@@ -12,19 +12,31 @@ export async function ensurePauseStatus(
   subscription: Subscription,
   now: Date = new Date()
 ): Promise<Subscription> {
+  if (!subscription.pausedFrom || !subscription.pausedUntil) {
+    return subscription
+  }
+
+  if (
+    subscription.status === 'paused' &&
+    !isAfterSkipCutoff(subscription.pausedFrom, now)
+  ) {
+    return deps.subscriptionPersistor.updateSubscription(subscription.id, {
+      status: 'active',
+    })
+  }
+
   if (
     !canEnterScheduledPause(subscription) ||
-    !subscription.pausedFrom ||
-    !subscription.pausedUntil
+    !isAfterSkipCutoff(subscription.pausedFrom, now)
   ) {
     return subscription
   }
 
-  if (!isAfterSkipCutoff(subscription.pausedFrom, now)) {
+  if (subscription.status === 'cancelled') {
     return subscription
   }
 
-  if (subscription.status === 'cancelled') {
+  if (subscription.status === 'paused') {
     return subscription
   }
 

@@ -17,6 +17,7 @@ import {
   isPauseInEffect,
   nextCalendarDay,
 } from '../services/pauseResumeDatePicker.js'
+import { isWorkingDeliveryDate } from '../services/pauseFrozenDays.js'
 
 export interface ResumeSubscriptionInput {
   userId: string
@@ -135,6 +136,24 @@ export function makeUC(deps: Deps) {
         )
       }
 
+      const holidayTo = toYYYYMMDD(
+        addDaysUtc(new Date(pausedUntil + 'T00:00:00Z'), 1)
+      )
+      const holidayDates = new Set(
+        await publicHolidayLoader.getHolidayDates(pausedFrom, holidayTo)
+      )
+
+      if (!isWorkingDeliveryDate(resumeDate, holidayDates)) {
+        throw new ValidationError(
+          'Resume date must be a working delivery day (Sun–Thu).',
+          {
+            fields: {
+              resume_date: 'Choose a Sunday–Thursday date within your pause window.',
+            },
+          }
+        )
+      }
+
       // Resume must be before pause-end cutoff.
       if (isAfterSkipCutoff(pausedUntil)) {
         throw new ValidationError(
@@ -146,13 +165,6 @@ export function makeUC(deps: Deps) {
         compareDateStrings(resumeDate, pausedFrom) < 0
           ? pausedFrom
           : resumeDate
-
-      const holidayTo = toYYYYMMDD(
-        addDaysUtc(new Date(pausedUntil + 'T00:00:00Z'), 1)
-      )
-      const holidayDates = new Set(
-        await publicHolidayLoader.getHolidayDates(pausedFrom, holidayTo)
-      )
 
       // Working days already consumed (from pause start through day before resume).
       const dayBeforeResume = toYYYYMMDD(

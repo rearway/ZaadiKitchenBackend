@@ -54,6 +54,7 @@ export interface GetSubscriptionOutput {
     visible: boolean
     min: string | null
     max: string | null
+    suggested_date: string | null
   }
   cancel_pause_available: boolean
 }
