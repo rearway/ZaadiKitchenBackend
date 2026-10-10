@@ -1,37 +1,150 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 
 import {
-    LoggerS,
-    UserPersistenceS,
-    OtpSessionPersistenceS,
-    RefreshTokenPersistenceS,
-    OtpServiceS,
+  LoggerS,
+  UserPersistenceS,
+  OtpSessionPersistenceS,
+  RefreshTokenPersistenceS,
+  DeliveryPersistenceS,
+  OtpServiceS,
+  PlanPersistenceS,
+  CheckoutSessionPersistenceS,
+  PaymentMethodPersistenceS,
+  OrderPersistenceS,
+  SubscriptionPersistenceS,
+  PublicHolidayPersistenceS,
+  WalletPersistenceS,
+  ReferralPersistenceS,
+  PaymentGatewayS,
+  MealPersistenceS,
+  MenuWeekPersistenceS,
+  StorageS,
+  AuditLogPersistenceS,
+  DeliveryIssuePersistenceS,
+  MealRatingPersistenceS,
+  AdminCustomerPersistenceS,
+  RevenuePersistenceS,
+  CommsPersistenceS,
+  RiderPersistenceS,
+  DailyOpsPersistenceS,
+  NotificationS,
+  UserDevicePersistenceS,
+  PaymentTransactionPersistenceS,
+  ErpIntegrationPersistenceS,
 } from '../tokens.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
 import { UserPersistenceService } from '../infrastructure/SequelizePersistence/user-persistence.service.js'
 import { OtpSessionPersistenceService } from '../infrastructure/SequelizePersistence/otp-session-persistence.service.js'
 import { RefreshTokenPersistenceService } from '../infrastructure/SequelizePersistence/refresh-token-persistence.service.js'
-import { OtpStubService } from '../infrastructure/OtpService/index.js'
+import { DeliveryPersistenceService } from '../infrastructure/SequelizePersistence/delivery-persistence.service.js'
+import { PlanPersistenceService } from '../infrastructure/SequelizePersistence/plan-persistence.service.js'
+import { CheckoutSessionPersistenceService } from '../infrastructure/SequelizePersistence/checkout-session-persistence.service.js'
+import { PaymentMethodPersistenceService } from '../infrastructure/SequelizePersistence/payment-method-persistence.service.js'
+import { OrderPersistenceService } from '../infrastructure/SequelizePersistence/order-persistence.service.js'
+import { SubscriptionPersistenceService } from '../infrastructure/SequelizePersistence/subscription-persistence.service.js'
+import { PublicHolidayPersistenceService } from '../infrastructure/SequelizePersistence/public-holiday-persistence.service.js'
+import { WalletPersistenceService } from '../infrastructure/SequelizePersistence/wallet-persistence.service.js'
+import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
+import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
+import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
+import { OtpStubService, SnsOtpService } from '../infrastructure/OtpService/index.js'
+import { OtpService } from '../core/entitygateway/OtpService.js'
+import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
+import { MoyasarPaymentGatewayService } from '../infrastructure/MoyasarPayment/moyasar-payment-gateway.service.js'
+import { S3StorageService } from '../infrastructure/S3Storage/index.js'
+import { AuditLogPersistenceService } from '../infrastructure/SequelizePersistence/audit-log-persistence.service.js'
+import { DeliveryIssuePersistenceService } from '../infrastructure/SequelizePersistence/delivery-issue-persistence.service.js'
+import { MealRatingPersistenceService } from '../infrastructure/SequelizePersistence/meal-rating-persistence.service.js'
+import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePersistence/admin-customer-persistence.service.js'
+import { RevenuePersistenceService } from '../infrastructure/SequelizePersistence/revenue-persistence.service.js'
+import { CommsPersistenceService } from '../infrastructure/SequelizePersistence/comms-persistence.service.js'
+import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
+import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
+import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
+import { SnsNotificationService } from '../infrastructure/SNSNotification/sns-notification.service.js'
+import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
+import { PaymentTransactionPersistenceService } from '../infrastructure/SequelizePersistence/payment-transaction-persistence.service.js'
+import { ErpIntegrationPersistenceService } from '../infrastructure/SequelizePersistence/erp-integration-persistence.service.js'
 import { coreAdapterService } from './coreadapter.service.js'
 
 @Module({
-    imports: [ConfigModule],
-    providers: [
-        // Logger
-        { provide: LoggerS, useClass: LoggerService },
+  imports: [ConfigModule],
+  providers: [
+    // Logger
+    { provide: LoggerS, useClass: LoggerService },
 
-        // Persistence services
-        { provide: UserPersistenceS, useClass: UserPersistenceService },
-        { provide: OtpSessionPersistenceS, useClass: OtpSessionPersistenceService },
-        { provide: RefreshTokenPersistenceS, useClass: RefreshTokenPersistenceService },
+    // Persistence services
+    { provide: UserPersistenceS, useClass: UserPersistenceService },
+    { provide: OtpSessionPersistenceS, useClass: OtpSessionPersistenceService },
+    {
+      provide: RefreshTokenPersistenceS,
+      useClass: RefreshTokenPersistenceService,
+    },
+    { provide: DeliveryPersistenceS, useClass: DeliveryPersistenceService },
+    { provide: PlanPersistenceS, useClass: PlanPersistenceService },
+    {
+      provide: CheckoutSessionPersistenceS,
+      useClass: CheckoutSessionPersistenceService,
+    },
+    {
+      provide: PaymentMethodPersistenceS,
+      useClass: PaymentMethodPersistenceService,
+    },
+    { provide: OrderPersistenceS, useClass: OrderPersistenceService },
+    {
+      provide: SubscriptionPersistenceS,
+      useClass: SubscriptionPersistenceService,
+    },
+    {
+      provide: PublicHolidayPersistenceS,
+      useClass: PublicHolidayPersistenceService,
+    },
+    { provide: WalletPersistenceS, useClass: WalletPersistenceService },
+    { provide: ReferralPersistenceS, useClass: ReferralPersistenceService },
+    { provide: MealPersistenceS, useClass: MealPersistenceService },
+    { provide: MenuWeekPersistenceS, useClass: MenuWeekPersistenceService },
+    { provide: UserDevicePersistenceS, useClass: UserDevicePersistenceService },
+    { provide: PaymentTransactionPersistenceS, useClass: PaymentTransactionPersistenceService },
+    { provide: ErpIntegrationPersistenceS, useClass: ErpIntegrationPersistenceService },
 
-        // External services
-        { provide: OtpServiceS, useClass: OtpStubService },
+    // External services
+    {
+      provide: OtpServiceS,
+      useFactory: (): OtpService => {
+        const skipOtp = process.env.SKIP_OTP === 'true'
+        return skipOtp ? new OtpStubService() : new SnsOtpService()
+      },
+    },
+    { 
+      provide: PaymentGatewayS, 
+      useFactory: (configService: ConfigService, logger: LoggerService) => {
+        const useMock = configService.get<string>('USE_MOCK_PAYMENT', 'true') === 'true'
+        return useMock ? new MockPaymentGatewayService() : new MoyasarPaymentGatewayService(configService, logger)
+      },
+      inject: [ConfigService, LoggerS]
+    },
+    { provide: StorageS, useClass: S3StorageService },
+    { provide: AuditLogPersistenceS, useClass: AuditLogPersistenceService },
+    { provide: DeliveryIssuePersistenceS, useClass: DeliveryIssuePersistenceService },
+    { provide: MealRatingPersistenceS, useClass: MealRatingPersistenceService },
+    { provide: AdminCustomerPersistenceS, useClass: AdminCustomerPersistenceService },
+    { provide: RevenuePersistenceS, useClass: RevenuePersistenceService },
+    { provide: CommsPersistenceS, useClass: CommsPersistenceService },
+    { provide: RiderPersistenceS, useClass: RiderPersistenceService },
+    { provide: DailyOpsPersistenceS, useClass: DailyOpsPersistenceService },
+    { 
+      provide: NotificationS, 
+      useFactory: (configService: ConfigService, logger: LoggerService) => {
+        const skipSns = configService.get<string>('SKIP_SNS', 'false') === 'true'
+        return skipSns ? new ConsoleNotificationService() : new SnsNotificationService(configService, logger)
+      },
+      inject: [ConfigService, LoggerS]
+    },
 
-        // Core adapter — maps infra → Deps → initUseCases()
-        coreAdapterService,
-    ],
-    exports: [coreAdapterService],
+    // Core adapter — maps infra → Deps → initUseCases()
+    coreAdapterService,
+  ],
+  exports: [coreAdapterService],
 })
-export class CoreAdapterModule { }
+export class CoreAdapterModule {}

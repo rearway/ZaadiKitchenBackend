@@ -6,6 +6,5 @@ dist
 *.md
 .prettierrc
 eslint.config.mjs
-nest-cli.json
 docker-compose.yml
 test/

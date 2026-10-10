@@ -1,0 +1,154 @@
+{
+  "info": {
+    "_postman_id": "b2c4e8f0-erp1-4a9b-8c3d-zaadikitchen-erp",
+    "name": "Zaadi Kitchen — ERP Integration",
+    "description": "Platio-style ERP read APIs. Auth: ApiKey only (no JWT).\n\nSet collection variables:\n- base_url — e.g. https://devapi.zaadikitchen.com/api/v1\n- erp_api_key — matches server ERP_API_KEY\n\nDocs: docs/client/ERP_INTEGRATION.md",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET Menus (live catalog)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "ApiKey {{erp_api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/integrations/erp/menus?offset=0&limit=50",
+          "host": ["{{base_url}}"],
+          "path": ["integrations", "erp", "menus"],
+          "query": [
+            { "key": "offset", "value": "0", "description": "Pagination offset" },
+            { "key": "limit", "value": "50", "description": "Max 100" }
+          ]
+        },
+        "description": "Returns code, name, description, status for all meals. Always live data."
+      },
+      "response": []
+    },
+    {
+      "name": "GET Customers (live)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "ApiKey {{erp_api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/integrations/erp/customers?offset=0&limit=50",
+          "host": ["{{base_url}}"],
+          "path": ["integrations", "erp", "customers"],
+          "query": [
+            { "key": "offset", "value": "0" },
+            { "key": "limit", "value": "50" }
+          ]
+        },
+        "description": "Returns code, name, mobile, statusCode. Always live data."
+      },
+      "response": []
+    },
+    {
+      "name": "POST Payments (date range)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "ApiKey {{erp_api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"dateFrom\": \"01/10/2026\",\n  \"dateTo\": \"31/10/2026\",\n  \"offset\": 0,\n  \"limit\": 50\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/integrations/erp/payments",
+          "host": ["{{base_url}}"],
+          "path": ["integrations", "erp", "payments"]
+        },
+        "description": "Confirmed orders by payment date (KSA). Dates: DD/MM/YYYY or YYYY-MM-DD. No cutoff logic."
+      },
+      "response": []
+    },
+    {
+      "name": "POST Daily Orders (with date)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "ApiKey {{erp_api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"date\": \"06/10/2026\",\n  \"offset\": 0,\n  \"limit\": 50\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/integrations/erp/daily-orders",
+          "host": ["{{base_url}}"],
+          "path": ["integrations", "erp", "daily-orders"]
+        },
+        "description": "Production list for delivery date. meta includes frozen/cutoff. date = delivery day."
+      },
+      "response": []
+    },
+    {
+      "name": "POST Daily Orders (no date — default)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "ApiKey {{erp_api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"offset\": 0,\n  \"limit\": 50\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/integrations/erp/daily-orders",
+          "host": ["{{base_url}}"],
+          "path": ["integrations", "erp", "daily-orders"]
+        },
+        "description": "Server resolves default delivery workday from ERP cutoff (19:00 KSA day before delivery)."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://devapi.zaadikitchen.com/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "erp_api_key",
+      "value": "your-erp-api-key",
+      "type": "string"
+    }
+  ]
+}

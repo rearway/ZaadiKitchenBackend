@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zaadi Kitchen — Product & Business Logic · Part 1 of 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mint:#00C896;--mintl:#E8FBF5;--mintd:#009E78;
+  --papaya:#FF7340;--papayal:#FFF0EB;--papayd:#C44D1A;
+  --lemon:#F5E642;--lemonl:#FEFBE8;--lemondark:#8A7E00;
+  --ink:#1A1A1A;--ink2:#2D2D2D;--mid:#6B7280;--soft:#9CA3AF;
+  --border:#E2E8F0;--bg:#F8FAFC;--white:#fff;
+  --red:#EF4444;--redl:#FEF2F2;--blue:#3B82F6;--purple:#8B5CF6;
+  --sw:268px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+.layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:var(--ink);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;flex-shrink:0}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+.sb-brand{padding:28px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-wordmark{font-family:"Fraunces",serif;font-size:20px;font-weight:900;color:#fff;line-height:1}
+.sb-wordmark span{color:var(--mint)}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:5px;line-height:1.55;letter-spacing:.01em}
+.sb-part-tag{margin:14px 12px 10px;background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.2);border-radius:9px;padding:9px 12px}
+.sb-pt-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);margin-bottom:3px}
+.sb-pt-name{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);line-height:1.4}
+.sb-nav{padding:8px 0 24px}
+.sb-group{margin-bottom:2px}
+.sb-group-hdr{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:12px 22px 5px}
+.sb-link{display:block;padding:7px 22px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.48);text-decoration:none;border-left:2px solid transparent;line-height:1.4;transition:color .12s,background .12s}
+.sb-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}
+.sb-link.on{color:#fff;border-left-color:var(--mint);background:rgba(0,200,150,.07);font-weight:700}
+.sb-divider{height:1px;background:rgba(255,255,255,.07);margin:14px 0}
+.sb-parts{padding:0 12px 16px}
+.sb-parts-hdr{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;padding-left:4px}
+.sb-part-pill{display:block;padding:7px 12px;font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;border-radius:8px;margin-bottom:3px;line-height:1.4}
+.sb-part-pill:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.6)}
+.sb-part-pill.here{background:rgba(0,200,150,.1);color:var(--mint);font-weight:700}
+
+/* MAIN */
+.main{margin-left:var(--sw);flex:1;min-width:0}
+
+/* PAGE HEADER */
+.ph{background:var(--ink);padding:56px 60px 48px;position:relative;overflow:hidden}
+.ph::before{content:"";position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(0,200,150,.06);top:-300px;right:-200px;pointer-events:none}
+.ph::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.022) 1px,transparent 1px);background-size:30px 30px;pointer-events:none}
+.ph-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,150,.14);border:1px solid rgba(0,200,150,.22);border-radius:20px;padding:5px 14px;margin-bottom:22px;position:relative;z-index:1}
+.ph-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--mint);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.ph-eyebrow-txt{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mint)}
+.ph-title{font-family:"Fraunces",serif;font-size:44px;font-weight:900;color:#fff;line-height:1.08;margin-bottom:10px;position:relative;z-index:1}
+.ph-title em{color:var(--mint);font-style:normal}
+.ph-desc{font-size:15px;color:rgba(255,255,255,.48);line-height:1.68;max-width:580px;position:relative;z-index:1}
+.ph-meta{display:flex;gap:0;margin-top:32px;background:rgba(255,255,255,.05);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);position:relative;z-index:1;width:fit-content}
+.ph-meta-item{padding:14px 24px;border-right:1px solid rgba(255,255,255,.08)}
+.ph-meta-item:last-child{border-right:none}
+.ph-meta-label{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:4px}
+.ph-meta-value{font-size:13px;font-weight:700;color:#fff}
+.ph-parts{display:flex;gap:8px;margin-top:22px;position:relative;z-index:1}
+.ph-part{font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;text-decoration:none}
+.ph-part.here{background:var(--mint);color:#fff}
+.ph-part.other{background:rgba(255,255,255,.07);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1)}
+.ph-part.other:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
+
+/* CONTENT */
+.content{padding:0 60px 80px;max-width:860px}
+
+/* PART OPENER */
+.part-opener{padding:52px 60px 0}
+.po-inner{display:flex;align-items:flex-start;gap:20px}
+.po-letter{font-family:"Fraunces",serif;font-size:72px;font-weight:900;color:var(--mint);line-height:1;opacity:.18;flex-shrink:0;margin-top:-8px}
+.po-body{flex:1;border-bottom:1px solid var(--border);padding-bottom:28px}
+.po-name{font-family:"Fraunces",serif;font-size:30px;font-weight:700;color:var(--ink);margin-bottom:5px}
+.po-desc{font-size:14px;color:var(--mid);line-height:1.6;max-width:640px}
+
+/* SECTION */
+.sec{padding:44px 60px 0;scroll-margin-top:20px}
+.sec-code{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--mintd);margin-bottom:7px}
+.sec-title{font-family:"Fraunces",serif;font-size:27px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.18}
+.sec-lead{font-size:14px;color:var(--mid);line-height:1.68;margin-bottom:30px;max-width:680px}
+
+/* BLOCK */
+.blk{margin-bottom:26px}
+.blk-title{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:11px;display:flex;align-items:center;gap:10px}
+.blk-title::after{content:"";flex:1;height:1px;background:var(--border)}
+
+/* PROSE */
+.prose{font-size:14px;color:var(--ink2);line-height:1.78}
+.prose p{margin-bottom:13px}
+.prose p:last-child{margin-bottom:0}
+.prose strong{color:var(--ink);font-weight:700}
+
+/* CARDS */
+.cards{display:grid;gap:12px}
+.cards.c2{grid-template-columns:1fr 1fr}
+.cards.c3{grid-template-columns:1fr 1fr 1fr}
+.cards.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.card{background:var(--white);border-radius:14px;padding:18px 20px;border:1px solid var(--border);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.card.c-mint::before{background:var(--mint)}
+.card.c-papaya::before{background:var(--papaya)}
+.card.c-lemon::before{background:var(--lemon)}
+.card.c-ink::before{background:var(--ink)}
+.card.c-red::before{background:var(--red)}
+.card.c-blue::before{background:var(--blue)}
+.card.c-purple::before{background:var(--purple)}
+.card.c-grey::before{background:var(--soft)}
+.card-label{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-bottom:6px}
+.card-value{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
+.card-note{font-size:12px;color:var(--mid);line-height:1.55}
+
+/* PLAN TABLE */
+.ptable{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+.ptable th{background:var(--ink);color:#fff;padding:11px 16px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;text-align:left}
+.ptable td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;background:#fff}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr:hover td{background:rgba(0,200,150,.018)}
+.pt-name{font-family:"Fraunces",serif;font-size:15px;font-weight:700;color:var(--ink)}
+.pt-tag{display:inline-block;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--mintl);color:var(--mintd);margin-top:4px}
+.pt-price{font-family:"Fraunces",serif;font-size:19px;font-weight:900;color:var(--mintd)}
+.pt-ppm{font-size:11px;font-weight:600;color:var(--mid);margin-top:1px}
+.pt-window{font-size:12px;font-weight:700;color:var(--ink2)}
+.pt-window-note{font-size:11px;color:var(--mid);margin-top:1px;line-height:1.4}
+
+/* DEF LIST */
+.dlist{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff}
+.drow{display:flex;border-bottom:1px solid var(--border)}
+.drow:last-child{border-bottom:none}
+.dkey{width:210px;flex-shrink:0;padding:13px 16px;font-size:12px;font-weight:700;color:var(--ink);background:var(--bg);border-right:1px solid var(--border);line-height:1.45}
+.dval{flex:1;padding:13px 16px;font-size:13px;color:var(--ink2);line-height:1.6}
+.dval strong{color:var(--ink);font-weight:700}
+
+/* FLOW */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:8px}
+.fstep{background:var(--white);border:1.5px solid var(--border);border-radius:11px;padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.fstep.f-mint{background:var(--mintl);border-color:rgba(0,200,150,.3);color:var(--mintd)}
+.fstep.f-ink{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fstep.f-papaya{background:var(--papayal);border-color:rgba(255,115,64,.3);color:var(--papayd)}
+.farrow{font-size:15px;color:var(--soft);padding:0 8px;flex-shrink:0}
+.flow-note{font-size:12px;color:var(--mid);line-height:1.55;margin-top:8px}
+
+/* CALLOUT */
+.callout{border-radius:13px;padding:15px 18px;margin-bottom:0;display:flex;gap:13px;align-items:flex-start}
+.callout.co-mint{background:var(--mintl);border:1px solid rgba(0,200,150,.22)}
+.callout.co-papaya{background:var(--papayal);border:1px solid rgba(255,115,64,.2)}
+.callout.co-lemon{background:var(--lemonl);border:1px solid rgba(245,230,66,.3)}
+.callout.co-red{background:var(--redl);border:1px solid rgba(239,68,68,.18)}
+.callout.co-ink{background:rgba(26,26,26,.04);border:1px solid rgba(26,26,26,.1)}
+.callout.co-warn{background:#FFFBEB;border:1.5px solid #F59E0B}
+.co-ico{font-size:18px;flex-shrink:0;margin-top:1px}
+.co-title{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:.01em}
+.co-body{font-size:13px;color:var(--ink2);line-height:1.62}
+.co-body strong{color:var(--ink);font-weight:700}
+
+/* INLINE TAGS */
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;vertical-align:middle}
+.tg-mint{background:var(--mintl);color:var(--mintd)}
+.tg-papaya{background:var(--papayal);color:var(--papayd)}
+.tg-lemon{background:var(--lemonl);color:var(--lemondark)}
+.tg-ink{background:var(--ink);color:#fff}
+.tg-red{background:var(--redl);color:var(--red)}
+.tg-grey{background:var(--bg);color:var(--mid);border:1px solid var(--border)}
+.tg-purple{background:#F5F3FF;color:var(--purple)}
+
+/* SEPARATOR */
+.sep{height:1px;background:var(--border);margin:44px 60px 0}
+
+/* FOOTER */
+.footer{background:var(--ink);padding:40px 60px;margin-top:60px}
+.ft-grid{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;flex-wrap:wrap}
+.ft-logo{font-family:"Fraunces",serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:5px}
+.ft-logo span{color:var(--mint)}
+.ft-sub{font-size:12px;color:rgba(255,255,255,.32);line-height:1.6}
+.ft-nav{display:flex;flex-direction:column;gap:7px;text-align:right}
+.ft-nav a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none}
+.ft-nav a:hover{color:var(--mint)}
+.ft-nav a.here{color:var(--mint);font-weight:700}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:768px){
+  :root{--sw:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s ease;width:280px;box-shadow:4px 0 24px rgba(0,0,0,.3)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .ph{padding:32px 22px 36px}
+  .ph-title{font-size:30px}
+  .ph-desc{font-size:13px}
+  .ph-meta{flex-direction:column;gap:0;width:100%}
+  .ph-meta-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);padding:10px 16px}
+  .ph-parts{flex-wrap:wrap}
+  .ph-part{font-size:10px;padding:4px 10px}
+  .content{padding:0 22px 60px}
+  .part-opener{padding:36px 22px 0}
+  .sec{padding:32px 22px 0}
+  .sep{margin:32px 22px 0}
+  .cards.c2,.cards.c3,.cards.c4{grid-template-columns:1fr}
+  .ptable{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dlist{border-radius:10px}
+  .drow{flex-direction:column}
+  .dkey{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:10px 14px 6px}
+  .dval{padding:8px 14px 12px}
+  .flow{gap:4px}
+  .fstep{font-size:11px;padding:7px 10px;white-space:normal}
+  .farrow{padding:0 4px;font-size:12px}
+  .footer{padding:32px 22px}
+  .ft-grid{flex-direction:column;gap:20px}
+  .ft-nav{text-align:left}
+  .po-letter{font-size:48px}
+  .po-name{font-size:22px}
+  .mob-menu-btn{display:flex}
+  .mob-overlay{display:block}
+}
+@media(min-width:769px){
+  .mob-menu-btn{display:none}
+  .mob-overlay{display:none}
+}
+/* Mobile top bar */
+.mob-top{display:none}
+@media(max-width:768px){
+  .mob-top{display:flex;align-items:center;justify-content:space-between;background:var(--ink);padding:14px 20px;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.08)}
+  .mob-logo{font-family:"Fraunces",serif;font-size:18px;font-weight:900;color:#fff}
+  .mob-logo span{color:var(--mint)}
+  .mob-menu-btn{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:0}
+  .mob-menu-btn span{display:block;width:18px;height:2px;background:#fff;border-radius:1px;transition:all .2s}
+  .mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s}
+  .mob-overlay.show{opacity:1;pointer-events:all}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-wordmark">Zaadi<span>.</span></div>
+    <div class="sb-sub">Product &amp; Business Logic<br>Master Reference · Part 1 of 3</div>
+  </div>
+  <div class="sb-part-tag">
+    <div class="sb-pt-label">Now reading</div>
+    <div class="sb-pt-name">Part 1 — Business Foundation &amp; Customer App (B1–B9)</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-group">
+      <div class="sb-group-hdr">Part A — Business Foundation</div>
+      <a class="sb-link" href="#a1">A1 — What is Zaadi Kitchen</a>
+      <a class="sb-link" href="#a2">A2 — Subscription Plans</a>
+      <a class="sb-link" href="#a3">A3 — Meal Types</a>
+      <a class="sb-link" href="#a4">A4 — Delivery Structure</a>
+      <a class="sb-link" href="#a5">A5 — Pricing, Wallet &amp; Payments</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-hdr">Part B — Customer App (B1–B9)</div>
+      <a class="sb-link" href="#b1">B1 — Sign In &amp; Authentication</a>
+      <a class="sb-link" href="#b2">B2 — Onboarding: Area &amp; Building</a>
+      <a class="sb-link" href="#b3">B3 — Plan Selection</a>
+      <a class="sb-link" href="#b4">B4 — Payment &amp; Checkout</a>
+      <a class="sb-link" href="#b5">B5 — Home Screen</a>
+      <a class="sb-link" href="#b6">B6 — Meal Detail</a>
+      <a class="sb-link" href="#b7">B7 — Menu</a>
+      <a class="sb-link" href="#b8">B8 — Skip a Day</a>
+      <a class="sb-link" href="#b9">B9 — Pause Subscription</a>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-parts">
+      <div class="sb-parts-hdr">All Parts</div>
+      <a class="sb-part-pill here" href="#">Part 1 — Foundation &amp; Customer (B1–B9)</a>
+      <a class="sb-part-pill" href="#">Part 2 — Customer (B10–B17) &amp; Admin (C1–C5)</a>
+      <a class="sb-part-pill" href="#">Part 3 — Admin (C6–C10), Rider &amp; Rules</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+
+<!-- Mobile top bar -->
+<div class="mob-top">
+  <div class="mob-logo">Zaadi<span>.</span></div>
+  <button class="mob-menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+<div class="mob-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<main class="main">
+<div class="ph">
+  <div class="ph-eyebrow"><div class="ph-eyebrow-dot"></div><div class="ph-eyebrow-txt">Master Reference Document · Part 1 of 3</div></div>
+  <div class="ph-title">Zaadi Kitchen<br><em>Product &amp; Business Logic</em></div>
+  <div class="ph-desc">Single source of truth for all application functions, business rules, and execution logic. Written for business stakeholders. Covers v1 only — everything built and intended, including known corrections from the current prototype.</div>
+  <div class="ph-meta">
+    <div class="ph-meta-item"><div class="ph-meta-label">Product</div><div class="ph-meta-value">Zaadi Kitchen · زادي كيتشن</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Version</div><div class="ph-meta-value">v1 — Initial Launch</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Market</div><div class="ph-meta-value">Riyadh, Saudi Arabia</div></div>
+    <div class="ph-meta-item"><div class="ph-meta-label">Document</div><div class="ph-meta-value">3 parts · complete when all read together</div></div>
+  </div>
+  <div class="ph-parts">
+    <a class="ph-part here" href="#">Part 1 — Foundation &amp; Customer App (B1–B9)</a>
+    <a class="ph-part other" href="#">Part 2 →</a>
+    <a class="ph-part other" href="#">Part 3 →</a>
+  </div>
+</div>
+<div class="content">
+
+<!-- ════ PART A ════ -->
+<div class="part-opener" id="part-a">
+  <div class="po-inner">
+    <div class="po-letter">A</div>
+    <div class="po-body">
+      <div class="po-name">Business Foundation</div>
+      <div class="po-desc">What Zaadi Kitchen is, how it operates, and the rules that govern the business. Read this section first — it provides the context behind every product and design decision covered in Parts B, C, and D.</div>
+    </div>
+  </div>
+</div>
+
+<!-- A1 -->
+<div class="sec" id="a1">
+  <div class="sec-code">A1</div>
+  <div class="sec-title">What is Zaadi Kitchen</div>
+  <div class="sec-lead">A neighbourhood kitchen that cooks fresh meals every morning and delivers them to office professionals at their desks in Riyadh, Sunday to Thursday.</div>
+  <div class="blk">
+    <div class="blk-title">The Concept</div>
+    <div class="prose">
+      <p>Zaadi Kitchen solves a specific daily problem: office workers in Riyadh need a reliable, fresh, high-quality lunch without the friction of ordering, waiting, or leaving their desk. The kitchen prepares all meals fresh on the morning of delivery — nothing is frozen, reheated, or prepared the previous day. Meals are delivered during the lunch window directly to the customer's desk.</p>
+      <p>The business runs on a subscription model. Customers pay upfront for a block of meals and receive deliveries on working days within their plan period. There is no auto-renewal — customers must actively choose to continue.</p>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Core Promise to Customers</div>
+    <div class="cards c2">
+      <div class="card c-mint"><div class="card-label">Freshness</div><div class="card-value">Cooked that same morning</div><div class="card-note">No frozen food. No reheating. Every meal is prepared on the day of delivery.</div></div>
+      <div class="card c-papaya"><div class="card-label">Convenience</div><div class="card-value">Delivered to your desk</div><div class="card-note">Customer sets building, floor, and desk. Rider delivers to that exact location. Push notification sent on arrival.</div></div>
+      <div class="card c-lemon"><div class="card-label">Flexibility</div><div class="card-value">Skip any day, no hassle</div><div class="card-note">No daily commitment. Skip before 6 PM with no penalty. Pause for travel or holidays. Cancel with no friction.</div></div>
+      <div class="card c-ink"><div class="card-label">Trust</div><div class="card-value">Halal and preservative-free</div><div class="card-note">Stated to all customers at sign-up. No allergen collection required in v1 — this is a baseline guarantee.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Operating Scope — v1</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Geography</div><div class="dval">Riyadh, Saudi Arabia. Delivery is limited to specific areas managed by admin. Customers can only sign up if their area is active.</div></div>
+      <div class="drow"><div class="dkey">Delivery days</div><div class="dval"><strong>Sunday to Thursday only.</strong> This is the Saudi working week. No Friday or Saturday deliveries. Public holidays are excluded.</div></div>
+      <div class="drow"><div class="dkey">Delivery window</div><div class="dval">Lunch time. The exact time is communicated via push notification the day of delivery. Evening-before preview is planned for future versions.</div></div>
+      <div class="drow"><div class="dkey">Meal types</div><div class="dval">Two types available each day: Executive Meal and Salad Meal. Customer selects their default type at subscription and can switch at any time.</div></div>
+      <div class="drow"><div class="dkey">Not in v1</div><div class="dval">Salad add-on (daily extra item at +SAR 15). Loyalty and points system. Weekend or public holiday delivery. Multiple concurrent subscriptions per account.</div></div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- A2 -->
+<div class="sec" id="a2">
+  <div class="sec-code">A2</div>
+  <div class="sec-title">Subscription Plans</div>
+  <div class="sec-lead">Four plans are available. All are prepaid with no auto-renewal. The customer selects a start date at checkout and receives deliveries on working days (Sunday–Thursday) within their plan period.</div>
+  <div class="blk">
+    <div class="blk-title">Plan Overview</div>
+    <table class="ptable">
+      <thead><tr><th>Plan</th><th>Price</th><th>Meals</th><th>Per Meal</th><th>Skip / Pause Window</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="pt-name">Try It</div><div class="pt-tag">No commitment</div></td>
+          <td><div class="pt-price">SAR 28</div></td>
+          <td>1 meal · any working day</td>
+          <td><div class="pt-ppm">SAR 28.00</div></td>
+          <td><div class="pt-window">N/A</div><div class="pt-window-note">Single delivery — no skip or pause needed</div></td>
+        </tr>
+        <tr>
+          <td><div class="pt-name">Week Plan</div></td>
+          <td><div class="pt-price">SAR 125</div></td>
+          <td>5 meals · Sun–Thu</td>
+          <td><div class="pt-ppm">SAR 25.00 / meal</div></td>
+          <td><div class="pt-window">3 weeks from start date</div><div class="pt-window-note">All skips and pauses must fall within this window</div></td>
+        </tr>
+        <tr>
+          <td><div class="pt-name">Month Plan</div><div class="pt-tag">Most popular</div></td>
+          <td><div class="pt-price">SAR 500</div></td>
+          <td>22 meals · full month</td>
+          <td><div class="pt-ppm">SAR 22.70 / meal</div></td>
+          <td><div class="pt-window">3 months from start date</div><div class="pt-window-note">All skips and pauses must fall within this window</div></td>
+        </tr>
+        <tr>
+          <td><div class="pt-name">Quarterly Plan</div></td>
+          <td><div class="pt-price">SAR 1,300</div></td>
+          <td>66 meals · 3 months</td>
+          <td><div class="pt-ppm">SAR 19.70 / meal</div></td>
+          <td><div class="pt-window">9 months from start date</div><div class="pt-window-note">All skips and pauses must fall within this window</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="blk">
+    <div class="blk-title">How Plans Work</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Payment</div><div class="dval">Full plan price paid upfront at checkout. No instalments or partial payments.</div></div>
+      <div class="drow"><div class="dkey">Start date</div><div class="dval">Customer selects on the payment page using a calendar picker. Default is the next working day (Sunday–Thursday). Can be changed to any future working day.</div></div>
+      <div class="drow"><div class="dkey">Auto-renewal</div><div class="dval"><strong>There is no auto-renewal on any plan.</strong> When the plan period ends, deliveries stop. The customer must actively return to the app and choose a new plan. A renewal nudge appears in the app when 20% or fewer of the plan's days remain.</div></div>
+      <div class="drow"><div class="dkey">Working days</div><div class="dval"><strong>Sunday to Thursday only.</strong> Weekends (Friday and Saturday) and public holidays are not delivery days. The plan period spans calendar days, but deliveries happen only on working days within that span.</div></div>
+      <div class="drow"><div class="dkey">Plan switching</div><div class="dval">When renewing, the customer can choose any plan tier — the app does not frame any choice as an "upgrade" or "downgrade." All plans are presented equally on the Plan Selection screen.</div></div>
+      <div class="drow"><div class="dkey">Refunds</div><div class="dval"><strong>No refunds on any plan.</strong> If a customer cancels, deliveries continue until the paid end date. The plan does not renew after that point.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">The 2× Skip and Pause Window</div>
+    <div class="callout co-mint">
+      <div class="co-ico">📌</div>
+      <div>
+        <div class="co-title">Core rule governing all skips and pauses</div>
+        <div class="co-body">Every plan has a time window within which the customer must use all their skips and pauses. The window is <strong>2× the plan duration</strong>, measured from the plan start date. <strong>Week Plan = 3 weeks. Month Plan = 3 months. Quarterly Plan = 9 months.</strong> Once this window closes, skipping and pausing are no longer available for that subscription period. The window resets completely when the customer renews — it does not carry over.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- A3 -->
+<div class="sec" id="a3">
+  <div class="sec-code">A3</div>
+  <div class="sec-title">Meal Types</div>
+  <div class="sec-lead">Two meal types are offered every working day. Customers choose their default at subscription and can switch at any time through the app.</div>
+  <div class="blk">
+    <div class="blk-title">The Two Types</div>
+    <div class="cards c2">
+      <div class="card c-mint"><div class="card-label">Executive Meal 🍛</div><div class="card-value">~500–600 kcal</div><div class="card-note">Arabic rice dish with a protein (chicken, lamb, or fish) and sides. Hearty and filling. Examples: Lamb Kabsa, Grilled Chicken Mandi, Chicken Haneeth.</div></div>
+      <div class="card c-grey"><div class="card-label">Salad Meal 🥗</div><div class="card-value">~300–350 kcal</div><div class="card-note">Grilled protein on fresh greens with dressing. Lighter, lower-carb option. Examples: Chicken Fattoush, Grilled Salmon Bowl, Tabbouleh &amp; Kofta Bowl.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Critical Distinction — Salad Meal vs Salad Add-On</div>
+    <div class="callout co-lemon">
+      <div class="co-ico">⚠️</div>
+      <div>
+        <div class="co-title">These are two entirely different things</div>
+        <div class="co-body"><strong>Salad Meal</strong> is a subscription meal type — the customer's daily meal is a salad bowl instead of a rice dish. This is fully supported in v1 and available on all plans.<br><br><strong>Salad Add-On</strong> was a planned feature allowing customers to add a daily salad on top of their Executive Meal for +SAR 15. <strong>This is not in v1 and does not appear anywhere in the application.</strong> No button, no screen, no charge for it exists in the current build.</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Menu Cadence</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Who sets the menu</div><div class="dval">The Administrator, using the Menu Manager in the admin portal. A new menu is planned and published each week.</div></div>
+      <div class="drow"><div class="dkey">Frequency</div><div class="dval">Weekly. One Executive Meal and one Salad Meal are assigned per working day (Sunday–Thursday). The admin must fill all 5 days before the Publish button becomes active.</div></div>
+      <div class="drow"><div class="dkey">When customers see it</div><div class="dval">Once the admin publishes the week's menu, it appears immediately in the customer's Menu screen (7-day view). The menu is visible to all users regardless of their subscription status.</div></div>
+      <div class="drow"><div class="dkey">Macros displayed</div><div class="dval">Calories, protein, carbs, and fat — shown per meal on the Meal Detail screen. Values are set by the admin when adding a dish to the Meal Library.</div></div>
+      <div class="drow"><div class="dkey">Chef's Note</div><div class="dval">Each dish can include a short description in the chef's voice. Shown on the Meal Detail screen in a lemon-coloured box with italic text.</div></div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- A4 -->
+<div class="sec" id="a4">
+  <div class="sec-code">A4</div>
+  <div class="sec-title">Delivery Structure</div>
+  <div class="sec-lead">How meals move from the kitchen to the customer's desk — and the address and notification system that makes it reliable.</div>
+  <div class="blk">
+    <div class="blk-title">Delivery Flow</div>
+    <div class="flow">
+      <div class="fstep f-ink">Kitchen cooks</div><div class="farrow">→</div>
+      <div class="fstep">Meals packed &amp; labelled</div><div class="farrow">→</div>
+      <div class="fstep f-papaya">Rider dispatches</div><div class="farrow">→</div>
+      <div class="fstep f-mint">Delivered to desk</div><div class="farrow">→</div>
+      <div class="fstep f-mint">Push notification sent to customer</div>
+    </div>
+    <div class="flow-note">The push notification is triggered automatically when the driver taps "Mark as Delivered" in the rider app. No manual step is needed from the kitchen or admin team.</div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Delivery Confirmation — Push Notification</div>
+    <div class="callout co-mint">
+      <div class="co-ico">🔔</div>
+      <div>
+        <div class="co-title">All customer notifications are push notifications</div>
+        <div class="co-body">Delivery confirmation is sent as a <strong>push notification</strong> to the customer's device when the rider marks their order as delivered. WhatsApp and SMS are used <strong>exclusively for OTP verification</strong> at sign-in — they are not used for any other communication in v1.</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Address Structure</div>
+    <div class="prose"><p>The delivery address is built in layers during onboarding and can be updated at any time.</p></div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Area</div><div class="dval">The delivery zone — e.g. "Al Nakheel", "Olaya Business District." Admin-managed list. Customers select from a dropdown. Out-of-zone areas cannot be selected — the customer's interest is captured for expansion planning but no delivery is possible.</div></div>
+      <div class="drow"><div class="dkey">Building</div><div class="dval">The office building — e.g. "Al Nakheel Tower, King Fahad Rd." Auto-suggest list populated by admin. Customers can type a building not in the list, but that entry is <strong>never stored</strong> and will not appear as a suggestion for anyone else.</div></div>
+      <div class="drow"><div class="dkey">Floor</div><div class="dval">Optional. Shown on the delivery label and the rider's delivery list. Example: "Floor 4".</div></div>
+      <div class="drow"><div class="dkey">Desk / Area</div><div class="dval">Optional. The specific desk or area within the floor. Example: "Desk B12", "Marketing section".</div></div>
+      <div class="drow"><div class="dkey">Gate / Entrance</div><div class="dval">Optional. Which building entrance the rider should use. Example: "Main lobby", "Gate B".</div></div>
+      <div class="drow"><div class="dkey">Rider Notes</div><div class="dval">Optional free text. Shown on the rider's delivery row for this customer. Example: "Call me on arrival", "Leave at reception if I'm in a meeting".</div></div>
+      <div class="drow"><div class="dkey">Delivery preference</div><div class="dval">Hand to me directly — or — Leave at reception. Set by the customer. Shown on the rider's delivery row so they know what to do on arrival.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Sticker Labels</div>
+    <div class="prose"><p>Every meal package carries a 100×60mm thermal sticker label. The label contains: customer name, building, floor, desk, gate, meal type, delivery date, and order reference number. Labels are generated from the admin portal by the ops team and printed before dispatch. Downloads are available as: all labels in one PDF, individual per customer, or grouped by delivery area.</p></div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Multiple Saved Addresses</div>
+    <div class="prose"><p>Customers can save more than one address — for example, a primary office and a secondary location. One address is marked as Active at any time and receives all deliveries. Switching the active address takes effect from the next scheduled delivery.</p></div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- A5 -->
+<div class="sec" id="a5">
+  <div class="sec-code">A5</div>
+  <div class="sec-title">Pricing, Wallet &amp; Payments</div>
+  <div class="sec-lead">How money flows through the application — from initial payment to wallet credits, promo codes, and the referral programme.</div>
+  <div class="blk">
+    <div class="blk-title">Payment Methods</div>
+    <div class="cards c2">
+      <div class="card c-mint"><div class="card-label">Apple Pay</div><div class="card-value">Default for new users</div><div class="card-note">Pre-selected as the quickest option when no saved card exists on the account.</div></div>
+      <div class="card c-mint"><div class="card-label">Mada</div><div class="card-value">Pre-selected for returning users</div><div class="card-note">The last saved card is pre-selected automatically at checkout for returning customers.</div></div>
+      <div class="card c-grey"><div class="card-label">Visa / Mastercard</div><div class="card-value">Also available</div><div class="card-note">Credit or debit card option. Available to all users on every payment page.</div></div>
+      <div class="card c-grey"><div class="card-label">STC Pay</div><div class="card-value">Also available</div><div class="card-note">Mobile wallet option. Available to all users on every payment page.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Wallet System</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">What the wallet is</div><div class="dval">An in-app credit balance. Shown as "SAR X.XX" in the Billing &amp; Wallet screen. Applied automatically at checkout for returning users.</div></div>
+      <div class="drow"><div class="dkey">How credits are earned</div><div class="dval">Two sources: (1) <strong>Referral rewards</strong> — 10% of a referred friend's first plan price, credited immediately when their plan activates. (2) <strong>Issue credits</strong> — admin manually credits an amount (up to SAR 30 maximum) when resolving a valid customer issue. Credit triggers a push notification to the customer.</div></div>
+      <div class="drow"><div class="dkey">How wallet is applied</div><div class="dval">For returning users, the wallet balance is automatically deducted from the total due and shown as a line item in the order summary on the payment page. The customer pays the remaining balance. There is no option to opt out of wallet application.</div></div>
+      <div class="drow"><div class="dkey">Expiry</div><div class="dval">Wallet credit does not expire. It remains until used and is not tied to a plan cycle or subscription period.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Promo Codes &amp; Referral Programme</div>
+    <div class="callout co-ink">
+      <div class="co-ico">📋</div>
+      <div>
+        <div class="co-title">Where codes are entered</div>
+        <div class="co-body">Promo and referral codes are entered on the <strong>payment page</strong>, above the payment method selection. The Plan Selection screen shows a teaser message ("Have a referral code? Enter it at checkout") but has no input field. The order total updates immediately when a valid code is applied.</div>
+      </div>
+    </div>
+    <div class="dlist" style="margin-top:12px;">
+      <div class="drow"><div class="dkey">Promo code</div><div class="dval"><strong>20% off</strong> the plan price. Applies to all four plan types. The discounted total is reflected immediately in the order summary.</div></div>
+      <div class="drow"><div class="dkey">Referral code — new user</div><div class="dval">Same 20% off. However, referral codes are only valid on a customer's <strong>first subscription.</strong> If a returning user attempts to apply a referral code, it is shown as invalid.</div></div>
+      <div class="drow"><div class="dkey">Referral reward — referrer</div><div class="dval">The person who shared their code earns <strong>10% of the new user's first plan purchase</strong> as wallet credit. This credit is applied <strong>immediately when the new user's plan activates</strong> — not at the moment of payment, but when the plan goes live. The amount varies: 10% of SAR 500 = SAR 50 for a Month Plan referral.</div></div>
+      <div class="drow"><div class="dkey">Referral code validity</div><div class="dval">Each customer has a permanent unique referral code. There is no limit to how many friends they can refer. The 20% discount applies only to the new user's first plan — they cannot use a referral code on any subsequent renewal.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Refund Policy</div>
+    <div class="callout co-red">
+      <div class="co-ico">❌</div>
+      <div>
+        <div class="co-title">No refunds on any plan</div>
+        <div class="co-body">Zaadi Kitchen does not offer refunds. If a customer cancels their plan, <strong>deliveries continue until the last day of the paid period.</strong> The plan will not renew after that date. Customers who wish to discuss their situation further are directed to the support team via the Contact Support link in the cancellation confirmation screen.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PART B ════ -->
+<div class="part-opener" id="part-b">
+  <div class="po-inner">
+    <div class="po-letter">B</div>
+    <div class="po-body">
+      <div class="po-name">Customer Application — B1 to B9</div>
+      <div class="po-desc">Every feature a customer interacts with: what it does, the rules behind it, and how the application executes it. Sections B1–B9 are covered here. B10–B17 continue in Part 2 of this document.</div>
+    </div>
+  </div>
+</div>
+
+<!-- B1 -->
+<div class="sec" id="b1">
+  <div class="sec-code">B1</div>
+  <div class="sec-title">Sign In &amp; Authentication</div>
+  <div class="sec-lead">How customers get into the app. Two OTP options are shown equally on the same screen. A 4-digit code is used. The app routes to different screens depending on whether the user is new or returning.</div>
+  <div class="blk">
+    <div class="blk-title">Authentication Options</div>
+    <div class="callout co-mint">
+      <div class="co-ico">📱</div>
+      <div>
+        <div class="co-title">WhatsApp and SMS are used for OTP only — nothing else</div>
+        <div class="co-body">In v1, <strong>WhatsApp and SMS are the two methods for delivering the sign-in OTP code.</strong> They are not used for any other purpose. All other notifications — delivery confirmation, feedback requests, renewal reminders, referral rewards, and broadcast messages — are sent as <strong>push notifications</strong>, not via WhatsApp or SMS.</div>
+      </div>
+    </div>
+    <div class="cards c2" style="margin-top:12px;">
+      <div class="card c-mint"><div class="card-label">WhatsApp OTP</div><div class="card-value">Primary option</div><div class="card-note">4-digit code sent via WhatsApp to the customer's phone number. Most customers will have WhatsApp — this is the recommended path.</div></div>
+      <div class="card c-grey"><div class="card-label">SMS OTP</div><div class="card-value">Equal option</div><div class="card-note">Same 4-digit code delivered via SMS. Shown on the same screen as WhatsApp — not a fallback. Both options are equally available.</div></div>
+    </div>
+    <div class="callout co-ink" style="margin-top:12px;">
+      <div class="co-ico">ℹ️</div>
+      <div>
+        <div class="co-title">4-digit code — important for developers</div>
+        <div class="co-body">The OTP is exactly <strong>4 digits</strong>. The UI shows 4 input boxes. The backend must generate and validate 4-digit codes only. This is different from the 6-digit standard used by many applications.</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Post-Authentication Routing</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Existing user</div><div class="dval">Routes directly to the Home screen in whatever state their subscription is in — Active, Expired, Paused, or Resumed.</div></div>
+      <div class="drow"><div class="dkey">New user</div><div class="dval">Routes to the Name Entry screen to complete their profile before proceeding to area selection and plan selection.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Name Entry — New Users Only</div>
+    <div class="prose">
+      <p><strong>Name is required</strong> — the app cannot proceed without it. The name is used in all personalised greetings throughout the app ("Good morning, Ahmed 👋") and on the Plan Selection screen for returning users ("Welcome back, Ahmed!").</p>
+      <p>Email is optional and can be skipped entirely or added later from the Edit Profile screen in the customer's account. A green banner on the Name Entry screen confirms that all meals are Halal and preservative-free.</p>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B2 -->
+<div class="sec" id="b2">
+  <div class="sec-code">B2</div>
+  <div class="sec-title">Onboarding: Area &amp; Building</div>
+  <div class="sec-lead">After entering their name, new customers set their delivery location. This is a two-step process — area first, then building details. All data comes from admin-managed lists. Customer free text input is accepted but never stored in those lists.</div>
+  <div class="blk">
+    <div class="blk-title">Step 1 — Area Search</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">What the customer sees</div><div class="dval">A search bar with a dropdown list of delivery areas. Each area shows its distance from the kitchen and an in-zone confirmation badge.</div></div>
+      <div class="drow"><div class="dkey">Where the list comes from</div><div class="dval">Populated entirely from the admin portal (Delivery Areas section). Only areas with "Active" status are selectable. "Coming Soon" areas appear in the list but are greyed out and cannot be chosen.</div></div>
+      <div class="drow"><div class="dkey">Out-of-zone areas</div><div class="dval">If the customer types an area not in the list, a message is shown: "We haven't expanded there yet." The customer can enter their area as free text. This is <strong>captured in the backend for expansion planning only</strong> — it is never shown to other customers and does not create an autosuggest entry.</div></div>
+      <div class="drow"><div class="dkey">Cannot proceed out-of-zone</div><div class="dval">A customer in an out-of-zone area cannot continue to plan selection. They must use a different address within an active delivery area.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Step 2 — Building Details</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Building field</div><div class="dval">Shows an auto-suggest list as the customer types. The list is populated by the admin from the Buildings section within each area. If a customer types a building not in the list, the free text is accepted — <strong>but it is never stored</strong> and will not appear as a suggestion for any other customer. Only the admin can add buildings to the official list.</div></div>
+      <div class="drow"><div class="dkey">Floor</div><div class="dval">Optional. Appears on the delivery sticker label and on the rider's delivery list for that customer.</div></div>
+      <div class="drow"><div class="dkey">Desk / Area</div><div class="dval">Optional. Helps the rider find the exact desk within the floor.</div></div>
+      <div class="drow"><div class="dkey">Gate / Entrance</div><div class="dval">Optional. Which building entrance to use.</div></div>
+      <div class="drow"><div class="dkey">Rider Notes</div><div class="dval">Optional free text. Shown to the rider on their delivery list for this customer. Example: "Call me on arrival", "Leave at reception if I'm in a meeting."</div></div>
+      <div class="drow"><div class="dkey">Minimum to proceed</div><div class="dval">The Building field is the only required field. All others (floor, desk, gate, notes) are optional. The Save &amp; Continue button is available once the building field is filled.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Editing the Address Later</div>
+    <div class="prose"><p>Customers can update their delivery location at any time from two entry points: the "Edit" link on the location strip on the Home screen, or via Profile → Delivery Address. Multiple addresses can be saved; one is marked as Active at any time. Changes take effect from the next scheduled delivery.</p></div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B3 -->
+<div class="sec" id="b3">
+  <div class="sec-code">B3</div>
+  <div class="sec-title">Plan Selection</div>
+  <div class="sec-lead">The screen where customers choose their subscription plan. The presentation differs slightly between new and returning users, but the available plans and the neutral tone are the same.</div>
+  <div class="blk">
+    <div class="blk-title">New User Plan Selection</div>
+    <div class="prose">
+      <p>New users see all 4 plans. The Month Plan is featured in a dark card with a "Most Popular" tag. A meal type toggle at the top (Executive / Salad) allows the customer to view plans in the context of their preferred type — this does not change prices. A teaser at the top of the screen reads "Have a referral code? Enter it at checkout" — there is no input field on this screen.</p>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Returning User Plan Selection</div>
+    <div class="prose">
+      <p>Returning users see a "Welcome back, [Name]!" header and a "Returning subscriber" banner. Their most recent plan is tagged "Your Last Plan" — this is informational only. They are equally free to choose any of the 4 plans.</p>
+    </div>
+    <div class="callout co-mint" style="margin-top:12px;">
+      <div class="co-ico">✅</div>
+      <div>
+        <div class="co-title">No upgrade or downgrade language</div>
+        <div class="co-body">Plan selection is intentionally neutral. The app does not frame any plan as an "upgrade" or "downgrade" relative to a customer's previous plan. All plans are presented on equal footing — the customer chooses whatever suits them for the next period.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B4 -->
+<div class="sec" id="b4">
+  <div class="sec-code">B4</div>
+  <div class="sec-title">Payment &amp; Checkout</div>
+  <div class="sec-lead">The payment page brings together address confirmation, start date selection, order summary, promo code, and payment method in a fixed sequence before the customer pays.</div>
+  <div class="blk">
+    <div class="blk-title">Payment Page Order</div>
+    <div class="flow">
+      <div class="fstep f-mint">Delivering To</div><div class="farrow">→</div>
+      <div class="fstep f-mint">Start Date</div><div class="farrow">→</div>
+      <div class="fstep">Order Summary</div><div class="farrow">→</div>
+      <div class="fstep">Promo Code</div><div class="farrow">→</div>
+      <div class="fstep">Payment Method</div><div class="farrow">→</div>
+      <div class="fstep f-papaya">Pay →</div>
+    </div>
+    <div class="flow-note">This sequence is the same for new and returning users. Returning users have their address pre-filled and wallet credit auto-applied in the order summary.</div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Each Section Explained</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Delivering To</div><div class="dval">Shows the customer's current active delivery address, pre-filled. An "Edit" link opens the Edit Location flow. Changes update the customer's active address.</div></div>
+      <div class="drow"><div class="dkey">Start Date</div><div class="dval">A calendar field defaults to the next working day (Sunday–Thursday). The customer can tap to open a date picker and choose any future working day. This becomes the date of their first delivery.</div></div>
+      <div class="drow"><div class="dkey">Order Summary</div><div class="dval">Shows plan name, meal count, meal type, and — for returning users — wallet credit applied as a deduction line. Total due updates if a promo code is applied.</div></div>
+      <div class="drow"><div class="dkey">Promo / Referral Code</div><div class="dval">Free text field with an Apply button. On a valid code: the order summary updates immediately with 20% discount shown as a line item and the new total. On an invalid or already-used code: an inline error message is shown below the field.</div></div>
+      <div class="drow"><div class="dkey">Payment Method</div><div class="dval">New users: Apple Pay pre-selected. Returning users: last saved card pre-selected. All four methods available (Apple Pay, Mada, Visa/MC, STC Pay).</div></div>
+      <div class="drow"><div class="dkey">Pay button</div><div class="dval">Displays the final amount due (post-discount and post-wallet-deduction). Triggers the payment gateway on tap. On success: routes to the Success screen. On failure: inline error with retry option.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Success Screens</div>
+    <div class="cards c2">
+      <div class="card c-mint"><div class="card-label">New User — First Timer</div><div class="card-value">"Your first Zaadi meal!"</div><div class="card-note">Primary CTA: "Explore the app →" routes to active Home. Secondary: "See this week's menu." If a referral code was used, the saving is shown in the summary. The referrer's 10% wallet credit is applied at this moment.</div></div>
+      <div class="card c-papaya"><div class="card-label">Returning User</div><div class="card-value">"You're back!"</div><div class="card-note">Primary CTA: "Go to Home →" routes to active Home. Secondary: "View receipt" opens the Billing history at this transaction.</div></div>
+    </div>
+    <div class="prose" style="margin-top:12px;"><p>Both screens show: plan name, meal count, first delivery date, and amount paid. The referrer's wallet credit is applied on the backend as soon as the new user's plan activates — it is reflected in the referrer's Billing &amp; Wallet screen with a transaction entry showing "10% of SAR [plan price]."</p></div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B5 -->
+<div class="sec" id="b5">
+  <div class="sec-code">B5</div>
+  <div class="sec-title">Home Screen</div>
+  <div class="sec-lead">The central daily screen for all customers. It has five distinct states based on subscription status. Each state shows different content, different quick actions, and a different bottom navigation tab.</div>
+  <div class="blk">
+    <div class="blk-title">The Five States</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey"><span class="tag tg-grey">Unsubscribed</span></div><div class="dval">For new or lapsed customers with no active plan. Dark hero with "Start for SAR 28 →" primary CTA and "See menu" secondary. Meal cards are visible without locks — they show today's meals with a Subscribe button. Why Zaadi value props listed below the cards. Bottom nav shows <strong>"Plans"</strong> tab (not "My Plan").</div></div>
+      <div class="drow"><div class="dkey"><span class="tag tg-mint">Active</span></div><div class="dval">Standard daily view. Dark subscription banner with plan name and days remaining. Location strip shows the delivery address. Horizontal meal card scroll for the week ahead. <strong>1×3 quick actions: Switch Meal Type / My Plan / Billing &amp; Wallet.</strong> Bottom nav shows <strong>"My Plan"</strong> tab.</div></div>
+      <div class="drow"><div class="dkey"><span class="tag tg-papaya">Expired</span></div><div class="dval">Plan has ended. Dark banner with orange "Expired" pill. Orange alert card with a Renew CTA. Meal cards are locked. <strong>1×3 quick actions: Renew / Meal History / Billing &amp; Wallet.</strong></div></div>
+      <div class="drow"><div class="dkey"><span class="tag tg-purple">Paused</span></div><div class="dval">Subscription is paused. Purple banner and purple card showing: days frozen, paused-on date, and resumes date. Resume Subscription → CTA in the purple card. <strong>1×3 quick actions: Resume Now / Browse Menu / Billing &amp; Wallet.</strong></div></div>
+      <div class="drow"><div class="dkey"><span class="tag tg-mint">Resumed</span></div><div class="dval">Immediately after resuming from pause. "Resumed" green pill in the active subscription banner. "You're back!" greeting. Upcoming meal cards visible. <strong>1×3 quick actions: same as Active state.</strong></div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Location Strip</div>
+    <div class="prose"><p>The location strip appears below the subscription banner in the Active and Resumed states. It shows the customer's current active delivery address: building, floor, and desk. Tapping "Edit" opens the Edit Location screen. The location strip is not shown in the Unsubscribed, Expired, or Paused states.</p></div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Meal Card Scroll</div>
+    <div class="prose"><p>The horizontal card scroll shows the current week's meals (up to 5 cards — Sunday through Thursday). Today's card is highlighted with a "TODAY" badge and a mint border. Future cards show the date label in the corner. Each card shows: meal emoji or image, meal name, kcal, and a Skip button. Tapping a card opens the Meal Detail bottom sheet for that specific meal.</p></div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Renewal Nudge</div>
+    <div class="prose"><p>A "Renew →" button appears in the subscription banner when 20% or fewer of the plan's days remain (e.g. fewer than 2 days on a Week Plan, fewer than 5 days on a Month Plan). Tapping it opens the Plan Selection screen with the customer's previous plan tagged "Your Last Plan."</p></div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B6 -->
+<div class="sec" id="b6">
+  <div class="sec-code">B6</div>
+  <div class="sec-title">Meal Detail</div>
+  <div class="sec-lead">A detailed view of a specific meal showing nutritional information, the chef's description, and the skip action. Available in two layouts — a bottom sheet from the home screen and a full screen from the menu.</div>
+  <div class="blk">
+    <div class="blk-title">Content Shown</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Meal image / emoji</div><div class="dval">Hero image area. If the admin uploaded a photo for the dish in the Meal Library, it is shown here. If not, the emoji selected by the admin appears on a colour-coded gradient background — orange for Executive Meal, green for Salad Meal.</div></div>
+      <div class="drow"><div class="dkey">Badges</div><div class="dval">"Highly Rated" badge appears when the meal has strong historical ratings. Meal type badge (Executive / Salad).</div></div>
+      <div class="drow"><div class="dkey">Date label</div><div class="dval">Shows which day this meal is scheduled for — e.g. "Sunday, Apr 7 · Executive Meal."</div></div>
+      <div class="drow"><div class="dkey">Meal names</div><div class="dval">English name in large Fraunces typeface. Arabic name shown directly below in a smaller weight.</div></div>
+      <div class="drow"><div class="dkey">Macros</div><div class="dval">Four pills showing: Calories (kcal) · Protein (g) · Carbs (g) · Fat (g). Values are set by admin in the Meal Library when the dish is added.</div></div>
+      <div class="drow"><div class="dkey">Chef's Note</div><div class="dval">Short description in the chef's voice. Shown in a lemon-coloured box with italic text. Set by admin when adding the dish. Example: "Slow-cooked for 4 hours with saffron rice and dried lime."</div></div>
+      <div class="drow"><div class="dkey">Key Ingredients</div><div class="dval">Shown in the full-screen view only. Small chip tags listing the main ingredients.</div></div>
+      <div class="drow"><div class="dkey">Action button</div><div class="dval"><strong>Single full-width button: "⏭ Skip this day."</strong> This is the only action. There is no second button — the salad add-on is not in v1. The button is subject to the 6 PM cutoff and skip limit rules.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Two Layouts</div>
+    <div class="cards c2">
+      <div class="card c-mint"><div class="card-label">Bottom Sheet</div><div class="card-value">Opened from home meal card</div><div class="card-note">Slides up from the bottom. Dismiss by swiping down or tapping the dark backdrop. Returns to the Home screen on close.</div></div>
+      <div class="card c-papaya"><div class="card-label">Full Screen</div><div class="card-value">Opened from a menu row tap</div><div class="card-note">Full page view with a floating back button top-left. Includes key ingredients chips. The Skip button is sticky at the bottom so it remains accessible while the customer scrolls through the content.</div></div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B7 -->
+<div class="sec" id="b7">
+  <div class="sec-code">B7</div>
+  <div class="sec-title">Menu</div>
+  <div class="sec-lead">The 7-day menu view shows all meals for the current week. It is accessible from the bottom navigation and is intended to be viewable by all users regardless of subscription status.</div>
+  <div class="blk">
+    <div class="blk-title">Menu Structure</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Filter tabs</div><div class="dval">Three tabs: All (default — shows both meal types per day), Executive (executive meals only), Salad (salad meals only). Tabs filter which rows are shown — they do not restrict which meals exist.</div></div>
+      <div class="drow"><div class="dkey">TODAY badge</div><div class="dval">The current day's section is labelled with a green "TODAY" badge next to the day name. The working week runs Sunday to Thursday.</div></div>
+      <div class="drow"><div class="dkey">Each row shows</div><div class="dval">Colour-coded meal thumbnail (orange = Executive, green = Salad) · English meal name · Arabic meal name · Calorie count · Chevron indicating it is tappable.</div></div>
+      <div class="drow"><div class="dkey">Tapping a row</div><div class="dval">Opens Meal Detail Full Screen for that meal. Past meals open in a read-only view — no skip action is available for past delivery days.</div></div>
+      <div class="drow"><div class="dkey">Data source</div><div class="dval">Menu content flows from what the admin published in the Menu Manager for that week. Once published, the customer app updates immediately.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Menu Accessibility — Intended Behaviour</div>
+    <div class="callout co-mint">
+      <div class="co-ico">✅</div>
+      <div>
+        <div class="co-title">Menu is open to all users in all states</div>
+        <div class="co-body">The Menu screen is designed to be fully browsable by <strong>all customers regardless of subscription status</strong> — Unsubscribed, Active, Expired, Paused, and Resumed. No meal should be locked or hidden at the menu level. The menu serves as a preview and an ongoing engagement tool for customers who are considering renewing or are between plans.</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">⚠️ Known Build Correction</div>
+    <div class="callout co-warn">
+      <div class="co-ico">🔧</div>
+      <div>
+        <div class="co-title">Menu not accessible in Expired plan state — fix required</div>
+        <div class="co-body">In the current built prototype, the Menu tab is not visible or accessible when a customer's plan is in the <strong>Expired state.</strong> This is a gap from the intended design. <strong>The production build must ensure the Menu screen is accessible in all subscription states, including Expired.</strong> A customer should always be able to browse this week's menu regardless of whether they have an active plan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B8 -->
+<div class="sec" id="b8">
+  <div class="sec-code">B8</div>
+  <div class="sec-title">Skip a Day</div>
+  <div class="sec-lead">Customers can skip any scheduled delivery before the 6 PM cutoff the day before. There is no per-skip charge. The total number of skips available is bounded only by the 2× plan window rule.</div>
+  <div class="blk">
+    <div class="blk-title">How Skipping Works</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Cutoff time</div><div class="dval"><strong>6 PM Riyadh time (AST, UTC+3)</strong> on the day <strong>before</strong> delivery. The Saudi working week is Sunday–Thursday, so:<br>· For a Sunday delivery: cutoff is Saturday 6 PM<br>· For a Monday delivery: cutoff is Sunday 6 PM<br>After the cutoff, the skip button is hidden or disabled for that meal.</div></div>
+      <div class="drow"><div class="dkey">What happens when skipped</div><div class="dval">The day is marked as skipped. No meal is produced or delivered for that customer on that day. <strong>The total number of meals in the plan does not increase</strong> to compensate — skipped meals are not replaced or rolled forward.</div></div>
+      <div class="drow"><div class="dkey">Undo skip</div><div class="dval">A skipped day can be un-skipped before the 6 PM cutoff. After the cutoff passes, the skip is final and cannot be reversed.</div></div>
+      <div class="drow"><div class="dkey">Skip limit</div><div class="dval">No fixed number of skips per week. However, all skips must occur within the <strong>2× plan window</strong> (see A2). Once that window closes, the Skip button is disabled. The limit resets completely on renewal.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Skip Limit Reached</div>
+    <div class="callout co-papaya">
+      <div class="co-ico">⚠️</div>
+      <div>
+        <div class="co-title">What the customer sees when the limit is hit</div>
+        <div class="co-body">A red banner appears at the top of the Skip a Day screen: <strong>"Skip limit reached for this subscription period"</strong> with a link to the FAQ explaining the 2× window rule. Individual skip buttons for affected days are greyed out and cannot be tapped. Skips that were already set before the limit was hit can still be undone if the 6 PM cutoff has not yet passed. The limit resets when the customer renews their subscription.</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Where Skip Actions Are Available</div>
+    <div class="prose">
+      <p>Skip can be triggered from three places in the app:</p>
+      <p><strong>1. Home screen meal cards</strong> — each card in the horizontal scroll has an inline "⏭ Skip" button below the meal details.</p>
+      <p><strong>2. Meal Detail</strong> — both the bottom sheet and the full-screen view have a "⏭ Skip this day" button.</p>
+      <p><strong>3. Skip a Day screen</strong> — accessed from My Plan tab → Skip a Day. Shows a full list of all scheduled delivery days with their status: Delivered / Skipped (with Undo option) / Available (with Skip button) / Limit Reached (button greyed).</p>
+    </div>
+  </div>
+</div>
+<div class="sep"></div>
+
+<!-- B9 -->
+<div class="sec" id="b9">
+  <div class="sec-code">B9</div>
+  <div class="sec-title">Pause Subscription</div>
+  <div class="sec-lead">Customers can pause their subscription for a defined date range. No meals are delivered and no charge is made during a pause. The remaining plan days are frozen and restart when the customer resumes.</div>
+  <div class="blk">
+    <div class="blk-title">How Pausing Works</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">How to initiate</div><div class="dval">From the My Plan tab: tap the Pause Subscription toggle. This opens the Pause Modal — the subscription is <strong>not</strong> paused immediately. The pause is only applied when the customer confirms in the modal.</div></div>
+      <div class="drow"><div class="dkey">Pause Modal</div><div class="dval">A calendar date picker with two fields: Start Date and End Date. The customer selects the date range they want to pause. Dates beyond the 2× plan window ceiling are greyed out in the calendar and cannot be selected.</div></div>
+      <div class="drow"><div class="dkey">During the pause</div><div class="dval">Plan days are frozen — the count does not decrease. No meals are produced or delivered. No charge is made. The Home screen transitions to the purple Paused state showing: days frozen, paused-on date, and the resumes date.</div></div>
+      <div class="drow"><div class="dkey">Ceiling enforcement</div><div class="dval">The pause end date cannot extend beyond the 2× plan window. These dates are greyed out in the calendar picker. If a customer does not manually resume by the ceiling date, <strong>the system automatically resumes the subscription</strong> at the ceiling date.</div></div>
+      <div class="drow"><div class="dkey">Window reset</div><div class="dval">Like skip limits, the pause window resets completely when the customer renews. Unused pause capacity from one subscription period does not carry over to the next.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Resuming from Pause</div>
+    <div class="dlist">
+      <div class="drow"><div class="dkey">Entry points</div><div class="dval">Two routes: (1) "Resume Subscription →" in the purple paused card on the Home screen. (2) "Resume Now" in the 1×3 quick actions row on the Paused Home state. Both open the Resume Confirmation Modal.</div></div>
+      <div class="drow"><div class="dkey">Resume options</div><div class="dval">Two choices in the modal: (1) "Resume from tomorrow" — the default option, shows the first delivery date. (2) "Choose a specific start date" — reveals a date picker to select any future working day (Sunday–Thursday).</div></div>
+      <div class="drow"><div class="dkey">What resumes</div><div class="dval">The remaining frozen days restart from the chosen date. The customer's meal type, delivery address, and all other preferences carry over unchanged. <strong>There is no charge to resume.</strong></div></div>
+      <div class="drow"><div class="dkey">Resume Success screen</div><div class="dval">Purple gradient screen: "Welcome back, [Name]!" Shows plan, days remaining, first delivery date, and explicitly states "Charged today: Nothing — ₀" to confirm no payment was taken.</div></div>
+    </div>
+  </div>
+  <div class="blk">
+    <div class="blk-title">Continued in Part 2</div>
+    <div class="callout co-ink">
+      <div class="co-ico">→</div>
+      <div>
+        <div class="co-title">Part 2 covers B10–B17</div>
+        <div class="co-body">Cancel Plan (B10) · Switch Meal Type (B11) · Profile (B12) · Referral (B13) · Billing &amp; Wallet (B14) · Feedback &amp; Ratings (B15) · Meal History (B16) · Support (B17) — all continue in Part 2 of this document, alongside Admin sections C1–C5.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="ft-grid">
+    <div>
+      <div class="ft-logo">Zaadi<span>.</span> Kitchen</div>
+      <div class="ft-sub">Product &amp; Business Logic Master Reference<br>Part 1 of 3 — Business Foundation (A1–A5) &amp; Customer App (B1–B9)<br>Continue to Part 2 for B10–B17 and Admin sections C1–C5.</div>
+    </div>
+    <div class="ft-nav">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;text-align:right;">All Document Parts</div>
+      <a class="here" href="#">Part 1 — Foundation &amp; Customer App (B1–B9)</a>
+      <a href="#">Part 2 — Customer App (B10–B17) &amp; Admin (C1–C5)</a>
+      <a href="#">Part 3 — Admin (C6–C10), Rider &amp; Cross-Cutting Rules</a>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// Mobile sidebar toggle
+function toggleSidebar(){
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+  document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
+}
+// Close sidebar when a nav link is tapped on mobile
+document.querySelectorAll('.sb-link, .sb-part-pill').forEach(l => {
+  l.addEventListener('click', () => {
+    if(window.innerWidth <= 768){
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  });
+});
+// Sidebar active link on scroll
+const links = document.querySelectorAll('.sb-link');
+const sections = document.querySelectorAll('.sec[id]');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      links.forEach(l => l.classList.remove('on'));
+      const a = document.querySelector('.sb-link[href="#'+e.target.id+'"]');
+      if(a) a.classList.add('on');
+    }
+  });
+}, {rootMargin:'-15% 0px -75% 0px'});
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+export type AuditLogAction =
+  | 'skip_delivery'
+  | 'undo_skip_delivery'
+  | 'pause_subscription'
+  | 'cancel_pause'
+  | 'resume_subscription'
+  | 'cancel_subscription'
+  | 'expire_subscription'
+  | 'delete_account'
+
+export interface AuditLog {
+  id: string
+  userId: string
+  subscriptionId: string | null
+  action: AuditLogAction
+  metadata: Record<string, unknown> | null
+  createdAt: Date
+}

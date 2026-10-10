@@ -1,74 +1,114 @@
 import { Injectable } from '@nestjs/common'
-import { Op } from 'sequelize'
 
 import { User } from '../../core/entities/index.js'
 import { UserRole } from '../../codecs/enums.js'
 import {
-    UserLoader,
-    UserPersistor,
-    CreateUserRequest,
-    UpdateUserRequest,
+  UserLoader,
+  UserPersistor,
+  CreateUserRequest,
+  UpdateUserRequest,
 } from '../../core/entitygateway/User.js'
 import { UserModel } from './models/index.js'
+import { generateCustomerErpCode } from '../../core/usecases/services/erpCodeUtils.js'
 
 @Injectable()
 export class UserPersistenceService implements UserLoader, UserPersistor {
-    async getUserById(userId: string): Promise<User | null> {
-        const model = await UserModel.findByPk(userId)
-        return model ? this.toEntity(model) : null
+  async getUserById(userId: string): Promise<User | null> {
+    const model = await UserModel.findByPk(userId)
+    return model ? this.toEntity(model) : null
+  }
+
+  async getUserByPhone(phone: string): Promise<User | null> {
+    const model = await UserModel.findOne({ where: { phone } })
+    return model ? this.toEntity(model) : null
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const model = await UserModel.findOne({ where: { email } })
+    return model ? this.toEntity(model) : null
+  }
+
+  private async nextUniqueCustomerErpCode(): Promise<string> {
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const erpCustomerCode = generateCustomerErpCode()
+      const existing = await UserModel.findOne({ where: { erpCustomerCode } })
+      if (!existing) return erpCustomerCode
+    }
+    throw new Error('Failed to generate unique erp_customer_code')
+  }
+
+  async createUser(request: CreateUserRequest): Promise<User> {
+    const erpCustomerCode =
+      request.role === UserRole.CUSTOMER
+        ? await this.nextUniqueCustomerErpCode()
+        : null
+    const model = await UserModel.create({
+      phone: request.phone || null,
+      email: request.email || null,
+      password: request.password || null,
+      fullName: request.fullName,
+      role: request.role,
+      languagePreference: request.languagePreference || 'EN',
+      erpCustomerCode,
+    })
+    return this.toEntity(model)
+  }
+
+  async updateUser(userId: string, updates: UpdateUserRequest): Promise<User> {
+    const model = await UserModel.findByPk(userId)
+    if (!model) {
+      throw new Error(`User with id '${userId}' not found`)
+    }
+    await model.update(updates)
+    return this.toEntity(model)
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const model = await UserModel.findByPk(userId)
+    if (model) {
+      await model.destroy()
+    }
+  }
+
+  async anonymizeAccountForDeletion(userId: string): Promise<User> {
+    const model = await UserModel.findByPk(userId)
+    if (!model) {
+      throw new Error(`User with id '${userId}' not found`)
     }
 
-    async getUserByPhone(phone: string): Promise<User | null> {
-        const model = await UserModel.findOne({ where: { phone } })
-        return model ? this.toEntity(model) : null
-    }
+    const deletedAt = new Date()
+    const tombstonePhone = `deleted:${userId}`
+    const tombstoneEmail = `deleted+${userId}@deleted.local`
 
-    async getUserByEmail(email: string): Promise<User | null> {
-        const model = await UserModel.findOne({ where: { email } })
-        return model ? this.toEntity(model) : null
-    }
+    await model.update({
+      phone: tombstonePhone,
+      email: tombstoneEmail,
+      password: null,
+      fullName: 'Deleted User',
+      pushNotificationToken: null,
+      referralCode: null,
+      isActive: false,
+      deletedAt,
+    })
 
-    async createUser(request: CreateUserRequest): Promise<User> {
-        const model = await UserModel.create({
-            phone: request.phone || null,
-            email: request.email || null,
-            password: request.password || null,
-            fullName: request.fullName,
-            role: request.role,
-            languagePreference: request.languagePreference || 'EN',
-        })
-        return this.toEntity(model)
-    }
+    return this.toEntity(model)
+  }
 
-    async updateUser(userId: string, updates: UpdateUserRequest): Promise<User> {
-        const model = await UserModel.findByPk(userId)
-        if (!model) {
-            throw new Error(`User with id '${userId}' not found`)
-        }
-        await model.update(updates)
-        return this.toEntity(model)
+  private toEntity(model: UserModel): User {
+    return {
+      id: model.id,
+      phone: model.phone || undefined,
+      email: model.email || undefined,
+      password: model.password || undefined,
+      fullName: model.fullName,
+      role: model.role as UserRole,
+      languagePreference: model.languagePreference as 'EN' | 'AR',
+      pushNotificationToken: model.pushNotificationToken || undefined,
+      isActive: model.isActive,
+      erpCustomerCode: model.erpCustomerCode ?? undefined,
+      deletedAt: model.deletedAt ?? undefined,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
     }
-
-    async deleteUser(userId: string): Promise<void> {
-        const model = await UserModel.findByPk(userId)
-        if (model) {
-            await model.destroy()
-        }
-    }
-
-    private toEntity(model: UserModel): User {
-        return {
-            id: model.id,
-            phone: model.phone || undefined,
-            email: model.email || undefined,
-            password: model.password || undefined,
-            fullName: model.fullName,
-            role: model.role as UserRole,
-            languagePreference: model.languagePreference as 'EN' | 'AR',
-            pushNotificationToken: model.pushNotificationToken || undefined,
-            isActive: model.isActive,
-            createdAt: model.createdAt,
-            updatedAt: model.updatedAt,
-        }
-    }
+  }
 }

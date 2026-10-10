@@ -22,12 +22,17 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.sequelizerc ./
 COPY --from=builder /app/.sequelizerc.js ./
+COPY --from=builder /app/src/infrastructure/SequelizePersistence/migrations ./src/infrastructure/SequelizePersistence/migrations
+COPY --from=builder /app/src/infrastructure/SequelizePersistence/seeders ./src/infrastructure/SequelizePersistence/seeders
+COPY --from=builder /app/start.sh ./
+RUN chmod +x start.sh
 
 # Install ONLY production dependencies to keep image small
-RUN npm ci --only=production
+# Also install sequelize-cli globally or locally so migrations can run
+RUN npm ci --only=production && npm install sequelize-cli pg pg-hstore
 
 # Expose the port (must match PORT in env and Terraform config)
 EXPOSE 3000
 
 # Start command
-CMD ["node", "dist/main.js"]
+CMD ["sh", "start.sh"]

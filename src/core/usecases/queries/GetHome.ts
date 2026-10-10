@@ -1,0 +1,346 @@
+import type { Deps } from '../../entitygateway/index.js'
+import type { Subscription } from '../../entities/Subscription.js'
+import type { Plan } from '../../entities/Plan.js'
+import { getFlexDaysRemaining } from '../services/flexDays.js'
+import {
+  ensurePauseStatus,
+  isPauseScheduled,
+} from '../services/ensurePauseStatus.js'
+import {
+  canUseSkipAndPause,
+  isSubscriptionInServicePeriod,
+} from '../services/subscriptionServicePeriod.js'
+import { buildPauseHomeLabels } from '../services/pauseFrozenDays.js'
+import { todayKSA } from '../services/revenueUtils.js'
+
+export interface GetHomeInput {
+  userId: string
+}
+
+export interface GetHomeOutput {
+  user: {
+    first_name: string
+    language: string
+  }
+  subscription_status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled'
+  subscription: Record<string, unknown> | null
+  delivery_location: {
+    building: string
+    floor: string | null
+    area_name: string
+  } | null
+  wallet_balance_sar: number | null
+  banner: Record<string, unknown>
+  quick_actions: Record<string, unknown>[] | null
+  plans: Array<{
+    id: string
+    name: string
+    price_sar: number
+    meal_count: number
+    price_per_meal_sar: number
+    is_most_popular: boolean
+    is_current_plan?: boolean
+    is_last_plan?: boolean
+    cta_label: string
+  }>
+}
+
+function getSubscriptionStatus(sub: Subscription | null): 'none' | 'active' | 'expired' | 'paused' | 'cancelled' {
+  if (!sub) return 'none'
+  return sub.status as 'active' | 'expired' | 'paused' | 'cancelled'
+}
+
+function formatEndDateLabel(endDate: string): string {
+  const d = new Date(endDate)
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `Ends ${d.getUTCDate()} ${months[d.getUTCMonth()]}`
+}
+
+function getTimeOfDayGreeting(): string {
+  const hour = new Date().getUTCHours() + 3  // AST = UTC+3
+  if (hour >= 5 && hour < 12) return 'Good morning'
+  if (hour >= 12 && hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function buildBanner(
+  status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
+  sub: Subscription | null,
+  firstName: string,
+  location: { buildingName: string; floor?: string; areaName?: string } | null,
+  pauseLabels: { days_frozen: number; pause_label: string } | null = null
+): Record<string, unknown> {
+  if (status === 'none') {
+    return {
+      theme: 'red',
+      headline: 'Fresh lunch, delivered daily.',
+      subtext: 'From our kitchen to your desk. Every day.',
+      primary_cta: { label: 'Start for SAR 28 →', action: 'navigate_plan_selection' },
+      secondary_cta: { label: 'Browse menu →', action: 'navigate_menu_tab' },
+    }
+  }
+
+  if (
+    sub &&
+    (status === 'active' ||
+      (status === 'cancelled' && isSubscriptionInServicePeriod(sub)))
+  ) {
+    const daysRemaining = Math.max(
+      0,
+      sub.totalMealDays - sub.deliveredCount - sub.skippedCount
+    )
+    const locationLabel = location
+      ? `📍 ${location.buildingName}${location.floor ? ' · ' + location.floor : ''}`
+      : null
+    return {
+      theme: 'black',
+      plan_label: `${sub.mealType === 'executive' ? 'Executive' : 'Salad'} Plan`,
+      greeting: `${getTimeOfDayGreeting()}, ${firstName} 👋`,
+      days_remaining_label: `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left`,
+      end_date_label: formatEndDateLabel(sub.endDate),
+      location_label: locationLabel,
+      location_edit_action: 'navigate_edit_location',
+      ...(status === 'cancelled'
+        ? { status_pill: 'Cancelled' as const }
+        : {}),
+    }
+  }
+
+  if (status === 'expired' && sub) {
+    return {
+      theme: 'red',
+      status_pill: 'Expired',
+      primary_cta: { label: 'Renew →', action: 'navigate_plan_selection_returning' },
+    }
+  }
+
+  if (status === 'paused' && sub && pauseLabels) {
+    return {
+      theme: 'black',
+      status_pill: 'Paused',
+      pause_label: pauseLabels.pause_label,
+      primary_cta: { label: 'Resume →', action: 'open_resume_modal' },
+    }
+  }
+
+  if (status === 'cancelled' && sub) {
+    return {
+      theme: 'black',
+      status_pill: 'Cancelled',
+      primary_cta: { label: 'Renew →', action: 'navigate_plan_selection_returning' },
+    }
+  }
+
+  return { theme: 'red' }
+}
+
+function buildQuickActions(
+  status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
+  sub: Subscription | null
+): Record<string, unknown>[] | null {
+  if (status === 'active' || (sub != null && canUseSkipAndPause(sub))) {
+    return [
+      {
+        id: 'skip',
+        label: 'Skip a day',
+        icon: '⏭',
+        subtext: 'Before 6 PM cutoff · No charge',
+        action: 'navigate_skip_screen',
+        theme: 'red_tint',
+      },
+      {
+        id: 'pause',
+        label: 'Pause anytime',
+        icon: '⏸',
+        subtext: 'Freeze your plan · No charge',
+        action: 'open_pause_modal',
+        theme: 'grey',
+      },
+    ]
+  }
+  if (status === 'paused') {
+    return [
+      {
+        id: 'resume',
+        label: 'Resume Now',
+        icon: '▶️',
+        action: 'open_resume_modal',
+        theme: 'red_tint',
+      },
+      {
+        id: 'browse_menu',
+        label: 'Browse Menu',
+        icon: '🍽',
+        action: 'navigate_menu_tab',
+        theme: 'white',
+      },
+    ]
+  }
+  return null
+}
+
+function buildPlans(
+  plans: Plan[],
+  status: 'none' | 'active' | 'expired' | 'paused' | 'cancelled',
+  sub: Subscription | null
+) {
+  const cancelledOutOfService =
+    status === 'cancelled' && sub != null && !isSubscriptionInServicePeriod(sub)
+  const isRenewing = status === 'expired' || cancelledOutOfService
+  const isActive =
+    status === 'active' ||
+    status === 'paused' ||
+    (status === 'cancelled' && sub != null && isSubscriptionInServicePeriod(sub))
+
+  return plans.map(p => {
+    const isCurrentPlan = isActive && sub?.planId === p.id
+    const isLastPlan = isRenewing && sub?.planId === p.id
+
+    let ctaLabel = 'Subscribe →'
+    if (isRenewing) ctaLabel = 'Renew →'
+    else if (isActive) ctaLabel = 'Switch →'
+
+    const base = {
+      id: p.slug,
+      name: p.name,
+      price_sar: p.priceSar,
+      meal_count: p.mealCount,
+      price_per_meal_sar: p.pricePerMealSar,
+      is_most_popular: p.isMostPopular,
+      cta_label: ctaLabel,
+    }
+
+    if (isActive) return { ...base, is_current_plan: isCurrentPlan }
+    if (isRenewing) return { ...base, is_last_plan: isLastPlan }
+    return base
+  })
+}
+
+export function makeUC(deps: Deps) {
+  return async function getHome(input: GetHomeInput): Promise<GetHomeOutput> {
+    const {
+      logger,
+      userLoader,
+      subscriptionLoader,
+      deliveryLocationLoader,
+      deliveryAreaLoader,
+      walletLoader,
+      planLoader,
+      publicHolidayLoader,
+    } = deps
+
+    try {
+      const [user, rawSub, plans] = await Promise.all([
+        userLoader.getUserById(input.userId),
+        subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
+        planLoader.getActivePlans(),
+      ])
+
+      const sub = rawSub ? await ensurePauseStatus(deps, rawSub) : null
+      const status = getSubscriptionStatus(sub)
+
+      let pauseHomeLabels: { days_frozen: number; pause_label: string } | null =
+        null
+      let pauseHolidaySet = new Set<string>()
+      if (sub?.pausedFrom && sub.pausedUntil) {
+        pauseHolidaySet = new Set(
+          await publicHolidayLoader.getHolidayDates(
+            sub.pausedFrom,
+            sub.pausedUntil
+          )
+        )
+        if (status === 'paused') {
+          pauseHomeLabels = buildPauseHomeLabels(
+            sub.pausedFrom,
+            sub.pausedUntil,
+            todayKSA(),
+            pauseHolidaySet
+          )
+        }
+      }
+      const needsLocation =
+        status === 'active' || (sub != null && canUseSkipAndPause(sub))
+      const needsWallet =
+        status === 'active' ||
+        status === 'expired' ||
+        (sub != null && canUseSkipAndPause(sub))
+      const flexRemaining = sub ? getFlexDaysRemaining(sub) : 0
+
+      const [location, walletBalance] = await Promise.all([
+        needsLocation ? deliveryLocationLoader.getPrimaryLocationByUserId(input.userId) : Promise.resolve(null),
+        needsWallet ? walletLoader.getBalanceByUserId(input.userId) : Promise.resolve(null),
+      ])
+
+      const area = location ? await deliveryAreaLoader.getAreaById(location.areaId) : null
+
+      const firstName = user?.fullName?.split(' ')[0] ?? 'there'
+      const locEntity = location ? { ...location, areaName: area?.name } : null
+
+      const subOutput = sub
+        ? status === 'active' ||
+          (status === 'cancelled' && canUseSkipAndPause(sub))
+          ? {
+              subscription_id: sub.id,
+              plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
+              meal_type: sub.mealType,
+              days_remaining: Math.max(
+                0,
+                sub.totalMealDays - sub.deliveredCount - sub.skippedCount
+              ),
+              end_date: sub.endDate,
+              end_date_label: formatEndDateLabel(sub.endDate),
+              skip_days_remaining: flexRemaining,
+              pause_days_remaining: flexRemaining,
+              skip_pause_days_remaining: flexRemaining,
+              pause_scheduled: isPauseScheduled(sub),
+              paused_from: sub.pausedFrom,
+              paused_until: sub.pausedUntil,
+            }
+          : status === 'paused' && pauseHomeLabels
+          ? {
+              subscription_id: sub.id,
+              plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
+              meal_type: sub.mealType,
+              paused_since: sub.pausedFrom,
+              paused_from: sub.pausedFrom,
+              paused_until: sub.pausedUntil,
+              days_frozen: pauseHomeLabels.days_frozen,
+              pause_ceiling_date: sub.pauseCeilingDate,
+              skip_days_remaining: flexRemaining,
+              pause_days_remaining: flexRemaining,
+              skip_pause_days_remaining: flexRemaining,
+            }
+          : {
+              plan_name: plans.find(p => p.id === sub.planId)?.name ?? sub.planId,
+              meal_type: sub.mealType,
+              end_date: sub.endDate,
+            }
+        : null
+
+      return {
+        user: {
+          first_name: firstName,
+          language: user?.languagePreference ?? 'EN',
+        },
+        subscription_status: status,
+        subscription: subOutput,
+        delivery_location: locEntity
+          ? {
+              building: locEntity.buildingName,
+              floor: locEntity.floor ?? null,
+              area_name: locEntity.areaName ?? locEntity.areaId,
+            }
+          : null,
+        wallet_balance_sar: walletBalance,
+        banner: buildBanner(status, sub, firstName, locEntity, pauseHomeLabels),
+        quick_actions: buildQuickActions(status, sub),
+        plans: buildPlans(plans, status, sub),
+      }
+    } catch (error) {
+      logger.error('GetHome failed', error instanceof Error ? error.message : String(error))
+      throw error
+    }
+  }
+}
+
+export const name = 'GetHome'
