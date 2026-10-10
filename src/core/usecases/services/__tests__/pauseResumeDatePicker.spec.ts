@@ -51,6 +51,21 @@ describe('pauseResumeDatePicker', () => {
     expect(state.cancel_pause_available).toBe(true)
   })
 
+  it('exposes resume picker when status is paused even before pause-start cutoff', () => {
+    const sub = makeSubscription({
+      status: 'paused',
+      pausedFrom: '2026-06-10',
+      pausedUntil: '2026-06-14',
+      startDate: '2026-06-01',
+      endDate: '2026-06-30',
+    })
+    const state = buildPauseResumePickerState(sub, new Set(), FROZEN)
+    expect(state.resume_date_picker.visible).toBe(true)
+    expect(state.resume_date_picker.min).toBe(nextCalendarDay('2026-06-10'))
+    expect(state.resume_date_picker.max).toBe('2026-06-14')
+    expect(state.cancel_pause_available).toBe(false)
+  })
+
   it('exposes resume picker after pause-start cutoff', () => {
     const afterPauseStart = new Date('2026-06-03T10:00:00Z')
     jest.setSystemTime(afterPauseStart)

@@ -94,6 +94,20 @@ export function hasPauseStarted(
   return isAfterSkipCutoff(pausedFrom, now)
 }
 
+/** User may resume: subscription is paused, or pause-start cutoff has passed. */
+export function isPauseInEffect(
+  subscription: Subscription,
+  now: Date = new Date()
+): boolean {
+  if (!subscription.pausedFrom || !subscription.pausedUntil) {
+    return false
+  }
+  if (subscription.status === 'paused') {
+    return true
+  }
+  return hasPauseStarted(subscription.pausedFrom, now)
+}
+
 export function buildPauseResumePickerState(
   subscription: Subscription,
   holidaySet: Set<string>,
@@ -104,7 +118,7 @@ export function buildPauseResumePickerState(
   const pausedFrom = subscription.pausedFrom
   const pausedUntil = subscription.pausedUntil
   const hasWindow = !!(pausedFrom && pausedUntil)
-  const pauseStarted = hasPauseStarted(pausedFrom, now)
+  const pauseInEffect = isPauseInEffect(subscription, now)
   const canSchedule =
     canUseSkipAndPause(subscription) &&
     flexRemaining > 0 &&
@@ -123,11 +137,9 @@ export function buildPauseResumePickerState(
 
   const resumeVisible =
     hasWindow &&
-    pauseStarted &&
+    pauseInEffect &&
     !isAfterSkipCutoff(pausedUntil!, now) &&
-    (subscription.status === 'paused' ||
-      subscription.status === 'active' ||
-      subscription.status === 'cancelled')
+    subscription.status !== 'expired'
 
   let resumeMin: string | null = null
   let resumeMax: string | null = null

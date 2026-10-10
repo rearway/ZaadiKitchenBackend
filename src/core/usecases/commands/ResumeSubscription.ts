@@ -14,7 +14,7 @@ import {
 } from '../services/flexDays.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 import {
-  hasPauseStarted,
+  isPauseInEffect,
   nextCalendarDay,
 } from '../services/pauseResumeDatePicker.js'
 
@@ -102,7 +102,7 @@ export function makeUC(deps: Deps) {
         throw new ValidationError('Only paused subscriptions can be resumed.')
       }
 
-      if (!hasPauseStarted(pausedFrom)) {
+      if (!isPauseInEffect(subscription)) {
         throw new ValidationError(
           'Your pause has not started yet. Cancel the scheduled pause instead.'
         )
