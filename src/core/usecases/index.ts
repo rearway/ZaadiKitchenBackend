@@ -85,6 +85,7 @@ import * as GetWallet from './queries/GetWallet.js'
 import * as GetWalletTransactions from './queries/GetWalletTransactions.js'
 import * as GetPaymentTransactions from './queries/GetPaymentTransactions.js'
 import * as GetReferralTransactions from './queries/GetReferralTransactions.js'
+import * as GetBillingTransactions from './queries/GetBillingTransactions.js'
 import * as GetReferral from './queries/GetReferral.js'
 import * as GetPublicHolidays from './queries/GetPublicHolidays.js'
 import * as GetAdminMeals from './queries/GetAdminMeals.js'
@@ -626,6 +627,12 @@ export function initUseCases(deps: Deps) {
     GetReferralTransactions.name,
     ...defaultWrappers
   )
+  const getBillingTransactions = wrapUC(
+    deps,
+    GetBillingTransactions.makeUC(deps),
+    GetBillingTransactions.name,
+    ...defaultWrappers
+  )
   const getReferral = wrapUC(
     deps,
     GetReferral.makeUC(deps),
@@ -832,6 +839,7 @@ export function initUseCases(deps: Deps) {
       getWalletTransactions,
       getPaymentTransactions,
       getReferralTransactions,
+      getBillingTransactions,
       getReferral,
       getPublicHolidays,
       getAdminMeals,

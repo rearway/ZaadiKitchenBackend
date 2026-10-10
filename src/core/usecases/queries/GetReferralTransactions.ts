@@ -1,7 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
-import { formatBillingShortDate } from '../services/billingFormatUtils.js'
-
-const REFERRAL_REWARD_RATE_PCT = 10
+import { mapReferralRewardToBillingHistory } from '../services/billingTransactionMappers.js'
 
 export interface GetReferralTransactionsInput {
   userId: string
@@ -44,19 +42,15 @@ export function makeUC(deps: Deps) {
 
       return {
         transactions: rewards.map(r => {
-          const baseSar =
-            r.referredPlanPriceSar > 0
-              ? r.referredPlanPriceSar
-              : Math.round(r.rewardCreditedSar / (REFERRAL_REWARD_RATE_PCT / 100))
-          const shortDate = formatBillingShortDate(r.creditedAt)
+          const row = mapReferralRewardToBillingHistory(r)
           return {
-            id: r.referralId,
+            id: row.id,
             category: 'referral_reward' as const,
             type: 'credit' as const,
-            amount_sar: r.rewardCreditedSar,
-            label: `Referral reward — ${r.referredUserName}`,
-            description: `${shortDate} · ${REFERRAL_REWARD_RATE_PCT}% of SAR ${baseSar}`,
-            created_at: r.creditedAt.toISOString(),
+            amount_sar: row.amount_sar,
+            label: row.label,
+            description: row.description,
+            created_at: row.created_at,
           }
         }),
         pagination: {

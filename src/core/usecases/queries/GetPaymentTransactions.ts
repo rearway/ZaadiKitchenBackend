@@ -1,8 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
-import {
-  formatBillingPlanPeriod,
-  formatBillingShortDate,
-} from '../services/billingFormatUtils.js'
+import { mapPaymentOrderToBillingHistory } from '../services/billingTransactionMappers.js'
 
 export interface GetPaymentTransactionsInput {
   userId: string
@@ -45,16 +42,19 @@ export function makeUC(deps: Deps) {
         })
 
       return {
-        transactions: orders.map(o => ({
-          id: o.orderId,
-          category: 'subscription_payment' as const,
-          type: 'debit' as const,
-          amount_sar: o.totalPaidSar,
-          label: `${o.planName} · ${formatBillingPlanPeriod(o.createdAt)}`,
-          description: formatBillingShortDate(o.createdAt),
-          payment_method_label: o.paymentMethodLabel,
-          created_at: o.createdAt.toISOString(),
-        })),
+        transactions: orders.map(o => {
+          const row = mapPaymentOrderToBillingHistory(o)
+          return {
+            id: row.id,
+            category: 'subscription_payment' as const,
+            type: 'debit' as const,
+            amount_sar: row.amount_sar,
+            label: row.label,
+            description: row.description,
+            payment_method_label: row.payment_method_label,
+            created_at: row.created_at,
+          }
+        }),
         pagination: {
           page,
           per_page: perPage,

@@ -1514,7 +1514,7 @@
     },
     {
       "name": "Billing & Wallet",
-      "description": "JWT required. Billing History: merge `GET /users/wallet/transactions`, `GET /users/billing/payments`, and `GET /users/billing/referrals` by `created_at`. Pagination: `page`, `per_page` (max 50).",
+      "description": "JWT required. Billing History: `GET /users/billing/transactions` (unified). Legacy split endpoints still available.",
       "item": [
         {
           "name": "Get Wallet Balance",
@@ -1573,6 +1573,42 @@
               ]
             },
             "description": "Paginated wallet ledger (`type` credit/debit, `amount_sar`, `label`, `created_at`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing History (unified)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/billing/transactions?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Wallet + subscription payments + referral rewards, newest first."
           },
           "response": []
         },

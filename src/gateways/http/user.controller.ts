@@ -199,6 +199,27 @@ export class UserController {
     })
   }
 
+  @Get('billing/transactions')
+  @ApiOperation({
+    summary:
+      'Unified billing history (wallet + subscription payments + referral rewards), newest first',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'per_page', required: false, type: Number })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-billing-transactions')
+  async getBillingTransactions(
+    @CurrentUser() user: UserWithoutPassword,
+    @Query('page') page?: string,
+    @Query('per_page') perPage?: string
+  ) {
+    return this.useCases.queries.getBillingTransactions({
+      userId: user.id,
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    })
+  }
+
   @Get('billing/payments')
   @ApiOperation({
     summary: 'Subscription payment history (confirmed orders) for billing screen',

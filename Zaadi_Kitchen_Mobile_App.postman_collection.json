@@ -1382,7 +1382,7 @@
     },
     {
       "name": "Billing & Wallet",
-      "description": "Billing & Wallet screen APIs. For **Billing History**, call wallet transactions, billing payments, and billing referrals; merge by `created_at` (newest first). Query: `page`, `per_page` (max 50).",
+      "description": "Billing & Wallet screen APIs. **Billing History:** prefer `GET /users/billing/transactions` (wallet + payments + referrals merged). Legacy: wallet/payments/referrals endpoints. Query: `page`, `per_page` (max 50).",
       "item": [
         {
           "name": "Get Wallet Balance",
@@ -1430,6 +1430,36 @@
               ]
             },
             "description": "Wallet ledger entries (credits/debits). Response: `transactions[]` with `type`, `amount_sar`, `label`, `description`, `created_at` + `pagination`."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing History (unified)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/billing/transactions?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "billing",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Single feed for Billing History. `category`: wallet_ledger | subscription_payment | referral_reward. Sorted newest first."
           },
           "response": []
         },
