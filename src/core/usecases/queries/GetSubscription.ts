@@ -5,6 +5,11 @@ import {
   isPauseScheduled,
 } from '../services/ensurePauseStatus.js'
 import { addDaysUtc, toYYYYMMDD } from '../services/deliveryScheduleUtils.js'
+import {
+  addWorkingDaysForward,
+  buildPauseResumePickerState,
+} from '../services/pauseResumeDatePicker.js'
+import { getFlexDaysRemaining } from '../services/flexDays.js'
 
 export interface GetSubscriptionInput {
   userId: string
@@ -37,6 +42,20 @@ export interface GetSubscriptionOutput {
   paused_until: string | null
   pause_ceiling_date: string | null
   paused_days: string[]
+  pause_date_picker: {
+    visible: boolean
+    start_min: string | null
+    start_max: string | null
+    end_min: string | null
+    end_max: string | null
+    max_working_days_in_range: number
+  }
+  resume_date_picker: {
+    visible: boolean
+    min: string | null
+    max: string | null
+  }
+  cancel_pause_available: boolean
 }
 
 export function makeUC(deps: Deps) {
@@ -73,23 +92,33 @@ export function makeUC(deps: Deps) {
       const flex = flexAllowanceFields(subscription)
       const pauseScheduled = isPauseScheduled(subscription)
 
+      const flexRemaining = getFlexDaysRemaining(subscription)
+      const holidayRangeEnd = addWorkingDaysForward(
+        subscription.endDate,
+        flexRemaining + 10,
+        new Set()
+      )
+      const holidayDates = new Set(
+        await publicHolidayLoader.getHolidayDates(
+          subscription.startDate,
+          holidayRangeEnd
+        )
+      )
+
       let pausedDays: string[] = []
       if (subscription.pausedFrom && subscription.pausedUntil) {
-        const holidayTo = toYYYYMMDD(
-          addDaysUtc(new Date(subscription.pausedUntil + 'T00:00:00Z'), 1)
-        )
-        const holidays = new Set(
-          await publicHolidayLoader.getHolidayDates(
-            subscription.pausedFrom,
-            holidayTo
-          )
-        )
         pausedDays = listWorkingDaysInRange(
           subscription.pausedFrom,
           subscription.pausedUntil,
-          holidays
+          holidayDates
         )
       }
+
+      const pickerState = buildPauseResumePickerState(
+        subscription,
+        holidayDates,
+        new Date()
+      )
 
       return {
         subscription_id: subscription.id,
@@ -110,6 +139,9 @@ export function makeUC(deps: Deps) {
         paused_until: subscription.pausedUntil ?? null,
         pause_ceiling_date: subscription.pauseCeilingDate ?? null,
         paused_days: pausedDays,
+        pause_date_picker: pickerState.pause_date_picker,
+        resume_date_picker: pickerState.resume_date_picker,
+        cancel_pause_available: pickerState.cancel_pause_available,
       }
     } catch (error) {
       logger.error(

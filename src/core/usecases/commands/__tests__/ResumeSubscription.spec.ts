@@ -136,14 +136,17 @@ describe('ResumeSubscription', () => {
     expect(deps.subscriptionPersistor.updateSubscription).not.toHaveBeenCalled()
   })
 
-  it('throws ValidationError when the subscription is cancelled', async () => {
+  it('allows resume when cancelled but pause has started', async () => {
     const deps = makeDepsWithSub({ status: 'cancelled' })
     const resumeSubscription = makeUC(deps)
 
-    await expect(resumeSubscription(validInput)).rejects.toMatchObject({
-      errorCode: 'VALIDATION_ERROR',
-      statusCode: 400,
-    })
+    const result = await resumeSubscription(validInput)
+
+    expect(result.status).toBe('cancelled')
+    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 'cancelled' })
+    )
   })
 
   it('throws ValidationError when the subscription is expired', async () => {

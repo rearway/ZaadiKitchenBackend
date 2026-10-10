@@ -12,6 +12,7 @@ import {
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 import { canUseSkipAndPause } from '../services/subscriptionServicePeriod.js'
 import { addDaysUtc, toYYYYMMDD } from '../services/deliveryScheduleUtils.js'
+import { addWorkingDaysForward } from '../services/pauseResumeDatePicker.js'
 
 export interface PauseSubscriptionInput {
   userId: string
@@ -103,15 +104,6 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      if (compareDateStrings(endDate, subscription.endDate) > 0) {
-        throw new ValidationError(
-          'Pause end date cannot be after your plan end date.',
-          {
-            fields: { end_date: `Your plan ends on ${subscription.endDate}.` },
-          }
-        )
-      }
-
       if (isAfterSkipCutoff(startDate)) {
         throw new ValidationError(
           'The cutoff for the pause start day has passed. Choose a later start date.',
@@ -124,12 +116,41 @@ export function makeUC(deps: Deps) {
         )
       }
 
+      const flexRemainingBefore = getFlexDaysRemaining(subscription)
       const holidayTo = toYYYYMMDD(
-        addDaysUtc(new Date(endDate + 'T00:00:00Z'), 1)
+        addDaysUtc(
+          new Date(
+            addWorkingDaysForward(
+              subscription.endDate,
+              flexRemainingBefore + 5,
+              new Set()
+            ) + 'T00:00:00Z'
+          ),
+          1
+        )
       )
       const holidayDates = new Set(
-        await publicHolidayLoader.getHolidayDates(startDate, holidayTo)
+        await publicHolidayLoader.getHolidayDates(
+          subscription.startDate,
+          holidayTo
+        )
       )
+
+      const pauseEndMax = addWorkingDaysForward(
+        subscription.endDate,
+        flexRemainingBefore,
+        holidayDates
+      )
+      if (compareDateStrings(endDate, pauseEndMax) > 0) {
+        throw new ValidationError(
+          'Pause end date is outside the allowed range for your remaining skip/pause days.',
+          {
+            fields: {
+              end_date: `Latest allowed pause end date is ${pauseEndMax}.`,
+            },
+          }
+        )
+      }
 
       const workingDays = listWorkingDaysInRange(
         startDate,

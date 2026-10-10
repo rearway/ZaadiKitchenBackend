@@ -288,19 +288,18 @@ describe('PauseSubscription', () => {
     })
   })
 
-  it('rejects pause end after plan end date', async () => {
-    const deps = makeActiveDeps()
+  it('rejects pause end beyond flex-extended horizon', async () => {
+    const deps = makeActiveDeps({ endDate: '2026-08-31' })
     const pauseSubscription = makeUC(deps)
 
     await expect(
       pauseSubscription({
         userId: 'user-uuid-1',
         startDate: START,
-        endDate: '2100-01-15',
+        endDate: '2027-01-15',
       })
     ).rejects.toMatchObject({
       errorCode: 'VALIDATION_ERROR',
-      message: 'Pause end date cannot be after your plan end date.',
     })
   })
 

@@ -70,6 +70,9 @@ Present on **deliveries**, **menu/week cards**, **home/this-week cards**, **meal
 - `pause_scheduled` (boolean) — future pause booked, still `active`
 - `paused_days` (string[]) — working dates in current pause window
 - `pause_ceiling_date` (nullable)
+- `pause_date_picker` — `{ visible, start_min, start_max, end_min, end_max, max_working_days_in_range }` for pause calendar (range). Hidden when a pause exists or `skip_pause_days_remaining === 0`.
+- `resume_date_picker` — `{ visible, min, max }` for resume calendar (single date) after pause-start cutoff.
+- `cancel_pause_available` (boolean) — show cancel pause (no date picker).
 
 **Changed**
 

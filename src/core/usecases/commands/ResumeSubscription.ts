@@ -1,5 +1,4 @@
 import { Deps } from '../../entitygateway/index.js'
-import { todayKSA } from '../services/revenueUtils.js'
 import { compareDateStrings, isAfterSkipCutoff } from '../services/weekUtils.js'
 import {
   addDaysUtc,
@@ -14,6 +13,10 @@ import {
   getFlexDaysUsed,
 } from '../services/flexDays.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import {
+  hasPauseStarted,
+  nextCalendarDay,
+} from '../services/pauseResumeDatePicker.js'
 
 export interface ResumeSubscriptionInput {
   userId: string
@@ -92,25 +95,30 @@ export function makeUC(deps: Deps) {
       const { ValidationError } =
         await import('../../../shared/errors/index.js')
 
-      if (subscription.status !== 'paused') {
+      const pausedFrom = subscription.pausedFrom
+      const pausedUntil = subscription.pausedUntil
+
+      if (!pausedFrom || !pausedUntil) {
         throw new ValidationError('Only paused subscriptions can be resumed.')
       }
 
-      const pausedFrom = subscription.pausedFrom!
-      const pausedUntil = subscription.pausedUntil!
-
-      const today = todayKSA()
-      const tomorrow = toYYYYMMDD(
-        addDaysUtc(new Date(today + 'T00:00:00Z'), 1)
-      )
-
-      // Resume only from the next day (after pause state has started).
-      if (compareDateStrings(resumeDate, tomorrow) < 0) {
+      if (!hasPauseStarted(pausedFrom)) {
         throw new ValidationError(
-          'You can only resume from tomorrow or a later date.',
+          'Your pause has not started yet. Cancel the scheduled pause instead.'
+        )
+      }
+
+      if (subscription.status === 'expired') {
+        throw new ValidationError('Only paused subscriptions can be resumed.')
+      }
+
+      const minResume = nextCalendarDay(pausedFrom)
+      if (compareDateStrings(resumeDate, minResume) < 0) {
+        throw new ValidationError(
+          'You can only resume from the day after your pause started.',
           {
             fields: {
-              resume_date: `Earliest resume date is ${tomorrow}.`,
+              resume_date: `Earliest resume date is ${minResume}.`,
             },
           }
         )
@@ -222,7 +230,8 @@ export function makeUC(deps: Deps) {
       )
 
       await subscriptionPersistor.updateSubscription(subscription.id, {
-        status: 'active',
+        status:
+          subscription.status === 'cancelled' ? 'cancelled' : 'active',
         pausedFrom: null,
         pausedUntil: null,
         pauseCeilingDate: null,
@@ -243,9 +252,11 @@ export function makeUC(deps: Deps) {
       })
 
       const remaining = getFlexDaysAllowed(subscription) - newFlexUsed
+      const resumedStatus =
+        subscription.status === 'cancelled' ? 'cancelled' : 'active'
       return {
         subscription_id: subscription.id,
-        status: 'active',
+        status: resumedStatus,
         resume_date: effectiveResumeDate,
         first_delivery_label: formatDeliveryLabel(effectiveResumeDate),
         pause_days_used: newFlexUsed,
