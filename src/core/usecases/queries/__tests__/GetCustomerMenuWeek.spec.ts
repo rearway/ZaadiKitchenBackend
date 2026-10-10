@@ -144,6 +144,41 @@ describe('GetCustomerMenuWeek', () => {
     })
   })
 
+  it('shows undo only on the subscription meal type card when a day is skipped', async () => {
+    const deps = makeDeps({
+      sub: makeSubscription({ mealType: 'executive' }),
+      slots: [
+        makeSlot(UPCOMING, makeMeal({ mealType: 'executive' })),
+        makeSlot(UPCOMING, makeMeal({ id: 'meal-salad', mealType: 'salad' })),
+      ],
+      days: [
+        makeDeliveryDay({ date: UPCOMING, status: 'skipped', mealType: 'executive' }),
+      ],
+    })
+    const getCustomerMenuWeek = makeUC(deps)
+
+    const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
+    const execCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
+    )
+    const saladCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    )
+
+    expect(execCard).toMatchObject({
+      card_state: 'skipped',
+      undoable: true,
+      is_skipped: true,
+      skip_reason: 'already_skipped',
+    })
+    expect(saladCard).toMatchObject({
+      card_state: 'upcoming',
+      undoable: false,
+      is_skipped: false,
+      skip_reason: 'meal_type_mismatch',
+    })
+  })
+
   it('disables skip when menu card meal type does not match subscription', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ mealType: 'salad' }),

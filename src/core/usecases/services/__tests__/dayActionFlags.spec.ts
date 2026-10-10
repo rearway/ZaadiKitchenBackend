@@ -70,7 +70,7 @@ describe('resolveDayActionFlags', () => {
   })
 
   it('sets undoable when skipped and before cutoff', () => {
-    const sub = makeSubscription({ status: 'active' })
+    const sub = makeSubscription({ status: 'active', mealType: 'executive' })
     expect(
       resolveDayActionFlags({
         subscription: sub,
@@ -83,6 +83,23 @@ describe('resolveDayActionFlags', () => {
       is_skipped: true,
       undoable: true,
       skip_reason: 'already_skipped',
+    })
+  })
+
+  it('does not mark undo/skipped on menu card when day is skipped but meal type differs', () => {
+    const sub = makeSubscription({ status: 'active', mealType: 'executive' })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'salad',
+        dayStatus: 'skipped',
+      })
+    ).toMatchObject({
+      skip_available: false,
+      is_skipped: false,
+      undoable: false,
+      skip_reason: 'meal_type_mismatch',
     })
   })
 

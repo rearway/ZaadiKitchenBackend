@@ -87,6 +87,14 @@ export function resolveDayActionFlags(
 
   // active (may have a future scheduled pause)
   if (isDayPaused) {
+    if (mealType != null && mealType !== sub.mealType) {
+      return {
+        skip_available: false,
+        undoable: false,
+        is_skipped: false,
+        skip_reason: 'meal_type_mismatch',
+      }
+    }
     return {
       skip_available: false,
       undoable: false,
@@ -96,6 +104,14 @@ export function resolveDayActionFlags(
   }
 
   if (isSkipped) {
+    if (mealType != null && mealType !== sub.mealType) {
+      return {
+        skip_available: false,
+        undoable: false,
+        is_skipped: false,
+        skip_reason: 'meal_type_mismatch',
+      }
+    }
     return {
       skip_available: false,
       undoable: !pastCutoff,
