@@ -104,6 +104,7 @@ export function makeUC(deps: Deps) {
           subscription,
           deliveryDate: day.date,
           mealType: day.mealType,
+          assignedMealType: day.mealType,
           dayStatus: day.status,
         })
 

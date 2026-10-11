@@ -60,6 +60,26 @@ describe('resolveDayActionFlags', () => {
       ).toBe(false)
     })
 
+    it('uses the per-day assigned type after a day-level meal switch', () => {
+      const saladPlan = makeSubscription({ mealType: 'salad', status: 'active' })
+      expect(
+        isDeliverableMenuDay({
+          subscription: saladPlan,
+          mealType: 'executive',
+          assignedMealType: 'executive',
+          dayStatus: 'scheduled',
+        })
+      ).toBe(true)
+      expect(
+        isDeliverableMenuDay({
+          subscription: saladPlan,
+          mealType: 'salad',
+          assignedMealType: 'executive',
+          dayStatus: 'scheduled',
+        })
+      ).toBe(false)
+    })
+
     it('is false when there is no subscription', () => {
       expect(
         isDeliverableMenuDay({
@@ -84,6 +104,39 @@ describe('resolveDayActionFlags', () => {
       undoable: false,
       is_skipped: false,
       skip_reason: 'not_subscribed',
+    })
+  })
+
+  it('allows skip on a day switched away from the plan default type', () => {
+    const sub = makeSubscription({
+      mealType: 'salad',
+      status: 'active',
+      skipDaysUsed: 0,
+      pauseDaysUsed: 0,
+    })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'executive',
+        assignedMealType: 'executive',
+        dayStatus: 'scheduled',
+      })
+    ).toMatchObject({
+      skip_available: true,
+      skip_reason: null,
+    })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'salad',
+        assignedMealType: 'executive',
+        dayStatus: 'scheduled',
+      })
+    ).toMatchObject({
+      skip_available: false,
+      skip_reason: 'meal_type_mismatch',
     })
   })
 

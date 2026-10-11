@@ -86,7 +86,7 @@ export function makeUC(deps: Deps) {
             to: nextWeek.dateTo,
           })
         : []
-      const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
+      const dayByDate = new Map(deliveryDays.map(d => [d.date, d]))
 
       const mealTypeFilter = input.mealType ?? 'all'
 
@@ -101,11 +101,14 @@ export function makeUC(deps: Deps) {
 
         const isToday = slot.deliveryDate === todayStr
         const isPast = slot.deliveryDate < todayStr
-        const dayStatus = statusByDate.get(slot.deliveryDate) ?? null
+        const day = dayByDate.get(slot.deliveryDate)
+        const dayStatus = day?.status ?? null
+        const assignedMealType = day?.mealType ?? sub?.mealType
         const flags = resolveDayActionFlags({
           subscription: sub,
           deliveryDate: slot.deliveryDate,
           mealType: slot.meal.mealType,
+          assignedMealType,
           dayStatus,
           now,
         })
@@ -134,6 +137,7 @@ export function makeUC(deps: Deps) {
           is_deliverable: isDeliverableMenuDay({
             subscription: sub,
             mealType: slot.meal.mealType,
+            assignedMealType,
             dayStatus,
           }),
         }

@@ -75,7 +75,7 @@ export function makeUC(deps: Deps) {
             to: bounds.dateTo,
           })
         : []
-      const statusByDate = new Map(deliveryDays.map(d => [d.date, d.status]))
+      const dayByDate = new Map(deliveryDays.map(d => [d.date, d]))
 
       const subStatus = sub?.status ?? 'none'
       const flexLikeActive = sub != null && canUseSkipAndPause(sub)
@@ -88,11 +88,14 @@ export function makeUC(deps: Deps) {
           const isToday = slot.deliveryDate === todayStr
           const isPast = slot.deliveryDate < todayStr
           const dayAbbr = getDayLabel(slot.deliveryDate)
-          const dayStatus = statusByDate.get(slot.deliveryDate) ?? null
+          const day = dayByDate.get(slot.deliveryDate)
+          const dayStatus = day?.status ?? null
+          const assignedMealType = day?.mealType ?? sub?.mealType
           const flags = resolveDayActionFlags({
             subscription: sub,
             deliveryDate: slot.deliveryDate,
             mealType: meal.mealType,
+            assignedMealType,
             dayStatus,
             now,
           })
@@ -152,6 +155,7 @@ export function makeUC(deps: Deps) {
             is_deliverable: isDeliverableMenuDay({
               subscription: sub,
               mealType: meal.mealType,
+              assignedMealType,
               dayStatus,
             }),
             action: cta_label ? { type: action_type, cta_label } : null,

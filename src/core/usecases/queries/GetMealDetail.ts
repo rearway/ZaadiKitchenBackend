@@ -80,12 +80,14 @@ export function makeUC(deps: Deps) {
       }
 
       let dayStatus: string | null = null
+      let assignedMealType: string | null | undefined = sub?.mealType
       if (sub && deliveryDate) {
         const day = await deliveryDayLoader.getDeliveryDayByDate(
           sub.id,
           deliveryDate
         )
         dayStatus = day?.status ?? null
+        assignedMealType = day?.mealType ?? sub.mealType
       }
 
       const flags = deliveryDate
@@ -93,6 +95,7 @@ export function makeUC(deps: Deps) {
             subscription: sub,
             deliveryDate,
             mealType: meal.mealType,
+            assignedMealType,
             dayStatus,
             now,
           })
@@ -126,6 +129,7 @@ export function makeUC(deps: Deps) {
         is_deliverable: isDeliverableMenuDay({
           subscription: sub,
           mealType: meal.mealType,
+          assignedMealType,
           dayStatus,
         }),
       }

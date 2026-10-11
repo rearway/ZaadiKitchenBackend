@@ -273,6 +273,43 @@ describe('GetCustomerMenuWeek', () => {
     })
   })
 
+  it('marks the switched-day card deliverable after a per-day meal-type change', async () => {
+    const deps = makeDeps({
+      sub: makeSubscription({ mealType: 'salad' }),
+      slots: [
+        makeSlot(UPCOMING, makeMeal({ mealType: 'executive' })),
+        makeSlot(UPCOMING, makeMeal({ id: 'meal-salad', mealType: 'salad' })),
+      ],
+      days: [
+        makeDeliveryDay({
+          date: UPCOMING,
+          status: 'scheduled',
+          mealType: 'executive',
+        }),
+      ],
+    })
+    const getCustomerMenuWeek = makeUC(deps)
+
+    const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
+    const execCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
+    )
+    const saladCard = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    )
+
+    expect(execCard).toMatchObject({
+      is_deliverable: true,
+      skip_available: true,
+      skip_reason: null,
+    })
+    expect(saladCard).toMatchObject({
+      is_deliverable: false,
+      skip_available: false,
+      skip_reason: 'meal_type_mismatch',
+    })
+  })
+
   it('does not treat skipped days as skipped when the subscription is paused', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ status: 'paused' }),

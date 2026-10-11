@@ -26,26 +26,47 @@ export interface DayActionFlags {
 export interface ResolveDayActionFlagsInput {
   subscription: Subscription | null
   deliveryDate: string
-  /** Menu/slot meal type; when set must match subscription.mealType to skip. */
+  /** Menu/slot (or delivery-row) meal type. */
   mealType?: 'executive' | 'salad' | string | null
+  /**
+   * Meal type the user actually receives that day (`delivery_days.meal_type`).
+   * Falls back to `subscription.mealType` when omitted (plan default).
+   */
+  assignedMealType?: 'executive' | 'salad' | string | null
   /** Delivery day status for this date (scheduled | skipped | paused | …). */
   dayStatus?: string | null
   now?: Date
 }
 
+function expectedMealType(
+  sub: Subscription,
+  assignedMealType?: string | null
+): string {
+  return assignedMealType ?? sub.mealType
+}
+
+function isMealTypeMismatch(
+  sub: Subscription,
+  mealType?: string | null,
+  assignedMealType?: string | null
+): boolean {
+  return mealType != null && mealType !== expectedMealType(sub, assignedMealType)
+}
+
 /**
- * Menu/home card is a meal day on this subscription (same existence
- * check as GET /subscriptions/me/deliveries). True only when the slot
- * matches the plan meal type and the delivery row is scheduled or skipped.
+ * Menu/home card is a meal day on this subscription. True when the slot
+ * matches the type they receive that day (per-day switch or plan default)
+ * and the delivery row is scheduled or skipped.
  */
 export function isDeliverableMenuDay(input: {
   subscription: Subscription | null
   mealType?: string | null
+  assignedMealType?: string | null
   dayStatus?: string | null
 }): boolean {
-  const { subscription: sub, mealType, dayStatus } = input
+  const { subscription: sub, mealType, assignedMealType, dayStatus } = input
   if (!sub) return false
-  if (mealType != null && mealType !== sub.mealType) return false
+  if (isMealTypeMismatch(sub, mealType, assignedMealType)) return false
   return dayStatus === 'scheduled' || dayStatus === 'skipped'
 }
 
@@ -59,6 +80,7 @@ export function resolveDayActionFlags(
     subscription: sub,
     deliveryDate,
     mealType,
+    assignedMealType,
     dayStatus,
     now = new Date(),
   } = input
@@ -105,7 +127,7 @@ export function resolveDayActionFlags(
 
   // active (may have a future scheduled pause)
   if (isDayPaused) {
-    if (mealType != null && mealType !== sub.mealType) {
+    if (isMealTypeMismatch(sub, mealType, assignedMealType)) {
       return {
         skip_available: false,
         undoable: false,
@@ -122,7 +144,7 @@ export function resolveDayActionFlags(
   }
 
   if (isSkipped) {
-    if (mealType != null && mealType !== sub.mealType) {
+    if (isMealTypeMismatch(sub, mealType, assignedMealType)) {
       return {
         skip_available: false,
         undoable: false,
@@ -138,7 +160,7 @@ export function resolveDayActionFlags(
     }
   }
 
-  if (mealType != null && mealType !== sub.mealType) {
+  if (isMealTypeMismatch(sub, mealType, assignedMealType)) {
     return {
       skip_available: false,
       undoable: false,
