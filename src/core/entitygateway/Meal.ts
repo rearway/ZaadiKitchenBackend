@@ -20,11 +20,6 @@ export interface ImportError {
   message: string
 }
 
-export interface MealWithUsage extends Meal {
-  alreadyUsed?: boolean
-  usedOnDay?: string | null
-}
-
 export interface MealLoader {
   getMealById(id: string): Promise<Meal | null>
   getMealByName(nameEn: string, excludeId?: string): Promise<Meal | null>
@@ -34,12 +29,8 @@ export interface MealLoader {
     q?: string
     page?: number
     perPage?: number
-    excludeWeekId?: string
-  }): Promise<{ meals: MealWithUsage[]; total: number }>
+  }): Promise<{ meals: Meal[]; total: number }>
   getMealsByIds(ids: string[]): Promise<Meal[]>
-  getMealsInWeek(
-    weekId: string
-  ): Promise<{ mealId: string; dayLabel: string }[]>
 }
 
 export interface MealPersistor {

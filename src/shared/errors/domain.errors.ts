@@ -151,44 +151,23 @@ export class MealNotFoundError extends BaseError {
   }
 }
 
-export class MealAlreadyUsedInWeekError extends BaseError {
-  constructor(mealName: string, usedOnDay: string, usedInSlot: string, details?: unknown) {
-    super(
-      'MEAL_ALREADY_USED',
-      409,
-      `${mealName} is already assigned to ${usedOnDay} (${usedInSlot}) this week. Each meal can only appear once per week.`,
-      details
-    )
-  }
-}
-
 export class MealIsDraftError extends BaseError {
   constructor() {
     super('MEAL_IS_DRAFT', 422, 'Draft meals cannot be assigned to week slots. Activate the meal first.')
   }
 }
 
-export class MealTypeSlotMismatchError extends BaseError {
-  constructor(mealType: string, slotMealType: string) {
-    const label = (t: string) =>
-      t === 'salad' ? 'Salad' : t === 'executive' ? 'Executive' : t
+export class DaySaladAlreadyAssignedError extends BaseError {
+  constructor(deliveryDate: string, existingSlotId: string, existingMealName: string) {
     super(
-      'MEAL_TYPE_SLOT_MISMATCH',
-      422,
-      `${label(mealType)} meals can only be assigned to the ${label(slotMealType)} slot for that day.`,
-      { meal_type: mealType, slot_meal_type: slotMealType }
-    )
-  }
-}
-
-export class DayMealTypeAlreadyAssignedError extends BaseError {
-  constructor(mealType: string, deliveryDate: string) {
-    const label = mealType === 'salad' ? 'Salad' : mealType === 'executive' ? 'Executive' : mealType
-    super(
-      'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
+      'DAY_SALAD_ALREADY_ASSIGNED',
       409,
-      `This day already has a ${label} meal assigned (${deliveryDate}). Only one ${label} per day is allowed.`,
-      { meal_type: mealType, delivery_date: deliveryDate }
+      `A salad (${existingMealName}) is already assigned for ${deliveryDate}. Only one salad per day is allowed.`,
+      {
+        delivery_date: deliveryDate,
+        existing_slot_id: existingSlotId,
+        existing_meal_name: existingMealName,
+      }
     )
   }
 }

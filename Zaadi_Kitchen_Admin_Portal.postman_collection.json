@@ -498,13 +498,13 @@
                 {
                   "key": "context",
                   "value": "picker",
-                  "description": "Use picker mode for meal assignment UI",
+                  "description": "Shortcut for status=active (assign modal). Prefer status=active.",
                   "disabled": true
                 },
                 {
                   "key": "exclude_week_id",
                   "value": "{{week_id}}",
-                  "description": "Used with context=picker",
+                  "description": "DEPRECATED — ignored. Same meal may be assigned to multiple slots in a week; already_used / used_on_day are always null.",
                   "disabled": true
                 }
               ]
@@ -845,6 +845,7 @@
         {
           "name": "Assign Meal to Slot",
           "request": {
+            "description": "Any ACTIVE meal (executive or salad) can go in any slot; the same meal may repeat across the week. Errors: 422 MEAL_IS_DRAFT, 409 DAY_SALAD_ALREADY_ASSIGNED (another slot on that day already holds a salad), 422 SLOT_NOT_EDITABLE (published/past week), 404 week/slot/meal. List meals for the modal with GET /admin/meals?status=active.",
             "method": "POST",
             "header": [],
             "body": {

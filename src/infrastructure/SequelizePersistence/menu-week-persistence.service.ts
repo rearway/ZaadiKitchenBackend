@@ -43,20 +43,6 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
     return model ? this.toSlotEntity(model) : null
   }
 
-  async getMealsInWeek(weekId: string): Promise<{ mealId: string; dayLabel: string }[]> {
-    const slots = await MenuSlotModel.findAll({
-      where: { weekId },
-      attributes: ['mealId', 'deliveryDate'],
-    })
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return slots
-      .filter(s => s.mealId)
-      .map(s => ({
-        mealId: s.mealId as string,
-        dayLabel: days[new Date(s.deliveryDate).getDay()],
-      }))
-  }
-
   async getMenuForDateRange(from: string, to: string): Promise<MenuSlotWithMeal[]> {
     const slots = await MenuSlotModel.findAll({
       include: [

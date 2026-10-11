@@ -455,7 +455,6 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getMealByName: jest.fn().mockResolvedValue(null),
       getMeals: jest.fn().mockResolvedValue({ meals: [], total: 0 }),
       getMealsByIds: jest.fn().mockResolvedValue([]),
-      getMealsInWeek: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['mealLoader'],
 
     mealPersistor: {
@@ -473,7 +472,6 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getWeeks: jest.fn().mockResolvedValue([]),
       getSlotsByWeekId: jest.fn().mockResolvedValue([]),
       getSlotById: jest.fn().mockResolvedValue(null),
-      getMealsInWeek: jest.fn().mockResolvedValue([]),
       getMenuForDateRange: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['menuWeekLoader'],
 

@@ -1818,8 +1818,8 @@ GET    /admin/meals/:meal_id/photo-upload-url → Get presigned S3 URL for photo
 | `q` | string | — | Search by English or Arabic name |
 | `page` | integer | `1` | |
 | `per_page` | integer | `20` | Max `50` |
-| `context` | `picker` | — | Picker mode: only `active` meals, excludes meals in `exclude_week_id` |
-| `exclude_week_id` | string | — | Used with `context=picker`. Meals already in this week get `already_used: true` |
+| `context` | `picker` | — | Shortcut for `status=active` (assign modal) |
+| `exclude_week_id` | string | — | **Deprecated, ignored.** `already_used` / `used_on_day` are always `null` |
 
 **Response `200 OK`:**
 ```json
@@ -1832,7 +1832,7 @@ GET    /admin/meals/:meal_id/photo-upload-url → Get presigned S3 URL for photo
       "meal_type": "executive",
       "kcal": 550,
       "status": "active",
-      "already_used": false,
+      "already_used": null,
       "used_on_day": null
     }
   ],
@@ -2002,6 +2002,8 @@ Returns the 5-day × 2-slot grid. When `is_editable: false` (published week), al
 
 Returns updated slot + `week_fill_status: { filled_slots, total_slots, publish_ready }`.
 
+Rules: meal must be `active`; any active meal can go in any slot; the same meal can repeat across the week; at most one salad per delivery day.
+
 **Publish week — `POST /admin/menu/weeks/:week_id/publish`**
 
 - Requires all 10 slots to have a meal assigned.
@@ -2025,7 +2027,8 @@ Returns updated slot + `week_fill_status: { filled_slots, total_slots, publish_r
 | `WEEK_NOT_COMPLETE` | 409 | Not all 10 slots filled |
 | `WEEK_ALREADY_PUBLISHED` | 409 | Week is already published |
 | `SLOT_NOT_EDITABLE` | 422 | Slot's week is published or past |
-| `MEAL_ALREADY_USED` | 409 | Meal already assigned in this week |
+| `MEAL_IS_DRAFT` | 422 | Meal must be activated before assigning |
+| `DAY_SALAD_ALREADY_ASSIGNED` | 409 | That delivery day already has a salad in another slot |
 
 ---
 

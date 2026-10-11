@@ -66,7 +66,7 @@ export class AdminMenuController {
   @ApiOperation({
     summary: 'Assign a meal to a slot',
     description:
-      'Meal type must match slot (executive/salad). At most one executive and one salad per delivery day.',
+      'Any active meal can go in any slot, and the same meal may repeat across the week. Only rule: at most one salad per delivery day (409 DAY_SALAD_ALREADY_ASSIGNED). Draft meals are rejected (422 MEAL_IS_DRAFT).',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('assign-meal-to-slot')

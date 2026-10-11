@@ -58,7 +58,6 @@ export class AdminMealsController {
       page: query.page,
       perPage: query.per_page,
       context: query.context,
-      excludeWeekId: query.exclude_week_id,
     })
   }
 

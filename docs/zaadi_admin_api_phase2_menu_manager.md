@@ -236,24 +236,32 @@ Assigns a meal to a specific slot. This is the "Assign Dish Modal" confirm actio
   "meal": {
     "meal_id": "meal_01JK2ABX",
     "name_en": "Ch. Fattoush",
-    "kcal": 380
+    "meal_type": "salad",
+    "kcal": 380,
+    "photo_url": null
   },
   "week_fill_status": {
-    "filled_days": 5,
-    "total_days": 5,
+    "filled_slots": 10,
+    "total_slots": 10,
     "publish_ready": true
   }
 }
 ```
 
-**Response `409 Conflict` — Meal already used this week**
+`meal_type` at the top level is the slot's type; `meal.meal_type` is the dish's type (they can differ).
+
+**Response `409 Conflict` — Day already has a salad**
 
 ```json
 {
-  "error": "MEAL_ALREADY_USED",
-  "message": "Ch. Fattoush is already assigned to Mon (Executive) this week. Each meal can only appear once per week.",
-  "used_on_day": "Mon",
-  "used_in_slot": "executive"
+  "errorCode": "DAY_SALAD_ALREADY_ASSIGNED",
+  "statusCode": 409,
+  "message": "A salad (Ch. Fattoush) is already assigned for 2026-10-11. Only one salad per day is allowed.",
+  "details": {
+    "delivery_date": "2026-10-11",
+    "existing_slot_id": "slot_w2026-42_sun_salad",
+    "existing_meal_name": "Ch. Fattoush"
+  }
 }
 ```
 
@@ -267,9 +275,12 @@ Assigns a meal to a specific slot. This is the "Assign Dish Modal" confirm actio
 ```
 
 **Business Rules**
-- Each meal can appear **at most once** per week across both meal types (F26 annotation 2). A meal assigned on Monday Executive cannot be re-used anywhere else in the same week.
-- Only `active` meals can be assigned. Draft meals are excluded from the picker entirely (F30 annotation 2).
+- Only `active` meals can be assigned (`422 MEAL_IS_DRAFT`). List them with `GET /admin/meals?status=active`.
+- Any active meal (executive or salad) can go in any slot. Subscribers receive whatever is in the slot matching their plan type (executive subscribers get the executive slot's dish).
+- The same meal may be assigned to multiple slots in the same week.
+- At most **one salad per delivery day**: assigning a salad fails with `409 DAY_SALAD_ALREADY_ASSIGNED` if another slot on that day already holds a salad.
 - Replacing a slot (assigning to a slot that already has a meal) is allowed — the old meal is displaced with no confirmation required.
+- Published or past weeks cannot be edited (`422 SLOT_NOT_EDITABLE`).
 
 ---
 
@@ -659,9 +670,7 @@ Bulk-imports meals from an XLSX file. All imported meals are saved as `draft`. P
 
 | Error code | Endpoint | Description |
 |---|---|---|
-| `MEAL_ALREADY_USED` | POST .../slots/:slot_id/assign | Meal already in another slot of the same week |
-| `MEAL_TYPE_SLOT_MISMATCH` | POST .../slots/:slot_id/assign | Meal type (executive/salad) does not match the slot |
-| `DAY_MEAL_TYPE_ALREADY_ASSIGNED` | POST .../slots/:slot_id/assign | That delivery day already has a meal for this type (max 1 executive + 1 salad per day) |
+| `DAY_SALAD_ALREADY_ASSIGNED` | POST .../slots/:slot_id/assign | Another slot on that delivery day already holds a salad (max 1 salad per day) |
 | `MEAL_IS_DRAFT` | POST .../slots/:slot_id/assign | Cannot assign a draft meal to a week slot |
 | `WEEK_NOT_COMPLETE` | POST .../publish | Not all 10 slots are filled |
 | `WEEK_ALREADY_PUBLISHED` | POST .../publish | Week is already published |

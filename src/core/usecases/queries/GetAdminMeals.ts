@@ -1,5 +1,4 @@
 import type { Deps } from '../../entitygateway/index.js'
-import { ResourceNotFoundError } from '../../../shared/errors/domain.errors.js'
 
 export interface GetAdminMealsInput {
   status?: 'all' | 'active' | 'draft'
@@ -7,8 +6,8 @@ export interface GetAdminMealsInput {
   q?: string
   page?: number
   perPage?: number
+  /** `picker` forces `status=active` (assign modal). */
   context?: 'picker'
-  excludeWeekId?: string
 }
 
 export interface GetAdminMealsOutput {
@@ -20,8 +19,10 @@ export interface GetAdminMealsOutput {
     kcal: number
     status: string
     photo_url: string | null
-    already_used: boolean | null
-    used_on_day: string | null
+    /** Deprecated: always null. Duplicate meals in a week are allowed. */
+    already_used: null
+    /** Deprecated: always null. */
+    used_on_day: null
   }>
   pagination: {
     page: number
@@ -46,7 +47,6 @@ export function makeUC(deps: Deps) {
         q: input.q,
         page,
         perPage,
-        excludeWeekId: input.excludeWeekId,
       })
 
       return {
@@ -58,8 +58,8 @@ export function makeUC(deps: Deps) {
           kcal: m.kcal,
           status: m.status,
           photo_url: m.photoUrl ?? null,
-          already_used: input.excludeWeekId ? (m.alreadyUsed ?? false) : null,
-          used_on_day: input.excludeWeekId ? (m.usedOnDay ?? null) : null,
+          already_used: null,
+          used_on_day: null,
         })),
         pagination: {
           page,

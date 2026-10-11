@@ -15,7 +15,6 @@ export interface MenuWeekLoader {
   getWeeks(filters: { fromWeek?: string; count?: number }): Promise<MenuWeek[]>
   getSlotsByWeekId(weekId: string): Promise<MenuSlot[]>
   getSlotById(slotId: string): Promise<MenuSlot | null>
-  getMealsInWeek(weekId: string): Promise<{ mealId: string; dayLabel: string }[]>
   getMenuForDateRange(from: string, to: string): Promise<MenuSlotWithMeal[]>
 }
 

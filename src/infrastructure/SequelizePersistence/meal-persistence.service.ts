@@ -5,10 +5,9 @@ import type {
   MealPersistor,
   CreateMealInput,
   ImportError,
-  MealWithUsage,
 } from '../../core/entitygateway/Meal.js'
 import type { Meal } from '../../core/entities/Meal.js'
-import { MealModel, MenuSlotModel } from './models/index.js'
+import { MealModel } from './models/index.js'
 import { generateMealErpCode } from '../../core/usecases/services/erpCodeUtils.js'
 
 @Injectable()
@@ -24,8 +23,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     q?: string
     page?: number
     perPage?: number
-    excludeWeekId?: string
-  }): Promise<{ meals: MealWithUsage[]; total: number }> {
+  }): Promise<{ meals: Meal[]; total: number }> {
     const where: Record<string, unknown> = {}
 
     if (filters.status && filters.status !== 'all') {
@@ -55,31 +53,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       offset,
     })
 
-    // Determine already_used status for each meal in excludeWeekId
-    const usedMealMap = new Map<string, string>()
-    if (filters.excludeWeekId) {
-      const slots = await MenuSlotModel.findAll({
-        where: { weekId: filters.excludeWeekId },
-        attributes: ['mealId', 'deliveryDate', 'mealType'],
-      })
-      for (const slot of slots) {
-        if (slot.mealId) {
-          const d = new Date(slot.deliveryDate)
-          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-          usedMealMap.set(slot.mealId, days[d.getDay()])
-        }
-      }
-    }
-
-    const meals: MealWithUsage[] = rows.map(m => ({
-      ...this.toEntity(m),
-      alreadyUsed: filters.excludeWeekId ? usedMealMap.has(m.id) : undefined,
-      usedOnDay: filters.excludeWeekId
-        ? (usedMealMap.get(m.id) ?? null)
-        : undefined,
-    }))
-
-    return { meals, total: count }
+    return { meals: rows.map(m => this.toEntity(m)), total: count }
   }
 
   async getMealByName(
@@ -96,22 +70,6 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     if (ids.length === 0) return []
     const models = await MealModel.findAll({ where: { id: ids } })
     return models.map(m => this.toEntity(m))
-  }
-
-  async getMealsInWeek(
-    weekId: string
-  ): Promise<{ mealId: string; dayLabel: string }[]> {
-    const slots = await MenuSlotModel.findAll({
-      where: { weekId },
-      attributes: ['mealId', 'deliveryDate'],
-    })
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return slots
-      .filter(s => s.mealId)
-      .map(s => ({
-        mealId: s.mealId as string,
-        dayLabel: days[new Date(s.deliveryDate).getDay()],
-      }))
   }
 
   private async nextUniqueMealErpCode(): Promise<string> {

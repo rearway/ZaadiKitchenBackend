@@ -2,12 +2,9 @@ import type { Deps } from '../../entitygateway/index.js'
 import {
   ResourceNotFoundError,
   MealIsDraftError,
-  MealAlreadyUsedInWeekError,
   SlotNotEditableError,
-  MealTypeSlotMismatchError,
-  DayMealTypeAlreadyAssignedError,
+  DaySaladAlreadyAssignedError,
 } from '../../../shared/errors/domain.errors.js'
-import { getDayLabel } from '../services/weekUtils.js'
 
 export interface AssignMealToSlotInput {
   weekId: string
@@ -22,6 +19,7 @@ export interface AssignMealToSlotOutput {
   meal: {
     meal_id: string
     name_en: string
+    meal_type: string
     kcal: number
     photo_url: string | null
   }
@@ -56,37 +54,30 @@ export function makeUC(deps: Deps) {
 
       if (meal.status === 'draft') throw new MealIsDraftError()
 
-      if (meal.mealType !== slot.mealType) {
-        throw new MealTypeSlotMismatchError(meal.mealType, slot.mealType)
-      }
-
-      const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-      const anotherSameTypeOnDay = allSlots.find(
-        s =>
-          s.deliveryDate === slot.deliveryDate &&
-          s.mealType === meal.mealType &&
-          s.id !== slot.id &&
-          !!s.mealId
-      )
-      if (anotherSameTypeOnDay) {
-        throw new DayMealTypeAlreadyAssignedError(
-          meal.mealType,
-          slot.deliveryDate
+      if (meal.mealType === 'salad') {
+        const weekSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
+        const otherSlotsOnDay = weekSlots.filter(
+          s =>
+            s.deliveryDate === slot.deliveryDate &&
+            s.id !== slot.id &&
+            !!s.mealId
         )
-      }
-
-      // Check uniqueness within the week
-      const mealsInWeek = await menuWeekLoader.getMealsInWeek(input.weekId)
-      const duplicate = mealsInWeek.find(
-        m => m.mealId === input.mealId && slot.id !== input.slotId
-      )
-      if (duplicate) {
-        throw new MealAlreadyUsedInWeekError(
-          meal.nameEn,
-          duplicate.dayLabel,
-          slot.mealType,
-          { used_on_day: duplicate.dayLabel, used_in_slot: slot.mealType }
-        )
+        if (otherSlotsOnDay.length > 0) {
+          const otherMeals = await mealLoader.getMealsByIds(
+            otherSlotsOnDay.map(s => s.mealId as string)
+          )
+          const existingSalad = otherMeals.find(m => m.mealType === 'salad')
+          if (existingSalad) {
+            const existingSlot = otherSlotsOnDay.find(
+              s => s.mealId === existingSalad.id
+            )
+            throw new DaySaladAlreadyAssignedError(
+              slot.deliveryDate,
+              existingSlot?.id ?? '',
+              existingSalad.nameEn
+            )
+          }
+        }
       }
 
       await menuWeekPersistor.assignMealToSlot(input.slotId, input.mealId)
@@ -102,13 +93,16 @@ export function makeUC(deps: Deps) {
         meal: {
           meal_id: meal.id,
           name_en: meal.nameEn,
+          meal_type: meal.mealType,
           kcal: meal.kcal,
           photo_url: meal.photoUrl ?? null,
         },
         week_fill_status: {
           filled_slots: filledSlots,
           total_slots: slotsAfterAssign.length,
-          publish_ready: filledSlots === allSlots.length,
+          publish_ready:
+            slotsAfterAssign.length > 0 &&
+            filledSlots === slotsAfterAssign.length,
         },
       }
     } catch (error) {

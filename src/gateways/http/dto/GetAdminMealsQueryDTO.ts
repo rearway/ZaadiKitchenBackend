@@ -33,12 +33,18 @@ export class GetAdminMealsQueryDTO {
   @Max(50)
   per_page?: number
 
-  @ApiPropertyOptional({ enum: ['picker'] })
+  @ApiPropertyOptional({
+    enum: ['picker'],
+    description: 'Shortcut for status=active. Same meal may be assigned to multiple slots in a week.',
+  })
   @IsOptional()
   @IsEnum(['picker'])
   context?: 'picker'
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    deprecated: true,
+    description: 'Ignored. Kept so older clients do not get 400.',
+  })
   @IsOptional()
   @IsString()
   exclude_week_id?: string
