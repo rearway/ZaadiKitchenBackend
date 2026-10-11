@@ -3,7 +3,7 @@ import {
   ResourceNotFoundError,
   MealIsDraftError,
   SlotNotEditableError,
-  DaySaladAlreadyAssignedError,
+  DayMealTypeAlreadyAssignedError,
 } from '../../../shared/errors/domain.errors.js'
 
 export interface AssignMealToSlotInput {
@@ -54,29 +54,28 @@ export function makeUC(deps: Deps) {
 
       if (meal.status === 'draft') throw new MealIsDraftError()
 
-      if (meal.mealType === 'salad') {
-        const weekSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-        const otherSlotsOnDay = weekSlots.filter(
-          s =>
-            s.deliveryDate === slot.deliveryDate &&
-            s.id !== slot.id &&
-            !!s.mealId
+      const weekSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
+      const otherSlotsOnDay = weekSlots.filter(
+        s =>
+          s.deliveryDate === slot.deliveryDate &&
+          s.id !== slot.id &&
+          !!s.mealId
+      )
+      if (otherSlotsOnDay.length > 0) {
+        const otherMeals = await mealLoader.getMealsByIds(
+          otherSlotsOnDay.map(s => s.mealId as string)
         )
-        if (otherSlotsOnDay.length > 0) {
-          const otherMeals = await mealLoader.getMealsByIds(
-            otherSlotsOnDay.map(s => s.mealId as string)
+        const sameType = otherMeals.find(m => m.mealType === meal.mealType)
+        if (sameType) {
+          const existingSlot = otherSlotsOnDay.find(
+            s => s.mealId === sameType.id
           )
-          const existingSalad = otherMeals.find(m => m.mealType === 'salad')
-          if (existingSalad) {
-            const existingSlot = otherSlotsOnDay.find(
-              s => s.mealId === existingSalad.id
-            )
-            throw new DaySaladAlreadyAssignedError(
-              slot.deliveryDate,
-              existingSlot?.id ?? '',
-              existingSalad.nameEn
-            )
-          }
+          throw new DayMealTypeAlreadyAssignedError(
+            meal.mealType,
+            slot.deliveryDate,
+            existingSlot?.id ?? '',
+            sameType.nameEn
+          )
         }
       }
 

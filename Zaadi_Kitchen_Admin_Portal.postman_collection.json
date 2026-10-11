@@ -845,7 +845,7 @@
         {
           "name": "Assign Meal to Slot",
           "request": {
-            "description": "Any ACTIVE meal (executive or salad) can go in any slot; the same meal may repeat across the week. Errors: 422 MEAL_IS_DRAFT, 409 DAY_SALAD_ALREADY_ASSIGNED (another slot on that day already holds a salad), 422 SLOT_NOT_EDITABLE (published/past week), 404 week/slot/meal. List meals for the modal with GET /admin/meals?status=active.",
+            "description": "Any ACTIVE meal (executive or salad) can go in any slot; the same meal may repeat across the week. Errors: 422 MEAL_IS_DRAFT, 409 DAY_MEAL_TYPE_ALREADY_ASSIGNED (another slot on that day already holds a dish of the same type: max 1 executive + 1 salad per day), 422 SLOT_NOT_EDITABLE (published/past week), 404 week/slot/meal. List meals for the modal with GET /admin/meals?status=active.",
             "method": "POST",
             "header": [],
             "body": {

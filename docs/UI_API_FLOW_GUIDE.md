@@ -2002,7 +2002,7 @@ Returns the 5-day × 2-slot grid. When `is_editable: false` (published week), al
 
 Returns updated slot + `week_fill_status: { filled_slots, total_slots, publish_ready }`.
 
-Rules: meal must be `active`; any active meal can go in any slot; the same meal can repeat across the week; at most one salad per delivery day.
+Rules: meal must be `active`; any active meal can go in any slot; the same meal can repeat across the week; at most one executive meal and one salad per delivery day.
 
 **Publish week — `POST /admin/menu/weeks/:week_id/publish`**
 
@@ -2028,7 +2028,7 @@ Rules: meal must be `active`; any active meal can go in any slot; the same meal 
 | `WEEK_ALREADY_PUBLISHED` | 409 | Week is already published |
 | `SLOT_NOT_EDITABLE` | 422 | Slot's week is published or past |
 | `MEAL_IS_DRAFT` | 422 | Meal must be activated before assigning |
-| `DAY_SALAD_ALREADY_ASSIGNED` | 409 | That delivery day already has a salad in another slot |
+| `DAY_MEAL_TYPE_ALREADY_ASSIGNED` | 409 | That delivery day already has a dish of the same type (executive or salad) in another slot |
 
 ---
 

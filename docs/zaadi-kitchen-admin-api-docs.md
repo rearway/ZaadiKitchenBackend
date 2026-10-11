@@ -1013,7 +1013,7 @@ PUT /admin/menu/slots/{slot_id}/assign
 | Status | Code | Description |
 |---|---|---|
 | `400` | `DISH_NOT_ACTIVE` | Dish is in Draft status |
-| `409` | `DAY_SALAD_ALREADY_ASSIGNED` | Another slot on that day already holds a salad (max 1 salad per day). Same dish on multiple days is allowed. |
+| `409` | `DAY_MEAL_TYPE_ALREADY_ASSIGNED` | Another slot on that day already holds a dish of the same type (max 1 executive + 1 salad per day). Same dish on multiple days is allowed. |
 | `403` | `WEEK_PUBLISHED` | Slot belongs to a published (locked) week |
 | `404` | `SLOT_NOT_FOUND` | Slot ID not found |
 
@@ -2053,7 +2053,7 @@ POST /rider/deliveries/{delivery_id}/issue
 | `SLOTS_INCOMPLETE` | 409 | Cannot publish — not all 10 slots filled. Includes `unfilled_slots`. |
 | `ALREADY_PUBLISHED` | 409 | Week already published |
 | `DISH_NOT_ACTIVE` | 400 | Draft dish cannot be assigned to a slot |
-| `DAY_SALAD_ALREADY_ASSIGNED` | 409 | That delivery day already has a salad in another slot. |
+| `DAY_MEAL_TYPE_ALREADY_ASSIGNED` | 409 | That delivery day already has a dish of the same type (executive or salad) in another slot. |
 | `WEEK_PUBLISHED` | 403 | Cannot edit slots on a published week |
 | `CONFIRM_ACTIVATION_REQUIRED` | 409 | Area activation requires `confirm_activation: true` |
 | `CONFIRM_IMPACT_REQUIRED` | 409 | Deactivating a published dish requires `confirm_impact: true`. Includes `affected_weeks`. |

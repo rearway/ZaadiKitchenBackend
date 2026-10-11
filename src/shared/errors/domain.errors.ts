@@ -157,13 +157,23 @@ export class MealIsDraftError extends BaseError {
   }
 }
 
-export class DaySaladAlreadyAssignedError extends BaseError {
-  constructor(deliveryDate: string, existingSlotId: string, existingMealName: string) {
+export class DayMealTypeAlreadyAssignedError extends BaseError {
+  constructor(
+    mealType: string,
+    deliveryDate: string,
+    existingSlotId: string,
+    existingMealName: string
+  ) {
+    const [one, many] =
+      mealType === 'salad'
+        ? ['A salad', 'salads']
+        : ['An executive meal', 'executive meals']
     super(
-      'DAY_SALAD_ALREADY_ASSIGNED',
+      'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
       409,
-      `A salad (${existingMealName}) is already assigned for ${deliveryDate}. Only one salad per day is allowed.`,
+      `${one} (${existingMealName}) is already assigned for ${deliveryDate}. You cannot assign two ${many} on the same day.`,
       {
+        meal_type: mealType,
         delivery_date: deliveryDate,
         existing_slot_id: existingSlotId,
         existing_meal_name: existingMealName,
