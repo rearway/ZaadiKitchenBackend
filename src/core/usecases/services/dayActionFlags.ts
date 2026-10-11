@@ -34,6 +34,22 @@ export interface ResolveDayActionFlagsInput {
 }
 
 /**
+ * Menu/home card is a meal day on this subscription (same existence
+ * check as GET /subscriptions/me/deliveries). True only when the slot
+ * matches the plan meal type and the delivery row is scheduled or skipped.
+ */
+export function isDeliverableMenuDay(input: {
+  subscription: Subscription | null
+  mealType?: string | null
+  dayStatus?: string | null
+}): boolean {
+  const { subscription: sub, mealType, dayStatus } = input
+  if (!sub) return false
+  if (mealType != null && mealType !== sub.mealType) return false
+  return dayStatus === 'scheduled' || dayStatus === 'skipped'
+}
+
+/**
  * Canonical skip/undo flags for home, menu week, deliveries, and meal detail.
  */
 export function resolveDayActionFlags(

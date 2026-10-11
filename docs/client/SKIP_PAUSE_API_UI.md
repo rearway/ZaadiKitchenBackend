@@ -43,12 +43,13 @@ Present on **deliveries**, **menu/week cards**, **home/this-week cards**, **meal
 
 | Field | Type | UI rule |
 |-------|------|---------|
-| `skip_available` | boolean | Show **Skip** when `true` |
+| `skip_available` | boolean | Show **Skip** when `true` (and `is_deliverable` on menu/home/detail) |
 | `undoable` | boolean | Show **Undo skip** when `true` |
 | `is_skipped` | boolean | Skipped styling when `true` |
 | `skip_reason` | string \| null | Tooltip / disabled state when skip blocked; `null` if skip allowed |
+| `is_deliverable` | boolean | Menu / home / meal-detail only. `true` when this card is a meal day on the plan (`scheduled` or `skipped` + matching meal type) |
 
-`skip_reason` values: `past_cutoff`, `skip_limit_reached`, `not_subscribed`, `subscription_paused`, `subscription_expired`, `subscription_cancelled` (cancelled **after** `end_date` only — in-cycle cancel behaves like active for skip/pause), `already_skipped`, `meal_type_mismatch`, `day_paused`.
+`skip_reason` values: `past_cutoff`, `skip_limit_reached`, `not_subscribed`, `subscription_paused`, `subscription_expired`, `subscription_cancelled` (cancelled **after** `end_date` only — in-cycle cancel behaves like active for skip/pause), `already_skipped`, `meal_type_mismatch`, `day_paused`, `no_delivery`.
 
 **Deliveries only:** `skippable` is deprecated — mirror of `skip_available`.
 
@@ -219,7 +220,7 @@ When **paused**, same unified remaining fields; existing `paused_since` / `days_
 
 ### `GET /home/this-week`
 
-Each card **added:** `skip_available`, `undoable`, `is_skipped`, `skip_reason`.
+Each card **added:** `skip_available`, `undoable`, `is_skipped`, `skip_reason`, `is_deliverable`.
 
 CTA: `Skip →` when `skip_available`; `Undo` when `undoable`; `Browse only` when sub paused.
 
@@ -227,7 +228,7 @@ CTA: `Skip →` when `skip_available`; `Undo` when `undoable`; `Browse only` whe
 
 ### `GET /menu/week`
 
-Each day card **added:** `undoable`, `is_skipped` (plus existing `skip_available`, `skip_reason`).
+Each day card **added:** `undoable`, `is_skipped`, `is_deliverable` (plus existing `skip_available`, `skip_reason`).
 
 ---
 
@@ -235,7 +236,7 @@ Each day card **added:** `undoable`, `is_skipped` (plus existing `skip_available
 
 **Query:** `?delivery_date=YYYY-MM-DD` **recommended** so skip flags match that day.
 
-**Added:** `skip_available`, `undoable`, `is_skipped`, `skip_reason`.
+**Added:** `skip_available`, `undoable`, `is_skipped`, `skip_reason`, `is_deliverable`.
 
 Without `delivery_date`, flags may default to blocked (`not_subscribed`).
 

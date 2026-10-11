@@ -1,4 +1,4 @@
-import { resolveDayActionFlags } from '../dayActionFlags.js'
+import { isDeliverableMenuDay, resolveDayActionFlags } from '../dayActionFlags.js'
 import { makeSubscription } from '../../../../__tests__/helpers/mock-deps'
 
 describe('resolveDayActionFlags', () => {
@@ -12,6 +12,63 @@ describe('resolveDayActionFlags', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+  })
+
+  describe('isDeliverableMenuDay', () => {
+    const sub = makeSubscription({ mealType: 'executive', status: 'active' })
+
+    it('is true for scheduled matching meal type', () => {
+      expect(
+        isDeliverableMenuDay({
+          subscription: sub,
+          mealType: 'executive',
+          dayStatus: 'scheduled',
+        })
+      ).toBe(true)
+    })
+
+    it('is true for skipped matching meal type', () => {
+      expect(
+        isDeliverableMenuDay({
+          subscription: sub,
+          mealType: 'executive',
+          dayStatus: 'skipped',
+        })
+      ).toBe(true)
+    })
+
+    it.each(['paused', 'delivered', 'past_cutoff', null, undefined] as const)(
+      'is false when dayStatus is %s',
+      dayStatus => {
+        expect(
+          isDeliverableMenuDay({
+            subscription: sub,
+            mealType: 'executive',
+            dayStatus,
+          })
+        ).toBe(false)
+      }
+    )
+
+    it('is false when meal type does not match', () => {
+      expect(
+        isDeliverableMenuDay({
+          subscription: sub,
+          mealType: 'salad',
+          dayStatus: 'scheduled',
+        })
+      ).toBe(false)
+    })
+
+    it('is false when there is no subscription', () => {
+      expect(
+        isDeliverableMenuDay({
+          subscription: null,
+          mealType: 'executive',
+          dayStatus: 'scheduled',
+        })
+      ).toBe(false)
+    })
   })
 
   it('returns not_subscribed when no subscription', () => {

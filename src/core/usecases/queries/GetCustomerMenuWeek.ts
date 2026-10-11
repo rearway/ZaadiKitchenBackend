@@ -5,7 +5,10 @@ import {
   getDayLabel,
   formatWeekRangeLabel,
 } from '../services/weekUtils.js'
-import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import {
+  isDeliverableMenuDay,
+  resolveDayActionFlags,
+} from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface GetCustomerMenuWeekInput {
@@ -30,6 +33,8 @@ interface MealCard {
   undoable: boolean
   is_skipped: boolean
   skip_reason: string | null
+  /** True when this card is a meal day on the user's plan (scheduled or skipped). */
+  is_deliverable: boolean
 }
 
 interface WeekSection {
@@ -126,6 +131,11 @@ export function makeUC(deps: Deps) {
           undoable: flags.undoable,
           is_skipped: flags.is_skipped,
           skip_reason: flags.skip_reason,
+          is_deliverable: isDeliverableMenuDay({
+            subscription: sub,
+            mealType: slot.meal.mealType,
+            dayStatus,
+          }),
         }
       }
 

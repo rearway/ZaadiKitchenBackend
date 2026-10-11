@@ -14,6 +14,7 @@ Skip and pause both consume **flex** working days (Sun–Thu, holidays excluded)
 | `undoable` | User may undo skip (before 6 PM KSA day before delivery) |
 | `is_skipped` | Day is currently skipped |
 | `skip_reason` | Why skip is blocked, or `null`. `no_delivery` = menu day the user has no delivery for (outside their plan dates) |
+| `is_deliverable` | Menu/home/meal-detail only. `true` when this card is a meal day on the user's plan (`delivery_days` is `scheduled` or `skipped`, and slot meal type matches). Same existence check as `GET /subscriptions/me/deliveries`. |
 
 `skippable` on deliveries is deprecated; use `skip_available`.
 
@@ -33,6 +34,7 @@ Skip and pause both consume **flex** working days (Sun–Thu, holidays excluded)
 
 ## UI
 
-- Show Skip when `skip_available === true`
+- Show Skip when `is_deliverable === true` and `skip_available === true`
 - Show Undo when `undoable === true`
+- Treat the card as “your meal” when `is_deliverable === true` (including skipped days)
 - Do not assume `status: paused` immediately after scheduling pause

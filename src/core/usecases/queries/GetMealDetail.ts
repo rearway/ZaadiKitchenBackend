@@ -4,7 +4,10 @@ import {
   getSaudiWorkWeekBounds,
   getNextSaudiWorkWeekBounds,
 } from '../services/weekUtils.js'
-import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import {
+  isDeliverableMenuDay,
+  resolveDayActionFlags,
+} from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 
 export interface GetMealDetailInput {
@@ -33,6 +36,7 @@ export interface GetMealDetailOutput {
   undoable: boolean
   is_skipped: boolean
   skip_reason: string | null
+  is_deliverable: boolean
 }
 
 export function makeUC(deps: Deps) {
@@ -119,6 +123,11 @@ export function makeUC(deps: Deps) {
         undoable: flags.undoable,
         is_skipped: flags.is_skipped,
         skip_reason: flags.skip_reason,
+        is_deliverable: isDeliverableMenuDay({
+          subscription: sub,
+          mealType: meal.mealType,
+          dayStatus,
+        }),
       }
     } catch (error) {
       logger.error(

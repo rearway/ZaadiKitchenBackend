@@ -1,6 +1,9 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { getSaudiWorkWeekBounds, getDayLabel } from '../services/weekUtils.js'
-import { resolveDayActionFlags } from '../services/dayActionFlags.js'
+import {
+  isDeliverableMenuDay,
+  resolveDayActionFlags,
+} from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 import {
   canUseSkipAndPause,
@@ -34,6 +37,7 @@ export interface GetHomeThisWeekOutput {
     undoable: boolean
     is_skipped: boolean
     skip_reason: string | null
+    is_deliverable: boolean
     action: {
       type: string
       cta_label: string
@@ -145,6 +149,11 @@ export function makeUC(deps: Deps) {
             undoable: flags.undoable,
             is_skipped: flags.is_skipped,
             skip_reason: flags.skip_reason,
+            is_deliverable: isDeliverableMenuDay({
+              subscription: sub,
+              mealType: meal.mealType,
+              dayStatus,
+            }),
             action: cta_label ? { type: action_type, cta_label } : null,
           }
         })
