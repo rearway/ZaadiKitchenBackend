@@ -350,8 +350,14 @@ export function makeUC(deps: Deps) {
 
       // Load and validate session
       const session = await deps.checkoutSessionLoader.getSessionById(sessionId)
+      if (session && session.userId === userId && session.status === 'confirmed') {
+        const { CheckoutAlreadyCompletedError } =
+          await import('../../../shared/errors/index.js')
+        throw new CheckoutAlreadyCompletedError()
+      }
       if (
         !session ||
+        session.userId !== userId ||
         session.status === 'expired' ||
         new Date() > session.expiresAt
       ) {
@@ -396,12 +402,40 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Plan', session.planId)
       }
 
+      const promotionSubscriptionId = session.promotionSubscriptionId ?? null
+      const liveSub =
+        await deps.subscriptionLoader.getActiveSubscriptionByUserId(userId)
+      if (promotionSubscriptionId) {
+        if (
+          !liveSub ||
+          liveSub.id !== promotionSubscriptionId ||
+          liveSub.status !== 'active'
+        ) {
+          const { ActiveSubscriptionCheckoutBlockedError } =
+            await import('../../../shared/errors/index.js')
+          throw new ActiveSubscriptionCheckoutBlockedError(
+            'Your subscription changed after checkout started. Please start checkout again.'
+          )
+        }
+      } else if (liveSub) {
+        const { ActiveSubscriptionCheckoutBlockedError } =
+          await import('../../../shared/errors/index.js')
+        throw new ActiveSubscriptionCheckoutBlockedError()
+      }
+
       const lastOrder = await deps.orderLoader.getLastOrderByUserId(userId)
       const isNewUser = !lastOrder
       const promoDiscountLabel = await resolvePromoDiscountLabel(
         session,
         deps.promoCodeLoader
       )
+
+      const claimed = await deps.checkoutSessionPersistor.claimSession(sessionId)
+      if (!claimed) {
+        const { CheckoutAlreadyCompletedError } =
+          await import('../../../shared/errors/index.js')
+        throw new CheckoutAlreadyCompletedError()
+      }
 
       const paymentTx = await deps.paymentTransactionPersistor.createTransaction({
         userId,
@@ -422,6 +456,9 @@ export function makeUC(deps: Deps) {
           status: 'FAILED',
           gatewayPaymentId: chargeResult.gatewayPaymentId || null,
         })
+        await deps.checkoutSessionPersistor.updateSession(sessionId, {
+          status: 'active',
+        })
         const { PaymentFailedError } =
           await import('../../../shared/errors/index.js')
         throw new PaymentFailedError(
@@ -435,7 +472,6 @@ export function makeUC(deps: Deps) {
       })
 
       const gatewayPaymentId = chargeResult.gatewayPaymentId
-      const promotionSubscriptionId = session.promotionSubscriptionId ?? null
 
       if (promotionSubscriptionId) {
         const subscription =

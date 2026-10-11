@@ -337,6 +337,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     checkoutSessionPersistor: {
       createSession: jest.fn().mockResolvedValue(makeCheckoutSession()),
       updateSession: jest.fn().mockResolvedValue(makeCheckoutSession()),
+      claimSession: jest.fn().mockResolvedValue(true),
       expireAllUserSessions: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['checkoutSessionPersistor'],
 

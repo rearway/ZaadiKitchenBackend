@@ -13,6 +13,7 @@ export type DaySkipReason =
   | 'already_skipped'
   | 'meal_type_mismatch'
   | 'day_paused'
+  | 'no_delivery'
   | null
 
 export interface DayActionFlags {
@@ -127,6 +128,15 @@ export function resolveDayActionFlags(
       undoable: false,
       is_skipped: false,
       skip_reason: 'meal_type_mismatch',
+    }
+  }
+
+  if (dayStatus == null) {
+    return {
+      skip_available: false,
+      undoable: false,
+      is_skipped: false,
+      skip_reason: 'no_delivery',
     }
   }
 

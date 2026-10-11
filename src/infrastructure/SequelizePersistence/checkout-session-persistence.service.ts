@@ -54,6 +54,20 @@ export class CheckoutSessionPersistenceService
     return this.toSessionEntity(model!)
   }
 
+  async claimSession(id: string): Promise<boolean> {
+    const [affected] = await CheckoutSessionModel.update(
+      { status: 'confirmed' },
+      {
+        where: {
+          id,
+          status: 'active',
+          expiresAt: { [Op.gt]: new Date() },
+        },
+      }
+    )
+    return affected === 1
+  }
+
   async expireAllUserSessions(userId: string): Promise<void> {
     await CheckoutSessionModel.update(
       { status: 'expired' },

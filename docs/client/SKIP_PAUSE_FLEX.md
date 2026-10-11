@@ -13,7 +13,7 @@ Skip and pause both consume **flex** working days (Sun–Thu, holidays excluded)
 | `skip_available` | User may skip this day/meal now |
 | `undoable` | User may undo skip (before 6 PM KSA day before delivery) |
 | `is_skipped` | Day is currently skipped |
-| `skip_reason` | Why skip is blocked, or `null` |
+| `skip_reason` | Why skip is blocked, or `null`. `no_delivery` = menu day the user has no delivery for (outside their plan dates) |
 
 `skippable` on deliveries is deprecated; use `skip_available`.
 

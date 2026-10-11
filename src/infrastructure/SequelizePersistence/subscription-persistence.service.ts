@@ -233,28 +233,41 @@ export class SubscriptionPersistenceService
       status: DeliveryDayStatus
       delivered_at: Date | null
     }>(
-      `SELECT dd.id as delivery_day_id,
-              u.full_name as customer_name,
-              dl.building_name,
-              dl.floor,
-              dl.desk_area,
-              dl.gate,
-              dl.delivery_preference,
-              dl.rider_notes,
-              da.id as area_id,
-              da.name as area_name,
-              dd.meal_type,
-              dd.meal_name,
-              dd.status,
-              dd.delivered_at
-       FROM delivery_days dd
-       JOIN users u ON u.id = dd.user_id
-       LEFT JOIN delivery_locations dl ON dl.user_id = dd.user_id AND dl.is_primary = true
-       LEFT JOIN delivery_areas da ON da.id = dl.area_id
-       WHERE dd.date = :date
-         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
-         ${areaId ? 'AND da.id = :areaId' : ''}
-       ORDER BY da.name ASC NULLS LAST, dl.building_name ASC NULLS LAST, u.full_name ASC`,
+      `SELECT * FROM (
+         SELECT DISTINCT ON (dd.user_id)
+                dd.id as delivery_day_id,
+                u.full_name as customer_name,
+                dl.building_name,
+                dl.floor,
+                dl.desk_area,
+                dl.gate,
+                dl.delivery_preference,
+                dl.rider_notes,
+                da.id as area_id,
+                da.name as area_name,
+                dd.meal_type,
+                dd.meal_name,
+                dd.status,
+                dd.delivered_at
+         FROM delivery_days dd
+         JOIN users u ON u.id = dd.user_id
+         JOIN subscriptions s ON s.id = dd.subscription_id
+         LEFT JOIN LATERAL (
+           SELECT * FROM delivery_locations l
+           WHERE l.user_id = dd.user_id AND l.is_primary = true
+           ORDER BY l.updated_at DESC
+           LIMIT 1
+         ) dl ON true
+         LEFT JOIN delivery_areas da ON da.id = dl.area_id
+         WHERE dd.date = :date
+           AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+           AND s.status IN ('active', 'paused', 'cancelled')
+           ${areaId ? 'AND da.id = :areaId' : ''}
+         ORDER BY dd.user_id,
+                  CASE dd.status WHEN 'delivered' THEN 0 WHEN 'past_cutoff' THEN 1 ELSE 2 END,
+                  s.created_at ASC
+       ) one_per_user
+       ORDER BY area_name ASC NULLS LAST, building_name ASC NULLS LAST, customer_name ASC`,
       {
         replacements: areaId ? { date, areaId } : { date },
         type: QueryTypes.SELECT,
@@ -282,13 +295,23 @@ export class SubscriptionPersistenceService
   async getMealBreakdownByDate(
     date: string
   ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]> {
-    const models = await DeliveryDayModel.findAll({
-      where: { date, status: { [Op.in]: ['scheduled', 'past_cutoff', 'delivered'] } },
-      attributes: ['mealType'],
-    })
+    const rows = await DeliveryDayModel.sequelize!.query<{
+      meal_type: 'executive' | 'salad'
+    }>(
+      `SELECT DISTINCT ON (dd.user_id) dd.meal_type
+       FROM delivery_days dd
+       JOIN subscriptions s ON s.id = dd.subscription_id
+       WHERE dd.date = :date
+         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+         AND s.status IN ('active', 'paused', 'cancelled')
+       ORDER BY dd.user_id,
+                CASE dd.status WHEN 'delivered' THEN 0 WHEN 'past_cutoff' THEN 1 ELSE 2 END,
+                s.created_at ASC`,
+      { replacements: { date }, type: QueryTypes.SELECT }
+    )
 
     const counts = { executive: 0, salad: 0 }
-    for (const m of models) counts[m.mealType]++
+    for (const r of rows) counts[r.meal_type]++
 
     return [
       { mealType: 'executive' as const, count: counts.executive },

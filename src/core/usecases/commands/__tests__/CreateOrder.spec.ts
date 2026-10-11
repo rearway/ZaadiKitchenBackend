@@ -337,6 +337,131 @@ describe('CreateOrder', () => {
     expect(dates).not.toContain(holiday)
   })
 
+  describe('duplicate subscription protection', () => {
+    it('rejects a session that was already paid without charging again', async () => {
+      const deps = makeOrderDeps({
+        checkoutSessionLoader: {
+          getSessionById: jest
+            .fn()
+            .mockResolvedValue(makeCheckoutSession({ status: 'confirmed' })),
+        },
+      })
+
+      await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+        errorCode: 'CHECKOUT_ALREADY_COMPLETED',
+        statusCode: 409,
+      })
+      expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+      expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+    })
+
+    it('rejects a concurrent second submit when the session claim fails', async () => {
+      const deps = makeOrderDeps({
+        checkoutSessionPersistor: {
+          ...buildDeps().checkoutSessionPersistor,
+          claimSession: jest.fn().mockResolvedValue(false),
+        },
+      })
+
+      await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+        errorCode: 'CHECKOUT_ALREADY_COMPLETED',
+      })
+      expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+      expect(deps.deliveryDayPersistor.bulkCreateDeliveryDays).not.toHaveBeenCalled()
+    })
+
+    it('claims the session before charging', async () => {
+      const deps = makeOrderDeps()
+
+      await makeUC(deps)(validInput)
+
+      const claim = (deps.checkoutSessionPersistor.claimSession as jest.Mock).mock
+        .invocationCallOrder[0]
+      const charge = (deps.paymentGateway.charge as jest.Mock).mock.invocationCallOrder[0]
+      expect(deps.checkoutSessionPersistor.claimSession).toHaveBeenCalledWith(
+        validInput.sessionId
+      )
+      expect(claim).toBeLessThan(charge)
+    })
+
+    it.each(['active', 'paused', 'cancelled'] as const)(
+      'rejects a new purchase when the user already has a %s subscription',
+      async status => {
+        const deps = makeOrderDeps({
+          subscriptionLoader: {
+            ...buildDeps().subscriptionLoader,
+            getActiveSubscriptionByUserId: jest
+              .fn()
+              .mockResolvedValue(makeSubscription({ status })),
+          },
+        })
+
+        await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+          errorCode: 'ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED',
+        })
+        expect(deps.checkoutSessionPersistor.claimSession).not.toHaveBeenCalled()
+        expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+        expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+      }
+    )
+
+    it('rejects an upgrade when the live subscription is no longer the one being upgraded', async () => {
+      const deps = makeOrderDeps({
+        checkoutSessionLoader: {
+          getSessionById: jest.fn().mockResolvedValue(
+            makeCheckoutSession({ promotionSubscriptionId: 'sub-old' })
+          ),
+        },
+        subscriptionLoader: {
+          ...buildDeps().subscriptionLoader,
+          getActiveSubscriptionByUserId: jest
+            .fn()
+            .mockResolvedValue(makeSubscription({ id: 'sub-other', status: 'active' })),
+        },
+      })
+
+      await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+        errorCode: 'ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED',
+      })
+      expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    })
+
+    it("rejects another user's session", async () => {
+      const deps = makeOrderDeps({
+        checkoutSessionLoader: {
+          getSessionById: jest
+            .fn()
+            .mockResolvedValue(makeCheckoutSession({ userId: 'someone-else' })),
+        },
+      })
+
+      await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+        errorCode: 'SESSION_EXPIRED',
+      })
+      expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    })
+
+    it('releases the session when the charge is declined so the user can retry', async () => {
+      const deps = makeOrderDeps({
+        paymentGateway: {
+          charge: jest.fn().mockResolvedValue({
+            success: false,
+            gatewayPaymentId: '',
+            errorMessage: 'Declined',
+          }),
+        },
+      })
+
+      await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+        errorCode: 'PAYMENT_FAILED',
+      })
+      expect(deps.checkoutSessionPersistor.updateSession).toHaveBeenCalledWith(
+        validInput.sessionId,
+        { status: 'active' }
+      )
+    })
+  })
+
   it('links the order and subscription to each other', async () => {
     const deps = makeOrderDeps()
     const createOrder = makeUC(deps)

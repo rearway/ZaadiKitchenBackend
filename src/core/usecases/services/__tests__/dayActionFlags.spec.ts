@@ -69,6 +69,50 @@ describe('resolveDayActionFlags', () => {
     })
   })
 
+  it.each([null, undefined])(
+    'blocks skip on a menu day with no delivery row (dayStatus %s)',
+    dayStatus => {
+      const sub = makeSubscription({ mealType: 'executive', status: 'active' })
+      expect(
+        resolveDayActionFlags({
+          subscription: sub,
+          deliveryDate: future,
+          mealType: 'executive',
+          dayStatus,
+        })
+      ).toEqual({
+        skip_available: false,
+        undoable: false,
+        is_skipped: false,
+        skip_reason: 'no_delivery',
+      })
+    }
+  )
+
+  it('reports meal_type_mismatch before no_delivery for other meal type', () => {
+    const sub = makeSubscription({ mealType: 'executive', status: 'active' })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: future,
+        mealType: 'salad',
+        dayStatus: null,
+      })
+    ).toMatchObject({ skip_available: false, skip_reason: 'meal_type_mismatch' })
+  })
+
+  it('reports no_delivery instead of past_cutoff for a past day without a delivery', () => {
+    const sub = makeSubscription({ mealType: 'executive', status: 'active' })
+    expect(
+      resolveDayActionFlags({
+        subscription: sub,
+        deliveryDate: '2026-09-01',
+        mealType: 'executive',
+        dayStatus: null,
+      })
+    ).toMatchObject({ skip_available: false, skip_reason: 'no_delivery' })
+  })
+
   it('sets undoable when skipped and before cutoff', () => {
     const sub = makeSubscription({ status: 'active', mealType: 'executive' })
     expect(

@@ -71,6 +71,16 @@ export class SessionExpiredError extends BaseError {
   }
 }
 
+export class CheckoutAlreadyCompletedError extends BaseError {
+  constructor() {
+    super(
+      'CHECKOUT_ALREADY_COMPLETED',
+      409,
+      'This checkout has already been paid. Check your subscription before trying again.'
+    )
+  }
+}
+
 export class PaymentFailedError extends BaseError {
   constructor(
     message = 'Your payment could not be processed. Please check your card details and try again.'

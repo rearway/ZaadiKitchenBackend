@@ -13,5 +13,10 @@ export interface CheckoutSessionPersistor {
     id: string,
     updates: Partial<CheckoutSession>
   ): Promise<CheckoutSession>
+  /**
+   * Atomically moves an `active`, unexpired session to `confirmed`.
+   * Returns false if another request already claimed it.
+   */
+  claimSession(id: string): Promise<boolean>
   expireAllUserSessions(userId: string): Promise<void>
 }
