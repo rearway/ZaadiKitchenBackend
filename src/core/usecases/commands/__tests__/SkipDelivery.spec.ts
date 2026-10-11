@@ -125,6 +125,27 @@ describe('SkipDelivery', () => {
     jest.useRealTimers()
   })
 
+  it('skips a day whose meal type was switched away from the plan default', async () => {
+    const deps = makeDepsWithSub(
+      { mealType: 'salad', skipDaysUsed: 0, skipDaysAllowed: 15 },
+      { mealType: 'executive', status: 'scheduled' }
+    )
+    const skipDelivery = makeUC(deps)
+
+    const result = await skipDelivery({
+      userId: 'user-uuid-1',
+      deliveryDate: FAR_FUTURE_DATE,
+    })
+
+    expect(result.status).toBe('skipped')
+    expect(deps.deliveryDayPersistor.updateDeliveryDayStatus).toHaveBeenCalled()
+    expect(deps.deliveryDayPersistor.bulkCreateDeliveryDays).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ mealType: 'executive' }),
+      ])
+    )
+  })
+
   it('throws ResourceNotFoundError when the user has no active subscription', async () => {
     const deps = buildDeps({
       subscriptionLoader: {

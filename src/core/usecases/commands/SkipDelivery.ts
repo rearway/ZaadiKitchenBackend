@@ -95,14 +95,6 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      if (day.mealType !== subscription.mealType) {
-        const { ValidationError } =
-          await import('../../../shared/errors/index.js')
-        throw new ValidationError(
-          'You can only skip days that match your subscription meal type.'
-        )
-      }
-
       await deliveryDayPersistor.updateDeliveryDayStatus(day.id, 'skipped')
 
       // Roll the skipped meal forward to the next working day after the plan end
@@ -132,7 +124,7 @@ export function makeUC(deps: Deps) {
         await deliveryDayPersistor.bulkCreateDeliveryDays(
           buildDeliveryDayInputs(
             [makeupDate],
-            subscription.mealType,
+            day.mealType,
             subscription.id,
             userId
           )
