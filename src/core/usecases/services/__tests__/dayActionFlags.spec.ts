@@ -27,17 +27,17 @@ describe('resolveDayActionFlags', () => {
       ).toBe(true)
     })
 
-    it('is true for skipped matching meal type', () => {
+    it('is false for skipped even when meal type matches', () => {
       expect(
         isDeliverableMenuDay({
           subscription: sub,
           mealType: 'executive',
           dayStatus: 'skipped',
         })
-      ).toBe(true)
+      ).toBe(false)
     })
 
-    it.each(['paused', 'delivered', 'past_cutoff', null, undefined] as const)(
+    it.each(['paused', 'delivered', 'past_cutoff', 'skipped', null, undefined] as const)(
       'is false when dayStatus is %s',
       dayStatus => {
         expect(

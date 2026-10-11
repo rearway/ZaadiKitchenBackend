@@ -56,7 +56,7 @@ function isMealTypeMismatch(
 /**
  * Menu/home card is a meal day on this subscription. True when the slot
  * matches the type they receive that day (per-day switch or plan default)
- * and the delivery row is scheduled or skipped.
+ * and the delivery row is scheduled. Skipped days stay `is_skipped` but are not deliverable.
  */
 export function isDeliverableMenuDay(input: {
   subscription: Subscription | null
@@ -67,7 +67,7 @@ export function isDeliverableMenuDay(input: {
   const { subscription: sub, mealType, assignedMealType, dayStatus } = input
   if (!sub) return false
   if (isMealTypeMismatch(sub, mealType, assignedMealType)) return false
-  return dayStatus === 'scheduled' || dayStatus === 'skipped'
+  return dayStatus === 'scheduled'
 }
 
 /**

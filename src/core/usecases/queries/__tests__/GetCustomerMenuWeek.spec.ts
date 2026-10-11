@@ -89,7 +89,7 @@ describe('GetCustomerMenuWeek', () => {
       is_skipped: true,
       undoable: true,
       skip_reason: 'already_skipped',
-      is_deliverable: true,
+      is_deliverable: false,
     })
   })
 
@@ -146,7 +146,7 @@ describe('GetCustomerMenuWeek', () => {
     })
   })
 
-  it('sets is_deliverable only on the plan meal-type card with a scheduled or skipped row', async () => {
+  it('sets is_deliverable only on the plan meal-type card with a scheduled row', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ mealType: 'executive' }),
       slots: [
@@ -231,7 +231,7 @@ describe('GetCustomerMenuWeek', () => {
       undoable: true,
       is_skipped: true,
       skip_reason: 'already_skipped',
-      is_deliverable: true,
+      is_deliverable: false,
     })
     expect(saladCard).toMatchObject({
       card_state: 'upcoming',

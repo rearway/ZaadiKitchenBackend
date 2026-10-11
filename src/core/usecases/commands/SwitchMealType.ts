@@ -1,5 +1,6 @@
 import { Deps } from '../../entitygateway/index.js'
 import { MealType } from '../../entities/index.js'
+import { compareDateStrings } from '../services/weekUtils.js'
 
 export interface SwitchMealTypeInput {
   userId: string
@@ -38,17 +39,15 @@ function formatShort(dateStr: string): string {
   return `${DAYS[date.getUTCDay()]} ${d} ${MONTHS[m - 1]}`
 }
 
-// After 6 PM KSA (15:00 UTC), effective from day after next
-function getEffectiveFrom(): string {
-  const now = new Date()
+/** After 18:00 KSA, earliest change is the day after next; otherwise tomorrow. */
+export function getMealTypeEffectiveFrom(now: Date = new Date()): string {
   const ksaHour = (now.getUTCHours() + 3) % 24
   const addDaysCount = ksaHour >= 18 ? 2 : 1
-  const result = new Date(now)
+  const result = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  )
   result.setUTCDate(result.getUTCDate() + addDaysCount)
-  const y = result.getUTCFullYear()
-  const m = String(result.getUTCMonth() + 1).padStart(2, '0')
-  const d = String(result.getUTCDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
+  return result.toISOString().slice(0, 10)
 }
 
 export function makeUC(deps: Deps) {
@@ -72,13 +71,42 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Subscription')
       }
 
-      const effectiveFrom = getEffectiveFrom()
+      const effectiveFrom = getMealTypeEffectiveFrom()
+
+      let datesToUpdate: string[] | undefined
+      if (applyTo === 'specific') {
+        const requested = [...new Set(specificDays ?? [])]
+        if (requested.length === 0) {
+          const { ValidationError } =
+            await import('../../../shared/errors/index.js')
+          throw new ValidationError(
+            'Select at least one day to change the meal type.'
+          )
+        }
+        const tooSoon = requested.filter(
+          d => compareDateStrings(d, effectiveFrom) < 0
+        )
+        if (tooSoon.length > 0) {
+          const { ValidationError } =
+            await import('../../../shared/errors/index.js')
+          throw new ValidationError(
+            `Meal type can only change from ${formatShort(effectiveFrom)} onwards.`,
+            {
+              fields: {
+                specific_days: `Earliest allowed date is ${effectiveFrom}.`,
+                blocked_dates: tooSoon,
+              },
+            }
+          )
+        }
+        datesToUpdate = requested
+      }
 
       await deliveryDayPersistor.updateMealTypeForSubscription(
         subscription.id,
         mealType,
         effectiveFrom,
-        applyTo === 'specific' ? specificDays : undefined
+        datesToUpdate
       )
 
       if (applyTo === 'all') {

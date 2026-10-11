@@ -47,7 +47,7 @@ Present on **deliveries**, **menu/week cards**, **home/this-week cards**, **meal
 | `undoable` | boolean | Show **Undo skip** when `true` |
 | `is_skipped` | boolean | Skipped styling when `true` |
 | `skip_reason` | string \| null | Tooltip / disabled state when skip blocked; `null` if skip allowed |
-| `is_deliverable` | boolean | Menu / home / meal-detail only. `true` when this card is a meal day on the plan (`scheduled` or `skipped` + matching meal type) |
+| `is_deliverable` | boolean | Menu / home / meal-detail only. `true` when this card is a meal they will receive (`scheduled` + matching **day** meal type) |
 
 `skip_reason` values: `past_cutoff`, `skip_limit_reached`, `not_subscribed`, `subscription_paused`, `subscription_expired`, `subscription_cancelled` (cancelled **after** `end_date` only — in-cycle cancel behaves like active for skip/pause), `already_skipped`, `meal_type_mismatch`, `day_paused`, `no_delivery`.
 
