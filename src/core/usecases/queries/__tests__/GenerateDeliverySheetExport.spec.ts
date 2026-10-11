@@ -36,7 +36,7 @@ describe('GenerateDeliverySheetExport', () => {
     expect(result.buffer.length).toBeGreaterThan(0)
     // XLSX files are zip containers, which start with the "PK" magic bytes
     expect(result.buffer.subarray(0, 2).toString()).toBe('PK')
-    expect(result.filename).toBe('zaadi-delivery-sheet-2026-08-02.xlsx')
+    expect(result.filename).toBe('platio-delivery-sheet-2026-08-02.xlsx')
   })
 
   it('fetches deliveries for the whole day with no area/meal-type filter', async () => {

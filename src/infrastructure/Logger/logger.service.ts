@@ -3,7 +3,7 @@ import { Logger } from '../../core/entitygateway/Logger'
 
 @Injectable()
 export class LoggerService implements Logger {
-  private readonly nestLogger = new NestLogger('ZaadiKitchen')
+  private readonly nestLogger = new NestLogger('PlatioKitchen')
 
   log(message: string, ...args: any[]): void {
     this.nestLogger.log(message, ...args)

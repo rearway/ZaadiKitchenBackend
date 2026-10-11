@@ -24,8 +24,8 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Zaadi Kitchen API')
-    .setDescription('Backend API for Zaadi Kitchen meal subscription platform')
+    .setTitle('Platio Kitchen API')
+    .setDescription('Backend API for Platio Kitchen meal subscription platform')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -44,7 +44,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000
   await app.listen(port)
-  console.log(`🚀 Zaadi Kitchen API running on http://localhost:${port}`)
+  console.log(`🚀 Platio Kitchen API running on http://localhost:${port}`)
   console.log(`📚 Swagger UI: http://localhost:${port}/api`)
 }
 void bootstrap()

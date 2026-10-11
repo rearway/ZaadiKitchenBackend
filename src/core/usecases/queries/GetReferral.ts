@@ -42,7 +42,7 @@ export function makeUC(deps: Deps) {
       ])
 
       const shareText =
-        `Hey! Try Zaadi Kitchen — fresh lunch delivered to your desk every day. ` +
+        `Hey! Try Platio Kitchen — fresh lunch delivered to your desk every day. ` +
         `Use my code ${stats.referralCode} for 20% off your first plan. 🍛`
 
       return {

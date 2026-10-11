@@ -38,7 +38,7 @@ export function makeUC(deps: Deps) {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Deliveries')
       const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer
 
-      return { buffer, filename: `zaadi-delivery-sheet-${date}.xlsx` }
+      return { buffer, filename: `platio-delivery-sheet-${date}.xlsx` }
     } catch (error) {
       logger.error('GenerateDeliverySheetExport failed', error instanceof Error ? error.message : String(error))
       throw error

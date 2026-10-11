@@ -10,7 +10,7 @@ export class SnsOtpService implements OtpService {
   async sendOtp(phone: string, code: string): Promise<void> {
     const command = new PublishCommand({
       PhoneNumber: phone,
-      Message: `Your Zaadi Kitchen verification code is: ${code}. Valid for 2 minutes.`,
+      Message: `Your Platio Kitchen verification code is: ${code}. Valid for 2 minutes.`,
       MessageAttributes: {
         'AWS.SNS.SMS.SMSType': {
           DataType: 'String',

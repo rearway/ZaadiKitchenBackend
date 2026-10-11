@@ -19,7 +19,7 @@ module.exports = {
         phone: null,
         email: 'admin@zaadikitchen.com',
         password: hashedPassword,
-        full_name: 'Zaadi Admin',
+        full_name: 'Platio Admin',
         role: 'ADMIN',
         language_preference: 'EN',
         push_notification_token: null,

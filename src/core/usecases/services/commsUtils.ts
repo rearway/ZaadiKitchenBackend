@@ -1,6 +1,6 @@
 export const KSA_TIMEZONE = 'Asia/Riyadh'
 
-export const BROADCAST_TITLE = 'Zaadi Kitchen'
+export const BROADCAST_TITLE = 'Platio Kitchen'
 
 export const BROADCAST_SEGMENT_IDS = [
   'all_subscribers',
