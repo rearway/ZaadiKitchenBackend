@@ -211,13 +211,22 @@ export class SlotNotEditableError extends BaseError {
 }
 
 export class MealInPublishedWeekError extends BaseError {
-  constructor(affectedWeeks: string[], details?: unknown) {
-    super(
-      'MEAL_IN_PUBLISHED_WEEK',
-      409,
-      `This meal is currently in the published menu for ${affectedWeeks.join(', ')}. Pass confirm_published_edit: true to proceed.`,
-      { affected_weeks: affectedWeeks, ...((details as object) ?? {}) }
-    )
+  constructor(
+    affectedWeeks: string[],
+    details?: { action?: 'edit' | 'draft' | 'activate' }
+  ) {
+    const action = details?.action ?? 'edit'
+    const weeks = affectedWeeks.join(', ')
+    const message =
+      action === 'activate'
+        ? 'Activating these meal changes will update the live menu wherever this meal is used, including days that are already past cutoff. Pass confirm_published_edit: true to proceed.'
+        : action === 'draft'
+          ? `This meal is currently in the published menu for ${weeks}. Moving it to Draft will remove it from the customer-visible menu. Pass confirm_published_edit: true to proceed.`
+          : `This meal is currently in the published menu for ${weeks}. Pass confirm_published_edit: true to proceed.`
+    super('MEAL_IN_PUBLISHED_WEEK', 409, message, {
+      affected_weeks: affectedWeeks,
+      affects_live_menu: affectedWeeks.length > 0,
+    })
   }
 }
 

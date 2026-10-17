@@ -1,4 +1,4 @@
-import type { Meal } from '../entities/Meal.js'
+import type { Meal, MealStatus } from '../entities/Meal.js'
 
 export interface CreateMealInput {
   nameEn: string
@@ -24,7 +24,7 @@ export interface MealLoader {
   getMealById(id: string): Promise<Meal | null>
   getMealByName(nameEn: string, excludeId?: string): Promise<Meal | null>
   getMeals(filters: {
-    status?: 'draft' | 'active' | 'all'
+    status?: MealStatus | 'all' | 'assignable'
     mealType?: 'executive' | 'salad' | 'all'
     q?: string
     page?: number

@@ -348,6 +348,16 @@ describe('AssignMealToSlot', () => {
       expect(deps.menuWeekPersistor.assignMealToSlot).not.toHaveBeenCalled()
     })
 
+    it('allows assigning an updated meal using the live version', async () => {
+      const updatedExec = makeMeal('exec-updated', 'executive', { status: 'updated' })
+      const { assign, deps } = setup({ meals: [...allMeals, updatedExec] })
+
+      await expect(
+        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: updatedExec.id })
+      ).resolves.toBeDefined()
+      expect(deps.menuWeekPersistor.assignMealToSlot).toHaveBeenCalled()
+    })
+
     it('rejects an unknown meal', async () => {
       const { assign } = setup({ meals: allMeals })
 

@@ -6,7 +6,7 @@ import type {
   CreateMealInput,
   ImportError,
 } from '../../core/entitygateway/Meal.js'
-import type { Meal } from '../../core/entities/Meal.js'
+import type { Meal, MealPendingChanges, MealStatus } from '../../core/entities/Meal.js'
 import { MealModel } from './models/index.js'
 import { generateMealErpCode } from '../../core/usecases/services/erpCodeUtils.js'
 
@@ -18,7 +18,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
   }
 
   async getMeals(filters: {
-    status?: 'draft' | 'active' | 'all'
+    status?: MealStatus | 'all' | 'assignable'
     mealType?: 'executive' | 'salad' | 'all'
     q?: string
     page?: number
@@ -26,7 +26,9 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
   }): Promise<{ meals: Meal[]; total: number }> {
     const where: Record<string, unknown> = {}
 
-    if (filters.status && filters.status !== 'all') {
+    if (filters.status === 'assignable') {
+      where['status'] = { [Op.in]: ['active', 'updated'] }
+    } else if (filters.status && filters.status !== 'all') {
       where['status'] = filters.status
     }
     if (filters.mealType && filters.mealType !== 'all') {
@@ -125,6 +127,14 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     if (updates.emoji !== undefined) fieldsToUpdate['emoji'] = updates.emoji
     if (updates.photoUrl !== undefined)
       fieldsToUpdate['photoUrl'] = updates.photoUrl
+    if ('pendingChanges' in updates)
+      fieldsToUpdate['pendingChanges'] = updates.pendingChanges ?? null
+    if (updates.status !== undefined) {
+      fieldsToUpdate['status'] = updates.status
+      if (updates.status === 'active' && !model.activatedAt) {
+        fieldsToUpdate['activatedAt'] = new Date()
+      }
+    }
 
     await model.update(fieldsToUpdate)
     return this.toEntity(model)
@@ -194,6 +204,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       keyIngredients: model.keyIngredients ?? undefined,
       emoji: model.emoji,
       status: model.status,
+      pendingChanges: (model.pendingChanges as MealPendingChanges | null) ?? null,
       erpCode: model.erpCode,
       photoUrl: model.photoUrl ?? undefined,
       activatedAt: model.activatedAt ?? undefined,

@@ -60,8 +60,12 @@ export class MealModel extends Model {
 
   @AllowNull(false)
   @Default('draft')
-  @Column(DataType.ENUM('draft', 'active'))
-  declare status: 'draft' | 'active'
+  @Column(DataType.ENUM('draft', 'active', 'updated'))
+  declare status: 'draft' | 'active' | 'updated'
+
+  @AllowNull(true)
+  @Column(DataType.JSONB)
+  declare pendingChanges: Record<string, unknown> | null
 
   @AllowNull(false)
   @Column(DataType.STRING(10))

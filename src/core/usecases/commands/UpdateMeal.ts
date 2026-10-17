@@ -1,20 +1,15 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { Meal } from '../../entities/index.js'
-import { ResourceNotFoundError, MealInPublishedWeekError } from '../../../shared/errors/domain.errors.js'
-import { getPublishedWeeksBlockingMealEdit } from '../services/getMealPublishedEditBlockers.js'
+import { ResourceNotFoundError } from '../../../shared/errors/domain.errors.js'
+import {
+  hasMealFieldUpdates,
+  mergeMealUpdates,
+  snapshotMealFields,
+  type MealFieldUpdates,
+} from '../services/mealPendingChanges.js'
 
-export interface UpdateMealInput {
+export interface UpdateMealInput extends MealFieldUpdates {
   mealId: string
-  nameEn?: string
-  nameAr?: string
-  kcal?: number
-  proteinG?: number
-  carbsG?: number
-  fatG?: number
-  chefNote?: string
-  keyIngredients?: string[]
-  emoji?: string
-  photoUrl?: string
   confirmPublishedEdit?: boolean
 }
 
@@ -25,32 +20,40 @@ export interface UpdateMealOutput {
 
 export function makeUC(deps: Deps) {
   return async function updateMeal(input: UpdateMealInput): Promise<UpdateMealOutput> {
-    const { logger, mealLoader, mealPersistor, menuWeekLoader } = deps
+    const { logger, mealLoader, mealPersistor } = deps
 
     try {
       const meal = await mealLoader.getMealById(input.mealId)
       if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
 
+      const { mealId, confirmPublishedEdit: _confirm, ...fieldUpdates } = input
+
       if (input.nameEn && input.nameEn.toLowerCase() !== meal.nameEn.toLowerCase()) {
         const duplicate = await mealLoader.getMealByName(input.nameEn, input.mealId)
         if (duplicate) {
-          const { ResourceAlreadyExistsError } = await import('../../../shared/errors/index.js')
+          const { ResourceAlreadyExistsError } =
+            await import('../../../shared/errors/index.js')
           throw new ResourceAlreadyExistsError('Meal', input.nameEn)
         }
       }
 
-      // Block edits only when the meal is in a published current or next work week
-      const usedInPublished = await getPublishedWeeksBlockingMealEdit(
-        input.mealId,
-        menuWeekLoader
-      )
-
-      if (usedInPublished.length > 0 && !input.confirmPublishedEdit) {
-        throw new MealInPublishedWeekError(usedInPublished)
+      if (meal.status === 'draft') {
+        const updated = await mealPersistor.updateMeal(mealId, fieldUpdates)
+        return { message: 'Meal updated successfully', data: updated }
       }
 
-      const { mealId, confirmPublishedEdit: _confirm, ...updates } = input
-      const updated = await mealPersistor.updateMeal(mealId, updates)
+      if (!hasMealFieldUpdates(fieldUpdates)) {
+        return { message: 'Meal updated successfully', data: meal }
+      }
+
+      const pendingChanges = mergeMealUpdates(
+        snapshotMealFields(meal, meal.pendingChanges),
+        fieldUpdates
+      )
+      const updated = await mealPersistor.updateMeal(mealId, {
+        status: 'updated',
+        pendingChanges,
+      })
 
       return { message: 'Meal updated successfully', data: updated }
     } catch (error) {

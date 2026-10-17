@@ -3,10 +3,10 @@ import { ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 
 export class GetAdminMealsQueryDTO {
-  @ApiPropertyOptional({ enum: ['all', 'active', 'draft'], default: 'all' })
+  @ApiPropertyOptional({ enum: ['all', 'active', 'draft', 'updated'], default: 'all' })
   @IsOptional()
-  @IsEnum(['all', 'active', 'draft'])
-  status?: 'all' | 'active' | 'draft'
+  @IsEnum(['all', 'active', 'draft', 'updated'])
+  status?: 'all' | 'active' | 'draft' | 'updated'
 
   @ApiPropertyOptional({ enum: ['all', 'executive', 'salad'], default: 'all' })
   @IsOptional()
@@ -35,7 +35,8 @@ export class GetAdminMealsQueryDTO {
 
   @ApiPropertyOptional({
     enum: ['picker'],
-    description: 'Shortcut for status=active. Same meal may be assigned to multiple slots in a week.',
+    description:
+      'Shortcut for status=active and status=updated. Live version remains assignable while edits are pending.',
   })
   @IsOptional()
   @IsEnum(['picker'])

@@ -100,7 +100,11 @@ export class AdminMealsController {
 
   @Patch(':meal_id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update meal fields' })
+  @ApiOperation({
+    summary: 'Update meal fields',
+    description:
+      'Draft meals update immediately. Active/updated meals save a pending copy and move to status=updated; the live menu is unchanged until PATCH /status with status=active and confirm_published_edit=true.',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('update-meal')
   async updateMeal(
@@ -119,13 +123,16 @@ export class AdminMealsController {
       keyIngredients: dto.key_ingredients,
       emoji: dto.emoji,
       photoUrl: dto.photo_url,
-      confirmPublishedEdit: dto.confirm_published_edit,
     })
   }
 
   @Patch(':meal_id/status')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Activate or draft a meal' })
+  @ApiOperation({
+    summary: 'Activate or draft a meal',
+    description:
+      'draft → active makes the meal assignable. updated → active applies pending edits to the live menu (requires confirm_published_edit; this updates every slot that uses the meal, including days past cutoff).',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('update-meal-status')
   async updateStatus(

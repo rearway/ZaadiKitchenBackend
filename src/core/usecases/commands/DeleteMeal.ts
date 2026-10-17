@@ -22,9 +22,9 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Meal')
       }
 
-      if (meal.status === 'active') {
+      if (meal.status === 'active' || meal.status === 'updated') {
         const { ValidationError } = await import('../../../shared/errors/index.js')
-        throw new ValidationError('Cannot delete an active meal. Draft it first.')
+        throw new ValidationError('Cannot delete a live meal. Draft it first.')
       }
 
       await mealPersistor.deleteMeal(mealId)

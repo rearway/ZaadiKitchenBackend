@@ -1,3 +1,18 @@
+export type MealStatus = 'draft' | 'active' | 'updated'
+
+export interface MealPendingChanges {
+  nameEn?: string
+  nameAr?: string
+  kcal?: number
+  proteinG?: number
+  carbsG?: number
+  fatG?: number
+  chefNote?: string
+  keyIngredients?: string[]
+  emoji?: string
+  photoUrl?: string
+}
+
 export interface Meal {
   id: string
   nameEn: string
@@ -10,12 +25,13 @@ export interface Meal {
   chefNote?: string
   keyIngredients?: string[]
   emoji: string
-  status: 'draft' | 'active'
+  status: MealStatus
   erpCode: string
   photoUrl?: string
   activatedAt?: Date
   lastServed?: string
   timesServed: number
+  pendingChanges?: MealPendingChanges | null
   createdAt: Date
   updatedAt: Date
 }

@@ -58,7 +58,11 @@ export class UpdateMealDTO {
   @IsString()
   photo_url?: string
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    deprecated: true,
+    description:
+      'Ignored. Edits to an active meal are saved as pending (status=updated) and do not change the live menu until the meal is activated again.',
+  })
   @IsOptional()
   confirm_published_edit?: boolean
 }

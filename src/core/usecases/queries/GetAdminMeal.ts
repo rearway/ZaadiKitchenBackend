@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError } from '../../../shared/errors/domain.errors.js'
+import { toPendingApi } from '../services/mealPendingChanges.js'
 
 export interface GetAdminMealInput {
   mealId: string
@@ -25,6 +26,8 @@ export interface GetAdminMealOutput {
   activated_at?: Date
   last_served?: string
   times_served: number
+  has_pending_changes: boolean
+  pending: ReturnType<typeof toPendingApi>
 }
 
 export function makeUC(deps: Deps) {
@@ -34,6 +37,10 @@ export function makeUC(deps: Deps) {
     try {
       const meal = await mealLoader.getMealById(input.mealId)
       if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
+
+      const hasPending =
+        meal.status === 'updated' ||
+        (meal.pendingChanges != null && Object.keys(meal.pendingChanges).length > 0)
 
       return {
         meal_id: meal.id,
@@ -55,6 +62,8 @@ export function makeUC(deps: Deps) {
         activated_at: meal.activatedAt,
         last_served: meal.lastServed,
         times_served: meal.timesServed,
+        has_pending_changes: hasPending,
+        pending: toPendingApi(meal.pendingChanges),
       }
     } catch (error) {
       logger.error('GetAdminMeal failed', error instanceof Error ? error.message : String(error))

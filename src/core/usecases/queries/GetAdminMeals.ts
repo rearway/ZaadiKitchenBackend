@@ -1,12 +1,12 @@
 import type { Deps } from '../../entitygateway/index.js'
 
 export interface GetAdminMealsInput {
-  status?: 'all' | 'active' | 'draft'
+  status?: 'all' | 'active' | 'draft' | 'updated'
   mealType?: 'all' | 'executive' | 'salad'
   q?: string
   page?: number
   perPage?: number
-  /** `picker` forces `status=active` (assign modal). */
+  /** `picker` lists active + updated (live version is still assignable). */
   context?: 'picker'
 }
 
@@ -19,6 +19,7 @@ export interface GetAdminMealsOutput {
     kcal: number
     status: string
     photo_url: string | null
+    has_pending_changes: boolean
     /** Deprecated: always null. Duplicate meals in a week are allowed. */
     already_used: null
     /** Deprecated: always null. */
@@ -42,7 +43,7 @@ export function makeUC(deps: Deps) {
       const isPicker = input.context === 'picker'
 
       const { meals, total } = await mealLoader.getMeals({
-        status: isPicker ? 'active' : (input.status ?? 'all'),
+        status: isPicker ? 'assignable' : (input.status ?? 'all'),
         mealType: input.mealType ?? 'all',
         q: input.q,
         page,
@@ -58,6 +59,9 @@ export function makeUC(deps: Deps) {
           kcal: m.kcal,
           status: m.status,
           photo_url: m.photoUrl ?? null,
+          has_pending_changes:
+            m.status === 'updated' ||
+            (m.pendingChanges != null && Object.keys(m.pendingChanges).length > 0),
           already_used: null,
           used_on_day: null,
         })),
