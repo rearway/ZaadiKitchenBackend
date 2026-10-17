@@ -22,7 +22,14 @@ export interface DeliveryDayLoader {
   ): Promise<RiderDeliveryRow[]>
   getMealBreakdownByDate(
     date: string
-  ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]>
+  ): Promise<MealBreakdownRow[]>
+}
+
+export interface MealBreakdownRow {
+  mealType: 'executive' | 'salad'
+  mealId: string | null
+  mealName: string | null
+  count: number
 }
 
 export interface RiderDeliveryRow {
@@ -76,6 +83,11 @@ export interface DeliveryDayPersistor {
     fromDate: string,
     specificDates?: string[]
   ): Promise<void>
+  updateSelectedMeal(
+    id: string,
+    selectedMealId: string | null,
+    mealName: string | null
+  ): Promise<DeliveryDay>
   deleteScheduledDeliveryDaysOutsideDates(
     subscriptionId: string,
     allowedDates: string[]

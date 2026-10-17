@@ -9,7 +9,9 @@ import {
   DeliveryDayPersistor,
   DeliveryHistoryEntry,
   RiderDeliveryRow,
+  MealBreakdownRow,
 } from '../../core/entitygateway/DeliveryDay.js'
+import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 import { Subscription } from '../../core/entities/Subscription.js'
 import {
   DeliveryDay,
@@ -128,22 +130,15 @@ export class SubscriptionPersistenceService
       `SELECT dd.id as delivery_day_id,
               dd.date,
               dd.meal_type,
-              COALESCE(m.name_en, dd.meal_name) as meal_name,
-              m.id as meal_id,
-              m.photo_url,
-              m.kcal,
+              COALESCE(em.name_en, dd.meal_name) as meal_name,
+              em.meal_id as meal_id,
+              em.photo_url,
+              em.kcal,
               dd.status,
               mr.stars,
               mr.tags
        FROM delivery_days dd
-       LEFT JOIN menu_slots ms
-         ON ms.delivery_date = dd.date
-        AND ms.meal_type::text = dd.meal_type::text
-       LEFT JOIN menu_weeks mw
-         ON mw.id = ms.week_id
-        AND mw.date_from <= dd.date
-        AND mw.date_to >= dd.date
-       LEFT JOIN meals m ON m.id = ms.meal_id
+       ${effectiveMealLateralJoin()}
        LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
        WHERE dd.user_id = :userId
          AND dd.status IN ('delivered', 'skipped') ${dateFilter}
@@ -246,12 +241,13 @@ export class SubscriptionPersistenceService
                 da.id as area_id,
                 da.name as area_name,
                 dd.meal_type,
-                dd.meal_name,
+                COALESCE(em.name_en, dd.meal_name) as meal_name,
                 dd.status,
                 dd.delivered_at
          FROM delivery_days dd
          JOIN users u ON u.id = dd.user_id
          JOIN subscriptions s ON s.id = dd.subscription_id
+         ${effectiveMealLateralJoin()}
          LEFT JOIN LATERAL (
            SELECT * FROM delivery_locations l
            WHERE l.user_id = dd.user_id AND l.is_primary = true
@@ -292,15 +288,19 @@ export class SubscriptionPersistenceService
     }))
   }
 
-  async getMealBreakdownByDate(
-    date: string
-  ): Promise<{ mealType: 'executive' | 'salad'; count: number }[]> {
+  async getMealBreakdownByDate(date: string): Promise<MealBreakdownRow[]> {
     const rows = await DeliveryDayModel.sequelize!.query<{
       meal_type: 'executive' | 'salad'
+      meal_id: string | null
+      meal_name: string | null
     }>(
-      `SELECT DISTINCT ON (dd.user_id) dd.meal_type
+      `SELECT DISTINCT ON (dd.user_id)
+              dd.meal_type,
+              em.meal_id,
+              em.name_en as meal_name
        FROM delivery_days dd
        JOIN subscriptions s ON s.id = dd.subscription_id
+       ${effectiveMealLateralJoin()}
        WHERE dd.date = :date
          AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
          AND s.status IN ('active', 'paused', 'cancelled')
@@ -310,13 +310,23 @@ export class SubscriptionPersistenceService
       { replacements: { date }, type: QueryTypes.SELECT }
     )
 
-    const counts = { executive: 0, salad: 0 }
-    for (const r of rows) counts[r.meal_type]++
+    const counts = new Map<string, MealBreakdownRow>()
+    for (const r of rows) {
+      const key = r.meal_id ?? r.meal_type
+      const existing = counts.get(key)
+      if (existing) {
+        existing.count += 1
+      } else {
+        counts.set(key, {
+          mealType: r.meal_type,
+          mealId: r.meal_id,
+          mealName: r.meal_name,
+          count: 1,
+        })
+      }
+    }
 
-    return [
-      { mealType: 'executive' as const, count: counts.executive },
-      { mealType: 'salad' as const, count: counts.salad },
-    ]
+    return [...counts.values()].sort((a, b) => b.count - a.count)
   }
 
   async bulkUpdateDeliveryDayStatus(
@@ -371,6 +381,19 @@ export class SubscriptionPersistenceService
       { mealType, selectedMealId: null },
       { where }
     )
+  }
+
+  async updateSelectedMeal(
+    id: string,
+    selectedMealId: string | null,
+    mealName: string | null
+  ): Promise<DeliveryDay> {
+    await DeliveryDayModel.update(
+      { selectedMealId, mealName },
+      { where: { id } }
+    )
+    const model = await DeliveryDayModel.findByPk(id)
+    return this.toDeliveryDayEntity(model!)
   }
 
   private toSubscriptionEntity(model: SubscriptionModel): Subscription {

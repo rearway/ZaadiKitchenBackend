@@ -12,6 +12,7 @@ import type {
   CustomerHistoryIssue,
 } from '../../core/entitygateway/AdminCustomer.js'
 import { normalizePlanSlug, todayKSA } from '../../core/usecases/services/revenueUtils.js'
+import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 import {
   UserModel,
   SubscriptionModel,
@@ -271,18 +272,32 @@ export class AdminCustomerPersistenceService
       skippedCount: s.skippedCount,
     }))
 
-    const deliveryDayModels = await DeliveryDayModel.findAll({
-      where: { userId },
-      order: [['date', 'DESC']],
-      limit: 150,
-    })
+    const deliveryRows = await DeliveryDayModel.sequelize!.query<{
+      id: string
+      date: string
+      status: string
+      meal_type: string
+      meal_name: string | null
+    }>(
+      `SELECT dd.id,
+              dd.date,
+              dd.status,
+              dd.meal_type,
+              COALESCE(em.name_en, dd.meal_name) as meal_name
+       FROM delivery_days dd
+       ${effectiveMealLateralJoin()}
+       WHERE dd.user_id = :userId
+       ORDER BY dd.date DESC
+       LIMIT 150`,
+      { replacements: { userId }, type: QueryTypes.SELECT }
+    )
 
-    const deliveries: CustomerHistoryDelivery[] = deliveryDayModels.map(d => ({
+    const deliveries: CustomerHistoryDelivery[] = deliveryRows.map(d => ({
       id: d.id,
       date: d.date,
       status: d.status,
-      mealType: d.mealType,
-      mealName: d.mealName,
+      mealType: d.meal_type,
+      mealName: d.meal_name,
     }))
 
     const issueModels = await DeliveryIssueModel.findAll({

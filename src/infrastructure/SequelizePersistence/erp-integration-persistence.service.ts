@@ -8,6 +8,7 @@ import type {
   ErpDailyOrderRow,
 } from '../../core/entitygateway/ErpIntegration.js'
 import { MealModel } from './models/MealModel.js'
+import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 
 @Injectable()
 export class ErpIntegrationPersistenceService implements ErpIntegrationLoader {
@@ -140,21 +141,13 @@ export class ErpIntegrationPersistenceService implements ErpIntegrationLoader {
       `SELECT COUNT(*)::text AS count
        FROM delivery_days dd
        JOIN users u ON u.id = dd.user_id
-       LEFT JOIN menu_slots ms
-         ON ms.delivery_date = dd.date
-        AND ms.meal_type::text = dd.meal_type::text
-       LEFT JOIN menu_weeks mw
-         ON mw.id = ms.week_id
-        AND mw.date_from <= dd.date
-        AND mw.date_to >= dd.date
-        AND mw.status = 'published'
-       LEFT JOIN meals m ON m.id = ms.meal_id
        JOIN subscriptions s ON s.id = dd.subscription_id
        JOIN plans p ON p.id = s.plan_id
+       ${effectiveMealLateralJoin({ publishedOnly: true })}
        WHERE dd.date = :deliveryDate
          AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
          AND u.erp_customer_code IS NOT NULL
-         AND m.erp_code IS NOT NULL`,
+         AND em.erp_code IS NOT NULL`,
       { replacements: { deliveryDate }, type: QueryTypes.SELECT }
     )
     const total = parseInt(count, 10)
@@ -165,25 +158,17 @@ export class ErpIntegrationPersistenceService implements ErpIntegrationLoader {
       amount: string
     }>(
       `SELECT u.erp_customer_code AS customer_code,
-              m.erp_code AS menu_code,
+              em.erp_code AS menu_code,
               TRIM(to_char(p.price_per_meal_sar, '999999990.99')) AS amount
        FROM delivery_days dd
        JOIN users u ON u.id = dd.user_id
        JOIN subscriptions s ON s.id = dd.subscription_id
        JOIN plans p ON p.id = s.plan_id
-       LEFT JOIN menu_slots ms
-         ON ms.delivery_date = dd.date
-        AND ms.meal_type::text = dd.meal_type::text
-       LEFT JOIN menu_weeks mw
-         ON mw.id = ms.week_id
-        AND mw.date_from <= dd.date
-        AND mw.date_to >= dd.date
-        AND mw.status = 'published'
-       LEFT JOIN meals m ON m.id = ms.meal_id
+       ${effectiveMealLateralJoin({ publishedOnly: true })}
        WHERE dd.date = :deliveryDate
          AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
          AND u.erp_customer_code IS NOT NULL
-         AND m.erp_code IS NOT NULL
+         AND em.erp_code IS NOT NULL
        ORDER BY u.erp_customer_code ASC
        LIMIT :limit OFFSET :offset`,
       { replacements: { deliveryDate, limit, offset }, type: QueryTypes.SELECT }

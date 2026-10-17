@@ -392,10 +392,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
       getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
-      getMealBreakdownByDate: jest.fn().mockResolvedValue([
-        { mealType: 'executive', count: 0 },
-        { mealType: 'salad', count: 0 },
-      ]),
+      getMealBreakdownByDate: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['deliveryDayLoader'],
 
     deliveryDayPersistor: {
@@ -404,6 +401,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       markDeliveryDelivered: jest.fn().mockResolvedValue(makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })),
       bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
       updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
+      updateSelectedMeal: jest.fn().mockResolvedValue(makeDeliveryDay()),
       deleteScheduledDeliveryDaysOutsideDates: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryDayPersistor'],
 

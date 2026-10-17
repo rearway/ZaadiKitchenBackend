@@ -9,6 +9,14 @@ import {
   canUseSkipAndPause,
   isSubscriptionInServicePeriod,
 } from '../services/subscriptionServicePeriod.js'
+import {
+  canChangeMealChoice,
+  resolveDayEffectiveMeal,
+  slotsForDate,
+  streamOptions,
+  uniqueSortedDates,
+  type MealOptionCard,
+} from '../services/customerMenuDay.js'
 
 export interface GetHomeThisWeekInput {
   userId: string
@@ -38,6 +46,10 @@ export interface GetHomeThisWeekOutput {
     is_skipped: boolean
     skip_reason: string | null
     is_deliverable: boolean
+    selected_meal_id: string | null
+    can_change: boolean
+    executive_options: MealOptionCard[]
+    salad_options: MealOptionCard[]
     action: {
       type: string
       cta_label: string
@@ -80,29 +92,56 @@ export function makeUC(deps: Deps) {
       const subStatus = sub?.status ?? 'none'
       const flexLikeActive = sub != null && canUseSkipAndPause(sub)
 
-      const cards = slots
-        .filter(s => s.meal && s.deliveryDate >= todayStr)
-        .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
-        .map(slot => {
-          const meal = slot.meal!
-          const isToday = slot.deliveryDate === todayStr
-          const isPast = slot.deliveryDate < todayStr
-          const dayAbbr = getDayLabel(slot.deliveryDate)
-          const day = dayByDate.get(slot.deliveryDate)
+      const dates = uniqueSortedDates(slots, todayStr, bounds.dateTo)
+      const cards = dates
+        .map(date => {
+          const daySlots = slotsForDate(slots, date)
+          const day = dayByDate.get(date)
+          const assignedMealType = (day?.mealType ?? sub?.mealType) as
+            | 'executive'
+            | 'salad'
+            | undefined
+          const selectedMealId = day?.selectedMealId ?? null
+          const effective =
+            assignedMealType != null
+              ? resolveDayEffectiveMeal(
+                  assignedMealType,
+                  selectedMealId,
+                  daySlots
+                )
+              : resolveDayEffectiveMeal(
+                  'executive',
+                  null,
+                  daySlots
+                ) ?? resolveDayEffectiveMeal('salad', null, daySlots)
+          if (!effective) return null
+
+          const isToday = date === todayStr
+          const isPast = date < todayStr
+          const dayAbbr = getDayLabel(date)
           const dayStatus = day?.status ?? null
-          const assignedMealType = day?.mealType ?? sub?.mealType
           const flags = resolveDayActionFlags({
             subscription: sub,
-            deliveryDate: slot.deliveryDate,
-            mealType: meal.mealType,
-            assignedMealType,
+            deliveryDate: date,
+            mealType: assignedMealType ?? effective.mealType,
+            assignedMealType: assignedMealType ?? effective.mealType,
             dayStatus,
             now,
           })
+          const executive_options = streamOptions(
+            daySlots,
+            'executive',
+            selectedMealId
+          )
+          const salad_options = streamOptions(daySlots, 'salad', selectedMealId)
+          const optionCount =
+            (assignedMealType ?? effective.mealType) === 'salad'
+              ? salad_options.length
+              : executive_options.length
 
           let card_state: GetHomeThisWeekOutput['cards'][0]['card_state']
           let cta_label: string | null = null
-          let action_type = 'open_meal_detail'
+          const action_type = 'open_meal_detail'
 
           if (subStatus === 'paused') {
             card_state = 'browse_only'
@@ -138,13 +177,13 @@ export function makeUC(deps: Deps) {
           }
 
           return {
-            meal_id: meal.id,
-            name_en: meal.nameEn,
-            meal_type: meal.mealType,
-            kcal: meal.kcal,
-            emoji: meal.emoji,
-            photo_url: meal.photoUrl ?? null,
-            delivery_date: slot.deliveryDate,
+            meal_id: effective.id,
+            name_en: effective.nameEn,
+            meal_type: assignedMealType ?? effective.mealType,
+            kcal: effective.kcal,
+            emoji: effective.emoji,
+            photo_url: effective.photoUrl ?? null,
+            delivery_date: date,
             day_label: isToday ? 'TODAY' : dayAbbr,
             card_state,
             card_border: (isToday ? 'red' : 'default') as 'red' | 'default',
@@ -154,13 +193,24 @@ export function makeUC(deps: Deps) {
             skip_reason: flags.skip_reason,
             is_deliverable: isDeliverableMenuDay({
               subscription: sub,
-              mealType: meal.mealType,
-              assignedMealType,
+              mealType: assignedMealType ?? effective.mealType,
+              assignedMealType: assignedMealType ?? effective.mealType,
               dayStatus,
             }),
+            selected_meal_id: selectedMealId,
+            can_change: canChangeMealChoice({
+              subscription: sub,
+              dayStatus,
+              deliveryDate: date,
+              optionCount,
+              now,
+            }),
+            executive_options,
+            salad_options,
             action: cta_label ? { type: action_type, cta_label } : null,
           }
         })
+        .filter((card): card is NonNullable<typeof card> => card !== null)
 
       return {
         week_label: "This Week's Meals",

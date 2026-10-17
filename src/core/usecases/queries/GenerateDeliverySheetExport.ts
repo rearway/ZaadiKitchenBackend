@@ -30,6 +30,7 @@ export function makeUC(deps: Deps) {
         'Desk/Area': r.deskArea ?? '',
         Gate: r.gate ?? '',
         'Meal Type': r.mealType === 'executive' ? 'Executive' : 'Salad',
+        'Meal Name': r.mealName ?? '',
         'Rider Notes': r.riderNotes ?? '',
       }))
 

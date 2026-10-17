@@ -34,6 +34,7 @@ import * as CancelSubscription from './commands/CancelSubscription.js'
 import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
 import * as ToggleSaladForDay from './commands/ToggleSaladForDay.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
+import * as SetMealChoice from './commands/SetMealChoice.js'
 import * as ValidateReferral from './commands/ValidateReferral.js'
 import * as CreateMeal from './commands/CreateMeal.js'
 import * as DeleteMeal from './commands/DeleteMeal.js'
@@ -83,6 +84,7 @@ import * as GetOrder from './queries/GetOrder.js'
 import * as GetSubscription from './queries/GetSubscription.js'
 import * as GetPlanChangeOptions from './queries/GetPlanChangeOptions.js'
 import * as GetSubscriptionDeliveries from './queries/GetSubscriptionDeliveries.js'
+import * as GetMealChoice from './queries/GetMealChoice.js'
 import * as GetWallet from './queries/GetWallet.js'
 import * as GetWalletTransactions from './queries/GetWalletTransactions.js'
 import * as GetPaymentTransactions from './queries/GetPaymentTransactions.js'
@@ -327,6 +329,12 @@ export function initUseCases(deps: Deps) {
     deps,
     SwitchMealType.makeUC(deps),
     SwitchMealType.name,
+    ...defaultWrappers
+  )
+  const setMealChoice = wrapUC(
+    deps,
+    SetMealChoice.makeUC(deps),
+    SetMealChoice.name,
     ...defaultWrappers
   )
 
@@ -617,6 +625,12 @@ export function initUseCases(deps: Deps) {
     GetSubscriptionDeliveries.name,
     ...defaultWrappers
   )
+  const getMealChoice = wrapUC(
+    deps,
+    GetMealChoice.makeUC(deps),
+    GetMealChoice.name,
+    ...defaultWrappers
+  )
   const getWallet = wrapUC(
     deps,
     GetWallet.makeUC(deps),
@@ -849,6 +863,7 @@ export function initUseCases(deps: Deps) {
       getSubscription,
       getPlanChangeOptions,
       getSubscriptionDeliveries,
+      getMealChoice,
       getWallet,
       getWalletTransactions,
       getPaymentTransactions,
@@ -922,6 +937,7 @@ export function initUseCases(deps: Deps) {
       expireSubscriptions,
       toggleSaladForDay,
       switchMealType,
+      setMealChoice,
       validateReferral,
       createMeal,
       deleteMeal,

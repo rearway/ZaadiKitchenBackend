@@ -60,8 +60,16 @@ function drawMealBadge(
   y: number
 ): number {
   const badgeColor = row.mealType === 'executive' ? '#E4281D' : '#16A34A'
-  const badgeText =
-    row.mealType === 'executive' ? 'Executive Meal' : 'Salad Meal'
+  const typeLabel = row.mealType === 'executive' ? 'Exec' : 'Salad'
+  const dish =
+    row.mealName && row.mealName.length > 22
+      ? `${row.mealName.slice(0, 21)}…`
+      : row.mealName
+  const badgeText = dish
+    ? `${typeLabel} · ${dish}`
+    : row.mealType === 'executive'
+      ? 'Executive Meal'
+      : 'Salad Meal'
   const badgeFontSize = 7
   const badgePaddingX = 6
   const badgeHeight = 13

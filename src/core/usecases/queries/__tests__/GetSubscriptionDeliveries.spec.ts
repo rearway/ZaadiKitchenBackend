@@ -128,6 +128,74 @@ describe('GetSubscriptionDeliveries', () => {
     expect(result.skip_limit_reached).toBe(true)
   })
 
+  it('uses the effective menu dish over the stored meal_name', async () => {
+    const day = makeDeliveryDay({
+      date: FUTURE_DATE,
+      mealName: 'Stale Name',
+      selectedMealId: 'exec-b',
+    })
+    const deps = makeSubWithDays({}, [day])
+    deps.menuWeekLoader.getMenuForDateRange = jest.fn().mockResolvedValue([
+      {
+        id: 'slot-a',
+        weekId: 'w1',
+        deliveryDate: FUTURE_DATE,
+        mealType: 'executive',
+        mealId: 'exec-a',
+        isDefault: true,
+        meal: {
+          id: 'exec-a',
+          nameEn: 'Default Exec',
+          mealType: 'executive',
+          kcal: 400,
+          emoji: '🍗',
+          status: 'active',
+          erpCode: 'A',
+          photoUrl: 'https://cdn.example.com/a.jpg',
+          timesServed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'slot-b',
+        weekId: 'w1',
+        deliveryDate: FUTURE_DATE,
+        mealType: 'executive',
+        mealId: 'exec-b',
+        isDefault: false,
+        meal: {
+          id: 'exec-b',
+          nameEn: 'Picked Exec',
+          mealType: 'executive',
+          kcal: 500,
+          emoji: '🍖',
+          status: 'active',
+          erpCode: 'B',
+          photoUrl: 'https://cdn.example.com/b.jpg',
+          timesServed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ])
+    const getDeliveries = makeUC(deps)
+
+    const result = await getDeliveries({ userId: 'user-uuid-1' })
+
+    expect(result.deliveries[0]).toMatchObject({
+      meal_id: 'exec-b',
+      meal_name: 'Picked Exec',
+      photo_url: 'https://cdn.example.com/b.jpg',
+      selected_meal_id: 'exec-b',
+      can_change: true,
+    })
+  })
+
   it('includes the meal_name in each delivery item', async () => {
     const day = makeDeliveryDay({ date: FUTURE_DATE, mealName: 'Lamb Kabsa' })
     const deps = makeSubWithDays({}, [day])

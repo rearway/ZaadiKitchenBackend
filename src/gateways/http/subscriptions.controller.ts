@@ -4,6 +4,7 @@ import {
   Post,
   Delete,
   Patch,
+  Put,
   Body,
   Param,
   Query,
@@ -29,6 +30,7 @@ import {
   PauseSubscriptionDTO,
   ResumeSubscriptionDTO,
   SwitchMealTypeDTO,
+  SetMealChoiceDTO,
   ToggleSaladDTO,
   SubmitIssueDTO,
 } from './dto/index.js'
@@ -89,6 +91,41 @@ export class SubscriptionsController {
     return this.useCases.commands.skipDelivery({
       userId: user.id,
       deliveryDate,
+    })
+  }
+
+  @Get('me/deliveries/:delivery_date/meal-choice')
+  @ApiOperation({
+    summary: 'Dish options and the current pick for a delivery day',
+  })
+  @ApiResponse({ status: 200, description: 'Meal choice returned' })
+  @HandleErrors('get-meal-choice')
+  async getMealChoice(
+    @Param('delivery_date') deliveryDate: string,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.queries.getMealChoice({
+      userId: user.id,
+      deliveryDate,
+    })
+  }
+
+  @Put('me/deliveries/:delivery_date/meal-choice')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Pick a dish for a delivery day (before 18:00 KSA cutoff)',
+  })
+  @ApiResponse({ status: 200, description: 'Meal choice saved' })
+  @HandleErrors('set-meal-choice')
+  async setMealChoice(
+    @Param('delivery_date') deliveryDate: string,
+    @Body(ValidationPipe) dto: SetMealChoiceDTO,
+    @CurrentUser() user: UserWithoutPassword
+  ) {
+    return this.useCases.commands.setMealChoice({
+      userId: user.id,
+      deliveryDate,
+      mealId: dto.meal_id,
     })
   }
 

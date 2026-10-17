@@ -57,6 +57,7 @@ export function makeUC(deps: Deps) {
             order_ref: row.orderRef,
             customer_name: row.customerName,
             meal_type: row.mealType,
+            meal_name: row.mealName,
             building: row.buildingName,
             floor: row.floor,
             desk_area: row.deskArea,

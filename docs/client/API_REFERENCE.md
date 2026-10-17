@@ -171,6 +171,8 @@ The `operation` field maps to the server handler name for support correlation.
 | POST | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Skip a day |
 | DELETE | `/subscriptions/me/deliveries/:delivery_date/skip` | JWT | Undo skip (before cutoff) |
 | PATCH | `/subscriptions/me/deliveries/:delivery_date/salad` | JWT | Toggle salad for a day |
+| GET | `/subscriptions/me/deliveries/:delivery_date/meal-choice` | JWT | Dish options + current pick for that day |
+| PUT | `/subscriptions/me/deliveries/:delivery_date/meal-choice` | JWT | Pick a dish (`{ meal_id }`). Cutoff 18:00 KSA day before. See [MEAL_OPTIONS_API_UI.md](./MEAL_OPTIONS_API_UI.md) |
 | POST | `/subscriptions/me/pause` | JWT | Schedule pause window (working days); stays `active` until pause-start cutoff. See [SKIP_PAUSE_FLEX.md](./SKIP_PAUSE_FLEX.md). |
 | POST | `/subscriptions/me/pause/cancel` | JWT | Cancel scheduled future pause (no body). UI field guide: [SKIP_PAUSE_API_UI.md](./SKIP_PAUSE_API_UI.md) |
 | POST | `/subscriptions/me/resume` | JWT | Resume from pause |
@@ -188,10 +190,10 @@ The `operation` field maps to the server handler name for support correlation.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/home` | JWT | Home dashboard aggregate |
-| GET | `/home/this-week` | JWT | This week meal cards |
+| GET | `/home/this-week` | JWT | This week: **one card per date** (effective dish + options) |
 | GET | `/menu` | JWT | Customer menu (published weeks) |
-| GET | `/menu/week` | JWT | Week sections (this + next) |
-| GET | `/meals/:meal_id` | JWT | Meal detail (`?delivery_date=` optional); includes skip flags |
+| GET | `/menu/week` | JWT | Week sections: **one day card** with both Executive and Salad options |
+| GET | `/meals/:meal_id` | JWT | Meal detail (`?delivery_date=`); skip flags + `can_select` |
 | POST | `/meals/:meal_id/rating` | JWT | Submit rating for a delivery day |
 
 ---
@@ -245,9 +247,11 @@ The `operation` field maps to the server handler name for support correlation.
 | POST | `/admin/meals/import` | ADMIN \| OPS | Bulk import (xlsx) |
 | GET | `/admin/menu/weeks` | ADMIN \| OPS | List menu weeks |
 | GET | `/admin/menu/weeks/:week_id` | ADMIN \| OPS | Week grid |
-| POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN \| OPS | Assign meal to slot |
+| POST | `/admin/menu/weeks/:week_id/days/:date/slots` | ADMIN \| OPS | Add a stream slot (max 3 per type) |
+| PATCH | `/admin/menu/weeks/:week_id/days/:date/default` | ADMIN \| OPS | Set default dish for a stream |
+| POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN \| OPS | Assign meal to slot (up to 3+3 per day) |
 | DELETE | `/admin/menu/weeks/:week_id/slots/:slot_id` | ADMIN \| OPS | Clear slot |
-| POST | `/admin/menu/weeks/:week_id/publish` | ADMIN \| OPS | Publish week |
+| POST | `/admin/menu/weeks/:week_id/publish` | ADMIN \| OPS | Publish week (min 1+1, default required) |
 | POST | `/admin/menu/weeks/:week_id/unpublish` | ADMIN \| OPS | Unpublish week |
 
 ---
