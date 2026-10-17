@@ -41,6 +41,8 @@ import * as UpdateMeal from './commands/UpdateMeal.js'
 import * as UpdateMealStatus from './commands/UpdateMealStatus.js'
 import * as ImportMeals from './commands/ImportMeals.js'
 import * as AssignMealToSlot from './commands/AssignMealToSlot.js'
+import * as AddMenuSlot from './commands/AddMenuSlot.js'
+import * as SetMenuDayDefault from './commands/SetMenuDayDefault.js'
 import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
 import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
 import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
@@ -371,6 +373,18 @@ export function initUseCases(deps: Deps) {
     deps,
     AssignMealToSlot.makeUC(deps),
     AssignMealToSlot.name,
+    ...defaultWrappers
+  )
+  const addMenuSlot = wrapUC(
+    deps,
+    AddMenuSlot.makeUC(deps),
+    AddMenuSlot.name,
+    ...defaultWrappers
+  )
+  const setMenuDayDefault = wrapUC(
+    deps,
+    SetMenuDayDefault.makeUC(deps),
+    SetMenuDayDefault.name,
     ...defaultWrappers
   )
   const clearMenuSlot = wrapUC(
@@ -915,6 +929,8 @@ export function initUseCases(deps: Deps) {
       updateMealStatus,
       importMeals,
       assignMealToSlot,
+      addMenuSlot,
+      setMenuDayDefault,
       clearMenuSlot,
       publishMenuWeek,
       unpublishMenuWeek,

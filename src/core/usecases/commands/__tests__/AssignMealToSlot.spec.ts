@@ -111,6 +111,14 @@ function setup(opts: { week?: MenuWeek | null; meals?: Meal[] } = {}) {
         .mockImplementation(async (id: string, mealId: string) => {
           const slot = slots.find(s => s.id === id)!
           slot.mealId = mealId
+          const hasDefault = slots.some(
+            s =>
+              s.deliveryDate === slot.deliveryDate &&
+              s.mealType === slot.mealType &&
+              s.isDefault &&
+              s.id !== id
+          )
+          if (!hasDefault) slot.isDefault = true
           return { ...slot }
         }),
     },
@@ -205,6 +213,29 @@ describe('AssignMealToSlot', () => {
       ).resolves.toBeDefined()
     })
 
+    it('allows a second executive on the same day in an extra exec slot', async () => {
+      const { assign, slots } = setup({ meals: allMeals })
+      slots.push({
+        id: `${slotId('sun', 'exec')}_2`,
+        weekId: WEEK_ID,
+        deliveryDate: '2026-10-11',
+        mealType: 'executive',
+        mealId: undefined,
+        isDefault: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+
+      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
+      await expect(
+        assign({
+          weekId: WEEK_ID,
+          slotId: `${slotId('sun', 'exec')}_2`,
+          mealId: execB.id,
+        })
+      ).resolves.toMatchObject({ meal: { meal_id: execB.id } })
+    })
+
     it('allows replacing the executive in the same slot with another executive', async () => {
       const { assign, slots } = setup({ meals: allMeals })
 
@@ -240,45 +271,14 @@ describe('AssignMealToSlot', () => {
     })
   })
 
-  describe('one executive per day', () => {
-    it('rejects a second executive in the salad slot when the exec slot has one', async () => {
-      const { assign, deps, slots } = setup({ meals: allMeals })
+  describe('multiple dishes per stream', () => {
+    it('allows a second executive meal in the salad slot (streams are independent)', async () => {
+      const { assign } = setup({ meals: allMeals })
       await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
-      jest.mocked(deps.menuWeekPersistor.assignMealToSlot).mockClear()
 
       await expect(
         assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: execB.id })
-      ).rejects.toMatchObject({
-        errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
-        statusCode: 409,
-        message: expect.stringContaining('cannot assign two executive meals'),
-        details: {
-          meal_type: 'executive',
-          delivery_date: '2026-10-11',
-          existing_slot_id: slotId('sun', 'exec'),
-          existing_meal_name: execA.nameEn,
-        },
-      })
-      expect(deps.menuWeekPersistor.assignMealToSlot).not.toHaveBeenCalled()
-      expect(slots.find(s => s.id === slotId('sun', 'salad'))?.mealId).toBeUndefined()
-    })
-
-    it('rejects an executive in the exec slot when the salad slot holds an executive', async () => {
-      const { assign } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: execA.id })
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execB.id })
-      ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED' })
-    })
-
-    it('rejects the same executive twice on the same day', async () => {
-      const { assign } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: execA.id })
-      ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED' })
+      ).resolves.toMatchObject({ meal: { meal_id: execB.id } })
     })
 
     it('does not count executives on other days', async () => {
@@ -287,54 +287,6 @@ describe('AssignMealToSlot', () => {
 
       await expect(
         assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
-      ).resolves.toBeDefined()
-    })
-  })
-
-  describe('one salad per day', () => {
-    it('rejects a second salad in the executive slot when the salad slot has one', async () => {
-      const { assign, deps } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: saladA.id })
-      jest.mocked(deps.menuWeekPersistor.assignMealToSlot).mockClear()
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: saladB.id })
-      ).rejects.toMatchObject({
-        errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
-        statusCode: 409,
-        details: {
-          delivery_date: '2026-10-11',
-          existing_slot_id: slotId('sun', 'salad'),
-          existing_meal_name: saladA.nameEn,
-        },
-      })
-      expect(deps.menuWeekPersistor.assignMealToSlot).not.toHaveBeenCalled()
-    })
-
-    it('rejects a salad in the salad slot when the executive slot holds a salad', async () => {
-      const { assign } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: saladA.id })
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: saladB.id })
-      ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED' })
-    })
-
-    it('rejects the same salad twice on the same day', async () => {
-      const { assign } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: saladA.id })
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: saladA.id })
-      ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_ALREADY_ASSIGNED' })
-    })
-
-    it('does not count salads on other days', async () => {
-      const { assign } = setup({ meals: allMeals })
-      await assign({ weekId: WEEK_ID, slotId: slotId('mon', 'salad'), mealId: saladA.id })
-
-      await expect(
-        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: saladB.id })
       ).resolves.toBeDefined()
     })
   })

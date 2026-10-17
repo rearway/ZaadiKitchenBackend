@@ -1,4 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
+import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
 function toYYYYMMDD(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -47,7 +48,8 @@ export function makeUC(deps: Deps) {
 
     if (upcomingWeek) {
       const slots = await menuWeekLoader.getSlotsByWeekId(upcomingWeek.id)
-      const unfilledSlots = slots.filter(s => !s.mealId).length
+      const readiness = evaluateWeekPublishReadiness(slots)
+      const missingDays = Math.max(0, readiness.totalDays - readiness.filledDays)
       
       const startD = new Date(upcomingWeek.dateFrom)
       const month = startD.toLocaleString('en-US', { month: 'short' })
@@ -55,10 +57,12 @@ export function makeUC(deps: Deps) {
       
       menuWeekStatus.weekLabel = `Week of ${month} ${day}`
       
-      if (unfilledSlots === 0) {
+      if (readiness.publishReady) {
         menuWeekStatus.statusText = 'ready'
+      } else if (readiness.blockedReason) {
+        menuWeekStatus.statusText = readiness.blockedReason
       } else {
-        menuWeekStatus.statusText = `${unfilledSlots} slots unfilled`
+        menuWeekStatus.statusText = `${missingDays} days missing min menu`
       }
     }
 

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -28,7 +29,12 @@ import {
   CurrentUser,
 } from '../../infrastructure/Auth/index.js'
 import { HandleErrors } from '../../shared/decorators/index.js'
-import { GetMenuWeeksQueryDTO, AssignMealToSlotDTO } from './dto/index.js'
+import {
+  GetMenuWeeksQueryDTO,
+  AssignMealToSlotDTO,
+  AddMenuDaySlotDTO,
+  SetMenuDayDefaultDTO,
+} from './dto/index.js'
 import { UserRole } from '../../codecs/enums.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
 
@@ -61,12 +67,50 @@ export class AdminMenuController {
     return this.useCases.queries.getMenuWeek({ weekId })
   }
 
+  @Post('weeks/:week_id/days/:date/slots')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Add an Executive or Salad slot for a day (max 3 per stream)',
+  })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('add-menu-slot')
+  async addSlot(
+    @Param('week_id') weekId: string,
+    @Param('date') date: string,
+    @Body(ValidationPipe) dto: AddMenuDaySlotDTO
+  ) {
+    return this.useCases.commands.addMenuSlot({
+      weekId,
+      date,
+      mealType: dto.meal_type,
+      mealId: dto.meal_id,
+    })
+  }
+
+  @Patch('weeks/:week_id/days/:date/default')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set the default dish for a stream on a day' })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('set-menu-day-default')
+  async setDefault(
+    @Param('week_id') weekId: string,
+    @Param('date') date: string,
+    @Body(ValidationPipe) dto: SetMenuDayDefaultDTO
+  ) {
+    return this.useCases.commands.setMenuDayDefault({
+      weekId,
+      date,
+      mealType: dto.meal_type,
+      mealId: dto.meal_id,
+    })
+  }
+
   @Post('weeks/:week_id/slots/:slot_id/assign')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Assign a meal to a slot',
     description:
-      'Any active meal can go in any slot, and the same meal may repeat across the week. Only rule: at most one executive meal and one salad per delivery day (409 DAY_MEAL_TYPE_ALREADY_ASSIGNED). Draft meals are rejected (422 MEAL_IS_DRAFT).',
+      'Active or updated meals can be assigned. Up to 3 Executive and 3 Salad slots per day. Draft meals are rejected (422 MEAL_IS_DRAFT).',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('assign-meal-to-slot')
@@ -96,7 +140,11 @@ export class AdminMenuController {
 
   @Post('weeks/:week_id/publish')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Publish a week (requires all 10 slots filled)' })
+  @ApiOperation({
+    summary: 'Publish a week',
+    description:
+      'Requires min 1 Executive and 1 Salad per day, max 3 of each, and a default for each stream.',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('publish-menu-week')
   async publishWeek(

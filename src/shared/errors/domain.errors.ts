@@ -192,9 +192,32 @@ export class DayMealTypeAlreadyAssignedError extends BaseError {
   }
 }
 
+export class DayMealTypeLimitError extends BaseError {
+  constructor(mealType: string, deliveryDate: string, limit: number) {
+    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    super(
+      'DAY_MEAL_TYPE_LIMIT',
+      409,
+      `${label} already has ${limit} dishes on ${deliveryDate}.`,
+      { meal_type: mealType, delivery_date: deliveryDate, limit }
+    )
+  }
+}
+
+export class CannotClearDefaultError extends BaseError {
+  constructor(deliveryDate: string, mealType: string) {
+    super(
+      'CANNOT_CLEAR_DEFAULT',
+      409,
+      `Set another ${mealType} default for ${deliveryDate} before clearing this dish.`,
+      { delivery_date: deliveryDate, meal_type: mealType }
+    )
+  }
+}
+
 export class WeekNotCompleteError extends BaseError {
-  constructor(unfilledSlots: unknown[]) {
-    super('WEEK_NOT_COMPLETE', 409, `Cannot publish. ${unfilledSlots.length} slot${unfilledSlots.length > 1 ? 's are' : ' is'} still unfilled.`, { unfilled_slots: unfilledSlots })
+  constructor(reason: string, details?: unknown) {
+    super('WEEK_NOT_COMPLETE', 409, reason, (details as object) ?? { reason })
   }
 }
 

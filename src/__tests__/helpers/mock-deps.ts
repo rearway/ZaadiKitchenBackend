@@ -479,9 +479,13 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     menuWeekPersistor: {
       ensureWeekExists: jest.fn().mockResolvedValue({ week: null, slots: [] }),
+      createSlot: jest.fn().mockResolvedValue(null),
       assignMealToSlot: jest.fn().mockResolvedValue(null),
+      setDayDefault: jest.fn().mockResolvedValue(null),
       clearSlot: jest.fn().mockResolvedValue(null),
+      deleteSlot: jest.fn().mockResolvedValue(undefined),
       publishWeek: jest.fn().mockResolvedValue(null),
+      unpublishWeek: jest.fn().mockResolvedValue(null),
       transitionPastWeeks: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['menuWeekPersistor'],
 

@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { getSaudiWorkWeekBounds, getNextSaudiWorkWeekBounds, formatWeekRangeLabel } from '../services/weekUtils.js'
+import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
 
 export interface GetMenuWeeksInput {
   fromWeek?: string
@@ -51,19 +52,9 @@ export function makeUC(deps: Deps) {
       const mappedWeeks = await Promise.all(
         weeks.map(async week => {
           const slots = await menuWeekLoader.getSlotsByWeekId(week.id)
-
-          // A "day" is considered filled when both exec + salad slots have meals
-          const dayMap = new Map<string, { exec: boolean; salad: boolean }>()
-          for (const slot of slots) {
-            const entry = dayMap.get(slot.deliveryDate) ?? { exec: false, salad: false }
-            if (slot.mealId) {
-              if (slot.mealType === 'executive') entry.exec = true
-              else entry.salad = true
-            }
-            dayMap.set(slot.deliveryDate, entry)
-          }
-          const totalDays = dayMap.size || 5
-          const filledDays = [...dayMap.values()].filter(d => d.exec && d.salad).length
+          const readiness = evaluateWeekPublishReadiness(slots)
+          const totalDays = readiness.totalDays || 5
+          const filledDays = readiness.filledDays
 
           const isCurrentWeek = week.id === currentWeekBounds.weekId
           const isEditable = week.status === 'draft'

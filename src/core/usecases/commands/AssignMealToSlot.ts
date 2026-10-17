@@ -3,8 +3,8 @@ import {
   ResourceNotFoundError,
   MealIsDraftError,
   SlotNotEditableError,
-  DayMealTypeAlreadyAssignedError,
 } from '../../../shared/errors/domain.errors.js'
+import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
 
 export interface AssignMealToSlotInput {
   weekId: string
@@ -54,36 +54,12 @@ export function makeUC(deps: Deps) {
 
       if (meal.status === 'draft') throw new MealIsDraftError()
 
-      const weekSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-      const otherSlotsOnDay = weekSlots.filter(
-        s =>
-          s.deliveryDate === slot.deliveryDate &&
-          s.id !== slot.id &&
-          !!s.mealId
-      )
-      if (otherSlotsOnDay.length > 0) {
-        const otherMeals = await mealLoader.getMealsByIds(
-          otherSlotsOnDay.map(s => s.mealId as string)
-        )
-        const sameType = otherMeals.find(m => m.mealType === meal.mealType)
-        if (sameType) {
-          const existingSlot = otherSlotsOnDay.find(
-            s => s.mealId === sameType.id
-          )
-          throw new DayMealTypeAlreadyAssignedError(
-            meal.mealType,
-            slot.deliveryDate,
-            existingSlot?.id ?? '',
-            sameType.nameEn
-          )
-        }
-      }
-
       await menuWeekPersistor.assignMealToSlot(input.slotId, input.mealId)
 
       const slotsAfterAssign =
         await menuWeekLoader.getSlotsByWeekId(input.weekId)
       const filledSlots = slotsAfterAssign.filter(s => s.mealId).length
+      const readiness = evaluateWeekPublishReadiness(slotsAfterAssign)
 
       return {
         slot_id: slot.id,
@@ -99,9 +75,7 @@ export function makeUC(deps: Deps) {
         week_fill_status: {
           filled_slots: filledSlots,
           total_slots: slotsAfterAssign.length,
-          publish_ready:
-            slotsAfterAssign.length > 0 &&
-            filledSlots === slotsAfterAssign.length,
+          publish_ready: readiness.publishReady,
         },
       }
     } catch (error) {
