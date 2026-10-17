@@ -124,6 +124,7 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
             deliveryDate: date,
             mealType: type,
             mealId: null,
+            isDefault: false,
           })
           newSlots.push(slot)
         }
@@ -140,14 +141,27 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
   async assignMealToSlot(slotId: string, mealId: string): Promise<MenuSlot> {
     const slot = await MenuSlotModel.findByPk(slotId)
     if (!slot) throw new Error(`MenuSlot ${slotId} not found`)
-    await slot.update({ mealId })
+
+    const otherDefault = await MenuSlotModel.findOne({
+      where: {
+        weekId: slot.weekId,
+        deliveryDate: slot.deliveryDate,
+        mealType: slot.mealType,
+        isDefault: true,
+        id: { [Op.ne]: slot.id },
+      },
+    })
+    await slot.update({
+      mealId,
+      isDefault: slot.isDefault || !otherDefault,
+    })
     return this.toSlotEntity(slot)
   }
 
   async clearSlot(slotId: string): Promise<MenuSlot> {
     const slot = await MenuSlotModel.findByPk(slotId)
     if (!slot) throw new Error(`MenuSlot ${slotId} not found`)
-    await slot.update({ mealId: null })
+    await slot.update({ mealId: null, isDefault: false })
     return this.toSlotEntity(slot)
   }
 
@@ -195,6 +209,7 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
       deliveryDate: model.deliveryDate,
       mealType: model.mealType,
       mealId: model.mealId ?? undefined,
+      isDefault: model.isDefault,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

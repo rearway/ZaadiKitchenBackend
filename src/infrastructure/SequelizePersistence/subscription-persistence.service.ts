@@ -367,7 +367,10 @@ export class SubscriptionPersistenceService
     } else {
       where['date'] = { [Op.gte]: fromDate }
     }
-    await DeliveryDayModel.update({ mealType }, { where })
+    await DeliveryDayModel.update(
+      { mealType, selectedMealId: null },
+      { where }
+    )
   }
 
   private toSubscriptionEntity(model: SubscriptionModel): Subscription {
@@ -403,6 +406,7 @@ export class SubscriptionPersistenceService
       date: model.date,
       mealType: model.mealType,
       mealName: model.mealName,
+      selectedMealId: model.selectedMealId,
       status: model.status,
       deliveredAt: model.deliveredAt,
       createdAt: model.createdAt,

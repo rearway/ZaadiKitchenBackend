@@ -35,6 +35,7 @@ function makeSlot(deliveryDate: string, meal: Meal = makeMeal()): MenuSlotWithMe
     deliveryDate,
     mealType: meal.mealType,
     mealId: meal.id,
+    isDefault: true,
     meal,
     createdAt: new Date(),
     updatedAt: new Date(),

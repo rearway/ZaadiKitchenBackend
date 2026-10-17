@@ -40,6 +40,7 @@ function makeWeekSlots(): MenuSlot[] {
       deliveryDate: date,
       mealType,
       mealId: undefined,
+      isDefault: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     }))

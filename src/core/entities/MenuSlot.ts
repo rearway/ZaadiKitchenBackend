@@ -6,6 +6,7 @@ export interface MenuSlot {
   deliveryDate: string
   mealType: 'executive' | 'salad'
   mealId?: string
+  isDefault: boolean
   createdAt: Date
   updatedAt: Date
 }

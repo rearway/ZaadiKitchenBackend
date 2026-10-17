@@ -161,6 +161,7 @@ export const makeDeliveryDay = (overrides: Record<string, unknown> = {}) => ({
   date: '2025-06-01',
   mealType: 'executive' as const,
   mealName: null as string | null,
+  selectedMealId: null as string | null,
   status: 'scheduled' as const,
   deliveredAt: null as Date | null,
   createdAt: new Date(),
