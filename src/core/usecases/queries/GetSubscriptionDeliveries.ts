@@ -114,7 +114,7 @@ export function makeUC(deps: Deps) {
           slotsForDate(slots, day.date)
         )
         const optionCount = slotsForDate(slots, day.date).filter(
-          s => s.mealType === day.mealType && s.meal && s.mealId
+          s => s.meal && s.mealId
         ).length
 
         return {

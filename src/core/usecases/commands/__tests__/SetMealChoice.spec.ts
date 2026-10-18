@@ -109,16 +109,27 @@ describe('SetMealChoice', () => {
     })
   })
 
-  it('rejects a dish from the other stream', async () => {
+  it('switches the day to salad when picking a salad dish', async () => {
     const { deps, sub, salad } = makeChoiceDeps()
-    await expect(
-      makeUC(deps)({
-        userId: sub.userId,
-        deliveryDate: DATE,
-        mealId: salad.id,
-      })
-    ).rejects.toBeInstanceOf(ValidationError)
-    expect(deps.deliveryDayPersistor.updateSelectedMeal).not.toHaveBeenCalled()
+    const result = await makeUC(deps)({
+      userId: sub.userId,
+      deliveryDate: DATE,
+      mealId: salad.id,
+    })
+
+    expect(
+      deps.deliveryDayPersistor.updateMealTypeForSubscription
+    ).toHaveBeenCalledWith(sub.id, 'salad', DATE, [DATE])
+    expect(deps.deliveryDayPersistor.updateSelectedMeal).toHaveBeenCalledWith(
+      expect.any(String),
+      'salad-a',
+      'Caesar'
+    )
+    expect(result).toMatchObject({
+      meal_type: 'salad',
+      selected_meal_id: 'salad-a',
+      effective_meal: { meal_id: 'salad-a' },
+    })
   })
 
   it('rejects after cutoff', async () => {

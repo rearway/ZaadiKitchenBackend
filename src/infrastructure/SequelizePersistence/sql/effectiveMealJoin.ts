@@ -27,13 +27,20 @@ export function effectiveMealLateralJoin(opts?: {
    AND mw.date_from <= dd.date
    AND mw.date_to >= dd.date${published}
   WHERE ms.delivery_date = dd.date
-    AND ms.meal_type::text = dd.meal_type::text
     AND ms.meal_id IS NOT NULL
   ORDER BY
     CASE
       WHEN dd.selected_meal_id IS NOT NULL
        AND ms.meal_id = dd.selected_meal_id THEN 0
       ELSE 1
+    END,
+    CASE
+      WHEN dd.selected_meal_id IS NULL
+       AND ms.meal_type::text = dd.meal_type::text
+       AND ms.is_default THEN 0
+      WHEN dd.selected_meal_id IS NULL
+       AND ms.meal_type::text = dd.meal_type::text THEN 1
+      ELSE 2
     END,
     CASE WHEN ms.is_default THEN 0 ELSE 1 END,
     ms.id ASC

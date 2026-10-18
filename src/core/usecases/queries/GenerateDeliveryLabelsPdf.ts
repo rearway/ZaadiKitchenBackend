@@ -102,14 +102,25 @@ function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
     .fontSize(13.6)
     .text(row.customerName, MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 41
+  y = 39
+  if (row.customerPhone) {
+    doc
+      .fillColor('#444444')
+      .font('Montserrat-Bold')
+      .fontSize(8.5)
+      .text(row.customerPhone, MARGIN, y, { width: CONTENT_WIDTH })
+    y = 49
+  } else {
+    y = 41
+  }
+
   doc
     .fillColor('#333333')
     .font('Montserrat')
     .fontSize(9)
     .text(row.buildingName || '—', MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 52
+  y += 11
   const addressLine = [row.floor, row.deskArea, row.gate]
     .filter(Boolean)
     .join(' · ')

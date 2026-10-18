@@ -121,10 +121,13 @@ export function makeUC(deps: Deps) {
           }
 
       const daySlots = deliveryDate ? slotsForDate(slots, deliveryDate) : []
-      const streamType = (assignedMealType ?? meal.mealType) as
-        | 'executive'
-        | 'salad'
-      const options = streamOptions(daySlots, streamType, selectedMealId)
+      const executiveOptions = streamOptions(
+        daySlots,
+        'executive',
+        selectedMealId
+      )
+      const saladOptions = streamOptions(daySlots, 'salad', selectedMealId)
+      const dayOptions = [...executiveOptions, ...saladOptions]
       const effective =
         deliveryDate && assignedMealType
           ? resolveDayEffectiveMeal(
@@ -133,15 +136,15 @@ export function makeUC(deps: Deps) {
               daySlots
             )
           : null
-      const onAssignedStream = options.some(o => o.meal_id === meal.id)
+      const onMenuThatDay = dayOptions.some(o => o.meal_id === meal.id)
       const canSelect =
         deliveryDate != null &&
-        onAssignedStream &&
+        onMenuThatDay &&
         canChangeMealChoice({
           subscription: sub,
           dayStatus,
           deliveryDate,
-          optionCount: options.length,
+          optionCount: dayOptions.length,
           now,
         })
 

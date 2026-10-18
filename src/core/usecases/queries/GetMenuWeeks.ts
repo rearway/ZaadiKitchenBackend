@@ -1,6 +1,9 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { getSaudiWorkWeekBounds, getNextSaudiWorkWeekBounds, formatWeekRangeLabel } from '../services/weekUtils.js'
-import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
+import {
+  evaluateWeekPublishReadiness,
+  isWeekEditable,
+} from '../services/menuWeekPublish.js'
 
 export interface GetMenuWeeksInput {
   fromWeek?: string
@@ -57,7 +60,7 @@ export function makeUC(deps: Deps) {
           const filledDays = readiness.filledDays
 
           const isCurrentWeek = week.id === currentWeekBounds.weekId
-          const isEditable = week.status === 'draft'
+          const isEditable = isWeekEditable(week.status)
           const isPublished = week.status === 'published'
 
           let fillLabel: string

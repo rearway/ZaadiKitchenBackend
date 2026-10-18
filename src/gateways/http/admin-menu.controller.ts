@@ -71,6 +71,8 @@ export class AdminMenuController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Add an Executive or Salad slot for a day (max 3 per stream)',
+    description:
+      'Allowed on draft and published weeks. Past weeks are locked. Same dish cannot appear twice on the same date.',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('add-menu-slot')
@@ -110,7 +112,7 @@ export class AdminMenuController {
   @ApiOperation({
     summary: 'Assign a meal to a slot',
     description:
-      'Active or updated meals can be assigned. Up to 3 Executive and 3 Salad slots per day. Draft meals are rejected (422 MEAL_IS_DRAFT).',
+      'Active or updated meals can be assigned on draft or published weeks (not past). Up to 3 Executive and 3 Salad per day. Same dish cannot appear twice on the same date. Draft meals are rejected (422 MEAL_IS_DRAFT).',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('assign-meal-to-slot')
@@ -128,7 +130,11 @@ export class AdminMenuController {
 
   @Delete('weeks/:week_id/slots/:slot_id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Clear a meal from a slot' })
+  @ApiOperation({
+    summary: 'Clear a meal from a slot',
+    description:
+      'Allowed on draft and published weeks. On a published week the last Executive or Salad dish for that day cannot be removed.',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('clear-menu-slot')
   async clearSlot(

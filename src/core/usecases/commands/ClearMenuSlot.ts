@@ -3,10 +3,12 @@ import {
   ResourceNotFoundError,
   SlotNotEditableError,
   CannotClearDefaultError,
+  CannotClearLastStreamMealError,
 } from '../../../shared/errors/domain.errors.js'
 import {
   evaluateWeekPublishReadiness,
   filledSlotsForStream,
+  isPastWeek,
 } from '../services/menuWeekPublish.js'
 import { parseSlotIndex } from '../services/weekUtils.js'
 
@@ -36,7 +38,7 @@ export function makeUC(deps: Deps) {
       const week = await menuWeekLoader.getWeekById(input.weekId)
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
-      if (week.status === 'published' || week.status === 'past') {
+      if (isPastWeek(week.status)) {
         throw new SlotNotEditableError()
       }
 
@@ -51,6 +53,13 @@ export function makeUC(deps: Deps) {
         slot.deliveryDate,
         slot.mealType
       ).filter(s => s.id !== slot.id)
+
+      if (week.status === 'published' && otherFilled.length === 0) {
+        throw new CannotClearLastStreamMealError(
+          slot.deliveryDate,
+          slot.mealType
+        )
+      }
 
       if (slot.isDefault && otherFilled.length > 0) {
         throw new CannotClearDefaultError(slot.deliveryDate, slot.mealType)

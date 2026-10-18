@@ -7,6 +7,9 @@ describe('effectiveMealLateralJoin', () => {
     expect(sql).toContain('dd.selected_meal_id')
     expect(sql).toContain('ms.is_default')
     expect(sql).toContain('ms.meal_type::text = dd.meal_type::text')
+    expect(sql).not.toMatch(
+      /WHERE ms\.delivery_date = dd\.date\s+AND ms\.meal_type::text = dd\.meal_type::text/
+    )
     expect(sql).not.toContain("mw.status = 'published'")
   })
 

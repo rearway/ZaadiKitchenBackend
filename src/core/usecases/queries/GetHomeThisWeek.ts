@@ -135,9 +135,7 @@ export function makeUC(deps: Deps) {
           )
           const salad_options = streamOptions(daySlots, 'salad', selectedMealId)
           const optionCount =
-            (assignedMealType ?? effective.mealType) === 'salad'
-              ? salad_options.length
-              : executive_options.length
+            executive_options.length + salad_options.length
 
           let card_state: GetHomeThisWeekOutput['cards'][0]['card_state']
           let cta_label: string | null = null

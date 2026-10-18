@@ -67,8 +67,7 @@ export function makeUC(deps: Deps) {
         selectedMealId
       )
       const salad_options = streamOptions(slots, 'salad', selectedMealId)
-      const options =
-        day.mealType === 'salad' ? salad_options : executive_options
+      const options = [...executive_options, ...salad_options]
       const effective = resolveDayEffectiveMeal(
         day.mealType,
         selectedMealId,

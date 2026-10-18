@@ -79,14 +79,30 @@ export function makeUC(deps: Deps) {
         input.deliveryDate,
         input.deliveryDate
       )
-      const option = filledSlotsForStream(slots, day.mealType).find(
+      const execOption = filledSlotsForStream(slots, 'executive').find(
         s => s.mealId === input.mealId
       )
+      const saladOption = filledSlotsForStream(slots, 'salad').find(
+        s => s.mealId === input.mealId
+      )
+      const option = execOption ?? saladOption
       if (!option?.meal) {
         const { ValidationError } =
           await import('../../../shared/errors/index.js')
         throw new ValidationError(
           'That dish is not an option for this delivery day.'
+        )
+      }
+
+      const pickedType: 'executive' | 'salad' = execOption
+        ? 'executive'
+        : 'salad'
+      if (pickedType !== day.mealType) {
+        await deliveryDayPersistor.updateMealTypeForSubscription(
+          subscription.id,
+          pickedType,
+          input.deliveryDate,
+          [input.deliveryDate]
         )
       }
 
@@ -97,14 +113,14 @@ export function makeUC(deps: Deps) {
       )
 
       const effective = resolveEffectiveMeal({
-        mealType: day.mealType,
+        mealType: pickedType,
         selectedMealId: option.meal.id,
         slots,
       })
 
       return {
         delivery_date: day.date,
-        meal_type: day.mealType,
+        meal_type: pickedType,
         selected_meal_id: option.meal.id,
         effective_meal: effective ? toMealSummary(effective) : null,
       }

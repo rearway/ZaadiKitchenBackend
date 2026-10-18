@@ -80,6 +80,69 @@ describe('GetMenuWeek', () => {
     expect(day.can_add_salad).toBe(true)
     expect(day.executive_slots[0].is_default).toBe(true)
     expect(day.executive_slots[0].meal?.status).toBe('updated')
+    expect(result.is_editable).toBe(true)
     expect(result.publish_ready).toBe(true)
+  })
+
+  it('keeps published weeks editable so admin can add or replace dishes', async () => {
+    const base = buildDeps()
+    const deps = buildDeps({
+      menuWeekLoader: {
+        ...base.menuWeekLoader,
+        getWeekById: jest.fn().mockResolvedValue({
+          id: 'w2026-42',
+          weekNumber: 42,
+          status: 'published',
+        }),
+        getSlotsByWeekId: jest.fn().mockResolvedValue([
+          {
+            id: 'exec-1',
+            weekId: 'w2026-42',
+            deliveryDate: '2026-10-11',
+            mealType: 'executive',
+            mealId: 'e1',
+            isDefault: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]),
+      },
+    })
+
+    const result = await makeUC(deps)({ weekId: 'w2026-42' })
+    expect(result.is_editable).toBe(true)
+    expect(result.days[0].can_add_executive).toBe(true)
+    expect(result.days[0].executive_slots[0].is_editable).toBe(true)
+  })
+
+  it('locks past weeks', async () => {
+    const base = buildDeps()
+    const deps = buildDeps({
+      menuWeekLoader: {
+        ...base.menuWeekLoader,
+        getWeekById: jest.fn().mockResolvedValue({
+          id: 'w2026-42',
+          weekNumber: 42,
+          status: 'past',
+        }),
+        getSlotsByWeekId: jest.fn().mockResolvedValue([
+          {
+            id: 'exec-1',
+            weekId: 'w2026-42',
+            deliveryDate: '2026-10-11',
+            mealType: 'executive',
+            mealId: 'e1',
+            isDefault: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]),
+      },
+    })
+
+    const result = await makeUC(deps)({ weekId: 'w2026-42' })
+    expect(result.is_editable).toBe(false)
+    expect(result.days[0].can_add_executive).toBe(false)
+    expect(result.days[0].executive_slots[0].is_editable).toBe(false)
   })
 })

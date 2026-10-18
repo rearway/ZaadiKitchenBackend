@@ -47,14 +47,14 @@ describe('resolveEffectiveMeal', () => {
     expect(result?.id).toBe('exec-b')
   })
 
-  it('ignores a selected dish that is not in the stream options and uses the default', () => {
+  it('returns a selected dish from the other stream when it is on the menu that day', () => {
     const result = resolveEffectiveMeal({
       mealType: 'executive',
       selectedMealId: saladA.id,
       slots: [slot(execA, { isDefault: true }), slot(execB), slot(saladA)],
     })
 
-    expect(result?.id).toBe('exec-a')
+    expect(result?.id).toBe('salad-a')
   })
 
   it('uses the default dish when the customer has not selected', () => {

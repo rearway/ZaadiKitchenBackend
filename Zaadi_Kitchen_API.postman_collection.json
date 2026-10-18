@@ -1462,7 +1462,7 @@
                 "meal-choice"
               ]
             },
-            "description": "Dish options for that day. effective_meal is what they receive. can_change is false after 18:00 KSA cutoff. See MEAL_OPTIONS_API_UI.md."
+            "description": "options lists every dish that day (Executive + Salad). can_change is false after 18:00 KSA cutoff or when fewer than 2 dishes total. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },
@@ -1499,7 +1499,7 @@
                 "meal-choice"
               ]
             },
-            "description": "Pick a dish on the assigned stream. 422 PAST_CUTOFF after 6 PM KSA the day before. Switching meal type clears this pick."
+            "description": "Pick any dish on that day. Picking the other stream switches that day's meal_type. 422 PAST_CUTOFF after 6 PM KSA the day before. PATCH salad/meal-type still clears this pick."
           },
           "response": []
         },
@@ -2284,6 +2284,7 @@
         {
           "name": "Get My Deliveries",
           "request": {
+            "description": "Each delivery includes meal_name (effective dish from menu pick/default) and customer_phone.",
             "method": "GET",
             "header": [
               {

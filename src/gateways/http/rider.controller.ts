@@ -39,7 +39,11 @@ export class RiderController {
   constructor(@Inject(CoreS) private readonly useCases: UseCases) {}
 
   @Get('deliveries')
-  @ApiOperation({ summary: "Get the rider's delivery list for a date (defaults to today)" })
+  @ApiOperation({
+    summary: "Get the rider's delivery list for a date (defaults to today)",
+    description:
+      'Each delivery includes meal_name (effective dish) and customer_phone for contact.',
+  })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-my-deliveries')
   async getMyDeliveries(

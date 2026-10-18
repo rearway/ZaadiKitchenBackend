@@ -95,4 +95,49 @@ describe('GetMealDetail', () => {
       selected_meal_id: 'exec-b',
     })
   })
+
+  it('allows selecting a salad dish while the day is still executive', async () => {
+    const execA = makeMeal({ id: 'exec-a' })
+    const salad = makeMeal({
+      id: 'salad-a',
+      mealType: 'salad',
+      nameEn: 'Caesar',
+    })
+    const sub = makeSubscription()
+    const deps = buildDeps({
+      mealLoader: {
+        ...buildDeps().mealLoader,
+        getMealById: jest.fn().mockResolvedValue(salad),
+      },
+      subscriptionLoader: {
+        ...buildDeps().subscriptionLoader,
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+      },
+      deliveryDayLoader: {
+        ...buildDeps().deliveryDayLoader,
+        getDeliveryDayByDate: jest.fn().mockResolvedValue(
+          makeDeliveryDay({
+            date: UPCOMING,
+            status: 'scheduled',
+            mealType: 'executive',
+          })
+        ),
+      },
+      menuWeekLoader: {
+        ...buildDeps().menuWeekLoader,
+        getMenuForDateRange: jest
+          .fn()
+          .mockResolvedValue([makeSlot(execA, true), makeSlot(salad, true)]),
+      },
+    })
+
+    const result = await makeUC(deps)({
+      mealId: salad.id,
+      userId: sub.userId,
+      deliveryDate: UPCOMING,
+    })
+
+    expect(result.can_select).toBe(true)
+    expect(result.is_effective).toBe(false)
+  })
 })

@@ -9,6 +9,7 @@ import {
   canAddStreamSlot,
   evaluateWeekPublishReadiness,
   filledSlotsForStream,
+  isWeekEditable,
 } from '../services/menuWeekPublish.js'
 import type { Meal } from '../../entities/Meal.js'
 import type { MenuSlot } from '../../entities/MenuSlot.js'
@@ -101,7 +102,7 @@ export function makeUC(deps: Deps) {
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
       const slots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
-      const isEditable = week.status === 'draft'
+      const isEditable = isWeekEditable(week.status)
 
       const mealIds = [...new Set(slots.filter(s => s.mealId).map(s => s.mealId as string))]
       const meals = mealIds.length > 0 ? await mealLoader.getMealsByIds(mealIds) : []
@@ -140,8 +141,9 @@ export function makeUC(deps: Deps) {
             executive: execDefault?.mealId ?? null,
             salad: saladDefault?.mealId ?? null,
           },
-          can_add_executive: canAddStreamSlot(daySlots, date, 'executive'),
-          can_add_salad: canAddStreamSlot(daySlots, date, 'salad'),
+          can_add_executive:
+            isEditable && canAddStreamSlot(daySlots, date, 'executive'),
+          can_add_salad: isEditable && canAddStreamSlot(daySlots, date, 'salad'),
           executive_slots: mappedExec,
           salad_slots: mappedSalad,
           slots: [...mappedExec, ...mappedSalad],

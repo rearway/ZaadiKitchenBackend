@@ -77,4 +77,55 @@ describe('SetMenuDayDefault', () => {
       makeUC(deps)({ weekId: WEEK_ID, date: SUN, mealType: 'executive', mealId: 'missing' })
     ).rejects.toMatchObject({ statusCode: 404 })
   })
+
+  it('allows setting default on a published week', async () => {
+    const slots: MenuSlot[] = [
+      {
+        id: 's1',
+        weekId: WEEK_ID,
+        deliveryDate: SUN,
+        mealType: 'executive',
+        mealId: 'exec-a',
+        isDefault: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 's2',
+        weekId: WEEK_ID,
+        deliveryDate: SUN,
+        mealType: 'executive',
+        mealId: 'exec-b',
+        isDefault: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+    const base = buildDeps()
+    const deps = buildDeps({
+      menuWeekLoader: {
+        ...base.menuWeekLoader,
+        getWeekById: jest.fn().mockResolvedValue({
+          id: WEEK_ID,
+          status: 'published',
+          dateFrom: SUN,
+          dateTo: '2026-10-15',
+        }),
+        getSlotsByWeekId: jest.fn().mockResolvedValue(slots),
+      },
+      menuWeekPersistor: {
+        ...base.menuWeekPersistor,
+        setDayDefault: jest.fn().mockResolvedValue({ ...slots[1], isDefault: true }),
+      },
+    })
+
+    await expect(
+      makeUC(deps)({
+        weekId: WEEK_ID,
+        date: SUN,
+        mealType: 'executive',
+        mealId: 'exec-b',
+      })
+    ).resolves.toMatchObject({ default_meal_id: 'exec-b' })
+  })
 })

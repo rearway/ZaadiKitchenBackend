@@ -26,13 +26,15 @@ export function resolveEffectiveMeal(input: {
   selectedMealId?: string | null
   slots: EffectiveMealSlot[]
 }): Meal | null {
-  const options = filledSlotsForStream(input.slots, input.mealType)
-  if (options.length === 0) return null
-
   if (input.selectedMealId) {
-    const selected = options.find(s => s.mealId === input.selectedMealId)
+    const selected = input.slots.find(
+      s => s.mealId === input.selectedMealId && s.meal
+    )
     if (selected?.meal) return selected.meal
   }
+
+  const options = filledSlotsForStream(input.slots, input.mealType)
+  if (options.length === 0) return null
 
   const defaultSlot = options.find(s => s.isDefault)
   if (defaultSlot?.meal) return defaultSlot.meal

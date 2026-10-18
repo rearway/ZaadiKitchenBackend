@@ -841,14 +841,14 @@
                 "{{week_id}}"
               ]
             },
-            "description": "Days grouped with executive/salad slot arrays, defaults, and can_add flags. Min 1+1 max 3+3 per stream to publish."
+            "description": "Days grouped with executive/salad slot arrays, defaults, and can_add flags. is_editable is true for draft and published weeks (past is locked). Min 1+1 max 3+3 per stream to publish."
           },
           "response": []
         },
         {
           "name": "Add Day Slot",
           "request": {
-            "description": "Add an extra Executive or Salad slot for a date (max 3 per stream). Optional meal_id assigns immediately. Returns the new slot_id.",
+            "description": "Add an extra Executive or Salad slot (max 3 per stream) on draft or published weeks. 409 MEAL_ALREADY_ON_DAY if that dish is already on the date. Optional meal_id assigns immediately.",
             "method": "POST",
             "header": [],
             "body": {
@@ -914,7 +914,7 @@
         {
           "name": "Assign Meal to Slot",
           "request": {
-            "description": "Active or updated meals only (422 MEAL_IS_DRAFT). Up to 3 Executive + 3 Salad per day. First filled slot of a stream becomes the default. List assignable meals with GET /admin/meals?status=active (picker=true). See MEAL_OPTIONS_API_UI.md.",
+            "description": "Active or updated meals only (422 MEAL_IS_DRAFT). Allowed on draft and published weeks (not past). 409 MEAL_ALREADY_ON_DAY if that dish is already on the date. List assignable meals with GET /admin/meals?status=active (picker=true).",
             "method": "POST",
             "header": [],
             "body": {
@@ -947,6 +947,7 @@
         {
           "name": "Clear Slot",
           "request": {
+            "description": "Allowed on draft and published weeks. 409 CANNOT_CLEAR_LAST_STREAM_MEAL if this is the last Executive or Salad dish on a published day. Past weeks return 422 SLOT_NOT_EDITABLE.",
             "method": "DELETE",
             "header": [],
             "url": {
@@ -1806,6 +1807,7 @@
         {
           "name": "Get Delivery Labels",
           "request": {
+            "description": "Each label includes meal_name (effective dish) and customer_phone. PDF download uses the same data.",
             "method": "GET",
             "header": [],
             "url": {

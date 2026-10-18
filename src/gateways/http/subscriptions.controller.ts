@@ -97,6 +97,8 @@ export class SubscriptionsController {
   @Get('me/deliveries/:delivery_date/meal-choice')
   @ApiOperation({
     summary: 'Dish options and the current pick for a delivery day',
+    description:
+      'options lists every dish that day (Executive and Salad). can_change is true when there are at least two dishes before cutoff.',
   })
   @ApiResponse({ status: 200, description: 'Meal choice returned' })
   @HandleErrors('get-meal-choice')
@@ -114,6 +116,8 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Pick a dish for a delivery day (before 18:00 KSA cutoff)',
+    description:
+      "meal_id may be any dish on that day. Picking the other stream switches that day's meal_type, then saves the pick.",
   })
   @ApiResponse({ status: 200, description: 'Meal choice saved' })
   @HandleErrors('set-meal-choice')

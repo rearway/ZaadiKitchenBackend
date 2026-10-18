@@ -215,6 +215,7 @@ export class SubscriptionPersistenceService
     const rows = await sequelize.query<{
       delivery_day_id: string
       customer_name: string
+      customer_phone: string | null
       building_name: string | null
       floor: string | null
       desk_area: string | null
@@ -232,6 +233,7 @@ export class SubscriptionPersistenceService
          SELECT DISTINCT ON (dd.user_id)
                 dd.id as delivery_day_id,
                 u.full_name as customer_name,
+                u.phone as customer_phone,
                 dl.building_name,
                 dl.floor,
                 dl.desk_area,
@@ -273,6 +275,7 @@ export class SubscriptionPersistenceService
     return rows.map(r => ({
       deliveryDayId: r.delivery_day_id,
       customerName: r.customer_name,
+      customerPhone: r.customer_phone,
       buildingName: r.building_name,
       floor: r.floor,
       deskArea: r.desk_area,

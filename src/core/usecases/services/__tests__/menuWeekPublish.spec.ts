@@ -1,7 +1,9 @@
 import {
   canAddStreamSlot,
   evaluateWeekPublishReadiness,
+  isWeekEditable,
   MAX_DISHES_PER_STREAM,
+  slotWithMealOnDate,
 } from '../menuWeekPublish'
 import type { MenuSlot } from '../../../entities/MenuSlot.js'
 
@@ -99,5 +101,25 @@ describe('evaluateWeekPublishReadiness', () => {
         { id: 's1', status: 'active' },
       ]).blockedReason
     ).toBe('Sun: Draft meal on menu')
+  })
+})
+
+describe('isWeekEditable', () => {
+  it('allows draft and published weeks, not past', () => {
+    expect(isWeekEditable('draft')).toBe(true)
+    expect(isWeekEditable('published')).toBe(true)
+    expect(isWeekEditable('past')).toBe(false)
+  })
+})
+
+describe('slotWithMealOnDate', () => {
+  it('finds the same dish on that date in either stream', () => {
+    const slots = [
+      slot(SUN, 'executive', { mealId: 'e1', id: 'e-1' }),
+      slot(SUN, 'salad', { mealId: 's1', id: 's-1' }),
+    ]
+    expect(slotWithMealOnDate(slots, SUN, 'e1')?.id).toBe('e-1')
+    expect(slotWithMealOnDate(slots, SUN, 'e1', 'e-1')).toBeUndefined()
+    expect(slotWithMealOnDate(slots, MON, 'e1')).toBeUndefined()
   })
 })

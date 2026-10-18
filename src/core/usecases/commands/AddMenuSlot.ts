@@ -5,11 +5,14 @@ import {
   MealIsDraftError,
   SlotNotEditableError,
   DayMealTypeLimitError,
+  MealAlreadyOnDayError,
 } from '../../../shared/errors/domain.errors.js'
 import {
   canAddStreamSlot,
   evaluateWeekPublishReadiness,
+  isPastWeek,
   MAX_DISHES_PER_STREAM,
+  slotWithMealOnDate,
   slotsForStream,
 } from '../services/menuWeekPublish.js'
 import { makeSlotId, nextAvailableSlotIndex } from '../services/weekUtils.js'
@@ -29,7 +32,7 @@ export function makeUC(deps: Deps) {
       const week = await menuWeekLoader.getWeekById(input.weekId)
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
-      if (week.status === 'published' || week.status === 'past') {
+      if (isPastWeek(week.status)) {
         throw new SlotNotEditableError()
       }
 
@@ -51,6 +54,9 @@ export function makeUC(deps: Deps) {
         meal = await mealLoader.getMealById(input.mealId)
         if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
         if (meal.status === 'draft') throw new MealIsDraftError()
+        if (slotWithMealOnDate(weekSlots, input.date, input.mealId)) {
+          throw new MealAlreadyOnDayError(input.date, meal.nameEn)
+        }
       }
 
       const existing = slotsForStream(weekSlots, input.date, input.mealType)

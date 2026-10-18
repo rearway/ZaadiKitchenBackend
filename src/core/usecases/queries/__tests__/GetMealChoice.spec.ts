@@ -83,7 +83,11 @@ describe('GetMealChoice', () => {
       can_change: true,
       effective_meal: { meal_id: 'exec-b', name_en: 'Picked Exec' },
     })
-    expect(result.options.map(o => o.meal_id)).toEqual(['exec-a', 'exec-b'])
+    expect(result.options.map(o => o.meal_id)).toEqual([
+      'exec-a',
+      'exec-b',
+      'salad-a',
+    ])
     expect(result.salad_options).toHaveLength(1)
   })
 

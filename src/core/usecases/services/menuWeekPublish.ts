@@ -30,6 +30,29 @@ export function canAddStreamSlot(
   return slotsForStream(slots, date, mealType).length < MAX_DISHES_PER_STREAM
 }
 
+export function isPastWeek(status: string): boolean {
+  return status === 'past'
+}
+
+export function isWeekEditable(status: string): boolean {
+  return !isPastWeek(status)
+}
+
+/** Same dish cannot appear twice on the same calendar day (any stream). */
+export function slotWithMealOnDate(
+  slots: MenuSlot[],
+  date: string,
+  mealId: string,
+  excludeSlotId?: string
+): MenuSlot | undefined {
+  return slots.find(
+    s =>
+      s.deliveryDate === date &&
+      s.mealId === mealId &&
+      s.id !== excludeSlotId
+  )
+}
+
 export interface WeekPublishReadiness {
   publishReady: boolean
   blockedReason: string | null

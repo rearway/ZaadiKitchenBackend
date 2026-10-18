@@ -229,7 +229,36 @@ export class WeekAlreadyPublishedError extends BaseError {
 
 export class SlotNotEditableError extends BaseError {
   constructor() {
-    super('SLOT_NOT_EDITABLE', 422, 'This slot belongs to a published week and cannot be modified.')
+    super(
+      'SLOT_NOT_EDITABLE',
+      422,
+      'This slot belongs to a past week and cannot be modified.'
+    )
+  }
+}
+
+export class MealAlreadyOnDayError extends BaseError {
+  constructor(deliveryDate: string, mealName?: string) {
+    super(
+      'MEAL_ALREADY_ON_DAY',
+      409,
+      mealName
+        ? `${mealName} is already on the menu for ${deliveryDate}.`
+        : `This dish is already on the menu for ${deliveryDate}.`,
+      { delivery_date: deliveryDate }
+    )
+  }
+}
+
+export class CannotClearLastStreamMealError extends BaseError {
+  constructor(deliveryDate: string, mealType: string) {
+    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    super(
+      'CANNOT_CLEAR_LAST_STREAM_MEAL',
+      409,
+      `Published weeks must keep at least one ${label} dish on ${deliveryDate}.`,
+      { delivery_date: deliveryDate, meal_type: mealType }
+    )
   }
 }
 

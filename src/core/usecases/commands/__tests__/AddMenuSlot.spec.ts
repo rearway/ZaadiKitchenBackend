@@ -8,7 +8,7 @@ import type { Meal } from '../../../entities/Meal.js'
 const WEEK_ID = 'w2026-42'
 const SUN = '2026-10-11'
 
-function makeWeek(): MenuWeek {
+function makeWeek(overrides: Partial<MenuWeek> = {}): MenuWeek {
   return {
     id: WEEK_ID,
     weekNumber: 42,
@@ -18,6 +18,7 @@ function makeWeek(): MenuWeek {
     status: 'draft',
     createdAt: new Date(),
     updatedAt: new Date(),
+    ...overrides,
   }
 }
 
@@ -34,13 +35,17 @@ function baseSlots(): MenuSlot[] {
   }))
 }
 
-function setup(slots: MenuSlot[], meals: Meal[] = []) {
+function setup(
+  slots: MenuSlot[],
+  meals: Meal[] = [],
+  week: MenuWeek = makeWeek()
+) {
   const mealMap = new Map(meals.map(m => [m.id, m]))
   const base = buildDeps()
   const deps = buildDeps({
     menuWeekLoader: {
       ...base.menuWeekLoader,
-      getWeekById: jest.fn().mockResolvedValue(makeWeek()),
+      getWeekById: jest.fn().mockResolvedValue(week),
       getSlotsByWeekId: jest.fn().mockImplementation(async () => slots.map(s => ({ ...s }))),
     },
     mealLoader: {
@@ -110,5 +115,40 @@ describe('AddMenuSlot', () => {
     await expect(
       add({ weekId: WEEK_ID, date: SUN, mealType: 'executive' })
     ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_LIMIT', statusCode: 409 })
+  })
+
+  it('allows adding a slot on a published week', async () => {
+    const { add } = setup(baseSlots(), [], makeWeek({ status: 'published' }))
+
+    await expect(
+      add({ weekId: WEEK_ID, date: SUN, mealType: 'executive' })
+    ).resolves.toMatchObject({ meal_type: 'executive' })
+  })
+
+  it('rejects adding a dish that is already on that date', async () => {
+    const meal: Meal = {
+      id: 'exec-a',
+      nameEn: 'Biryani',
+      mealType: 'executive',
+      kcal: 500,
+      emoji: '🍛',
+      status: 'active',
+      erpCode: 'ERP-A',
+      timesServed: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    const slots = baseSlots()
+    slots[0].mealId = meal.id
+    const { add } = setup(slots, [meal])
+
+    await expect(
+      add({
+        weekId: WEEK_ID,
+        date: SUN,
+        mealType: 'executive',
+        mealId: meal.id,
+      })
+    ).rejects.toMatchObject({ errorCode: 'MEAL_ALREADY_ON_DAY', statusCode: 409 })
   })
 })

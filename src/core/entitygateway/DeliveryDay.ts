@@ -35,6 +35,7 @@ export interface MealBreakdownRow {
 export interface RiderDeliveryRow {
   deliveryDayId: string
   customerName: string
+  customerPhone: string | null
   buildingName: string | null
   floor: string | null
   deskArea: string | null

@@ -56,6 +56,7 @@ export function makeUC(deps: Deps) {
             label_id: row.deliveryDayId,
             order_ref: row.orderRef,
             customer_name: row.customerName,
+            customer_phone: row.customerPhone,
             meal_type: row.mealType,
             meal_name: row.mealName,
             building: row.buildingName,

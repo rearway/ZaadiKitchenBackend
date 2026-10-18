@@ -311,6 +311,7 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
 
     expect(row).toMatchObject({
       customerName: 'QA Zulu Customer',
+      customerPhone: custNorthScheduled.phone,
       buildingName: 'QA Bldg Zulu',
       floor: 'Floor 3',
       deskArea: 'Desk 9',

@@ -3,7 +3,10 @@ import {
   ResourceNotFoundError,
   SlotNotEditableError,
 } from '../../../shared/errors/domain.errors.js'
-import { filledSlotsForStream } from '../services/menuWeekPublish.js'
+import {
+  filledSlotsForStream,
+  isPastWeek,
+} from '../services/menuWeekPublish.js'
 
 export interface SetMenuDayDefaultInput {
   weekId: string
@@ -20,7 +23,7 @@ export function makeUC(deps: Deps) {
       const week = await menuWeekLoader.getWeekById(input.weekId)
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
-      if (week.status === 'published' || week.status === 'past') {
+      if (isPastWeek(week.status)) {
         throw new SlotNotEditableError()
       }
 

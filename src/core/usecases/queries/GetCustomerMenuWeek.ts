@@ -112,10 +112,7 @@ export function buildCustomerDayMenu(input: {
       ? resolveDayEffectiveMeal(assignedMealType, selectedMealId, slots)
       : null
   const summary = effective ? toMealSummary(effective) : null
-  const optionCount =
-    assignedMealType === 'salad'
-      ? salad_options.length
-      : executive_options.length
+  const optionCount = executive_options.length + salad_options.length
 
   return {
     delivery_date: date,

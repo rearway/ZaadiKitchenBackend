@@ -335,13 +335,34 @@ describe('AssignMealToSlot', () => {
       ).rejects.toMatchObject({ statusCode: 404 })
     })
 
-    it.each(['published', 'past'] as const)('rejects assign on a %s week', async status => {
-      const { assign, deps } = setup({ week: makeWeek({ status }), meals: allMeals })
+    it('allows assign on a published week', async () => {
+      const { assign, deps } = setup({
+        week: makeWeek({ status: 'published' }),
+        meals: allMeals,
+      })
+
+      await expect(
+        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
+      ).resolves.toMatchObject({ meal: { meal_id: execA.id } })
+      expect(deps.menuWeekPersistor.assignMealToSlot).toHaveBeenCalled()
+    })
+
+    it('rejects assign on a past week', async () => {
+      const { assign, deps } = setup({ week: makeWeek({ status: 'past' }), meals: allMeals })
 
       await expect(
         assign({ weekId: WEEK_ID, slotId: slotId('sun', 'exec'), mealId: execA.id })
       ).rejects.toMatchObject({ errorCode: 'SLOT_NOT_EDITABLE' })
       expect(deps.menuWeekPersistor.assignMealToSlot).not.toHaveBeenCalled()
+    })
+
+    it('rejects the same dish twice on the same date', async () => {
+      const { assign, slots } = setup({ meals: allMeals })
+      slots.find(s => s.id === slotId('sun', 'exec'))!.mealId = execA.id
+
+      await expect(
+        assign({ weekId: WEEK_ID, slotId: slotId('sun', 'salad'), mealId: execA.id })
+      ).rejects.toMatchObject({ errorCode: 'MEAL_ALREADY_ON_DAY', statusCode: 409 })
     })
   })
 })

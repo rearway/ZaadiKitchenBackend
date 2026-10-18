@@ -3,8 +3,13 @@ import {
   ResourceNotFoundError,
   MealIsDraftError,
   SlotNotEditableError,
+  MealAlreadyOnDayError,
 } from '../../../shared/errors/domain.errors.js'
-import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
+import {
+  evaluateWeekPublishReadiness,
+  isPastWeek,
+  slotWithMealOnDate,
+} from '../services/menuWeekPublish.js'
 
 export interface AssignMealToSlotInput {
   weekId: string
@@ -40,7 +45,7 @@ export function makeUC(deps: Deps) {
       const week = await menuWeekLoader.getWeekById(input.weekId)
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
-      if (week.status === 'published' || week.status === 'past') {
+      if (isPastWeek(week.status)) {
         throw new SlotNotEditableError()
       }
 
@@ -53,6 +58,17 @@ export function makeUC(deps: Deps) {
       if (!meal) throw new ResourceNotFoundError('Meal', input.mealId)
 
       if (meal.status === 'draft') throw new MealIsDraftError()
+
+      const weekSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
+      const duplicate = slotWithMealOnDate(
+        weekSlots,
+        slot.deliveryDate,
+        input.mealId,
+        slot.id
+      )
+      if (duplicate) {
+        throw new MealAlreadyOnDayError(slot.deliveryDate, meal.nameEn)
+      }
 
       await menuWeekPersistor.assignMealToSlot(input.slotId, input.mealId)
 
