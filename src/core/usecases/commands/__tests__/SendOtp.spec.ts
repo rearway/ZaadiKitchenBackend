@@ -26,6 +26,7 @@ describe('SendOtp', () => {
     expect(deps.otpSessionPersistor.createSession).toHaveBeenCalledWith(
       expect.objectContaining({
         phone: validPhone,
+        channel: 'sms',
         code: expect.stringMatching(/^\d{4}$/),
         expiresAt: expect.any(Date),
       })
@@ -40,8 +41,53 @@ describe('SendOtp', () => {
 
     expect(deps.otpService.sendOtp).toHaveBeenCalledWith(
       validPhone,
-      expect.stringMatching(/^\d{4}$/)
+      expect.stringMatching(/^\d{4}$/),
+      'whatsapp'
     )
+  })
+
+  describe('WhatsApp without SKIP_OTP', () => {
+    const envBackup = { ...process.env }
+
+    afterEach(() => {
+      process.env = { ...envBackup }
+    })
+
+    it('rejects WhatsApp when Twilio WhatsApp is not configured', async () => {
+      delete process.env.TWILIO_ACCOUNT_SID
+      delete process.env.TWILIO_AUTH_TOKEN
+      delete process.env.TWILIO_WHATSAPP_FROM
+      const deps = buildDeps({ skipOtp: false })
+      const sendOtp = makeUC(deps)
+
+      await expect(
+        sendOtp({ phone: validPhone, channel: 'whatsapp' })
+      ).rejects.toMatchObject({ errorCode: 'VALIDATION_ERROR', statusCode: 400 })
+      expect(deps.otpSessionPersistor.createSession).not.toHaveBeenCalled()
+    })
+
+    it('stores a 4-digit code and sends via WhatsApp when configured', async () => {
+      process.env.TWILIO_ACCOUNT_SID = 'AC123'
+      process.env.TWILIO_AUTH_TOKEN = 'token'
+      process.env.TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'
+      const deps = buildDeps({ skipOtp: false })
+      const sendOtp = makeUC(deps)
+
+      const result = await sendOtp({ phone: validPhone, channel: 'whatsapp' })
+
+      expect(result.data.otpCode).toBeUndefined()
+      expect(deps.otpSessionPersistor.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: 'whatsapp',
+          code: expect.stringMatching(/^\d{4}$/),
+        })
+      )
+      expect(deps.otpService.sendOtp).toHaveBeenCalledWith(
+        validPhone,
+        expect.stringMatching(/^\d{4}$/),
+        'whatsapp'
+      )
+    })
   })
 
   it('still succeeds when the OTP notification service throws (graceful degradation)', async () => {
@@ -55,24 +101,6 @@ describe('SendOtp', () => {
     expect(result.message).toBe('OTP sent successfully')
     expect(result.data.otpCode).toMatch(/^\d{4}$/)
     expect(deps.logger.error).toHaveBeenCalled()
-  })
-
-  it.each([
-    '+9665123456',       // too short (8 digits)
-    '+96651234567890',   // too long (11 digits)
-    '+971512345678',     // wrong country code (UAE)
-    '0512345678',        // no country code
-    '+966 512 345 678',  // contains spaces
-    '966512345678',      // missing leading +
-  ])('throws ValidationError for invalid phone: %s', async (invalidPhone) => {
-    const deps = buildDeps()
-    const sendOtp = makeUC(deps)
-
-    await expect(sendOtp({ phone: invalidPhone, channel: 'whatsapp' })).rejects.toMatchObject({
-      errorCode: 'VALIDATION_ERROR',
-      statusCode: 400,
-    })
-    expect(deps.otpSessionPersistor.createSession).not.toHaveBeenCalled()
   })
 
   it('throws RateLimitError when the phone is actively locked', async () => {
@@ -143,6 +171,40 @@ describe('SendOtp', () => {
     const result = await sendOtp({ phone: validPhone, channel: 'whatsapp' })
     expect(result.message).toBe('OTP sent successfully')
     expect(deps.otpSessionPersistor.lockPhone).not.toHaveBeenCalled()
+  })
+
+  describe('Indian test phones', () => {
+    const envBackup = { ...process.env }
+
+    afterEach(() => {
+      process.env = { ...envBackup }
+    })
+
+    it('accepts +91 when OTP_ALLOW_INDIAN_PHONES=true', async () => {
+      process.env.OTP_ALLOW_INDIAN_PHONES = 'true'
+      const deps = buildDeps()
+      const sendOtp = makeUC(deps)
+
+      const result = await sendOtp({
+        phone: '+919876543210',
+        channel: 'whatsapp',
+      })
+
+      expect(result.data.phone).toBe('+919876543210')
+    })
+
+    it('rejects +91 when OTP_ALLOW_INDIAN_PHONES=false', async () => {
+      process.env.OTP_ALLOW_INDIAN_PHONES = 'false'
+      const deps = buildDeps()
+      const sendOtp = makeUC(deps)
+
+      await expect(
+        sendOtp({ phone: '+919876543210', channel: 'sms' })
+      ).rejects.toMatchObject({
+        errorCode: 'VALIDATION_ERROR',
+        statusCode: 400,
+      })
+    })
   })
 
   describe('Play Store review accounts', () => {

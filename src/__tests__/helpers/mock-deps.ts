@@ -32,6 +32,7 @@ export const makeAdminUser = (overrides: Record<string, unknown> = {}) =>
 export const makeOtpSession = (overrides: Record<string, unknown> = {}) => ({
   id: 'otp-uuid-1',
   phone: '+966512345678',
+  channel: 'sms' as const,
   code: '1234',
   expiresAt: new Date(Date.now() + 120_000),
   isVerified: false,

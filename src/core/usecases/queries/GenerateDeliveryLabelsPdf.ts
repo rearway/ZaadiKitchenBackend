@@ -126,7 +126,8 @@ function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
     .join(' · ')
   doc.fontSize(9).text(addressLine || '—', MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 65
+  // One blank line between last address line and delivery preference (font 9 ≈ 11pt line step).
+  y = doc.y + 11
   doc
     .fillColor('#555555')
     .font('Montserrat')

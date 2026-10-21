@@ -137,6 +137,19 @@ describe('VerifyOtp', () => {
     })
   })
 
+  it('verifies a WhatsApp session against the stored code', async () => {
+    const user = makeUser()
+    const deps = makeDepsWithActiveSession(
+      { id: 'otp-wa-1', channel: 'whatsapp', code: '4321' },
+      user
+    )
+    const verifyOtp = makeUC(deps)
+
+    await verifyOtp({ ...validInput, code: '4321' })
+
+    expect(deps.otpSessionPersistor.markVerified).toHaveBeenCalledWith('otp-wa-1')
+  })
+
   it('throws OtpInvalidError and increments attempt count for a wrong code', async () => {
     const session = makeOtpSession({ code: '9999' })
     const deps = buildDeps({

@@ -45,9 +45,9 @@ export function makeUC(deps: Deps) {
     try {
       const { phone, code, userAgent, ipAddress } = input
       const reviewFixedCode = getReviewOtpCode(phone)
-      const reviewCodeAccepted = reviewFixedCode !== null && code === reviewFixedCode
+      const reviewCodeAccepted =
+        reviewFixedCode !== null && code === reviewFixedCode
 
-      // Get active OTP session
       const session = await otpSessionLoader.getActiveSession(phone)
 
       if (!reviewCodeAccepted) {
@@ -57,7 +57,6 @@ export function makeUC(deps: Deps) {
           throw new OtpExpiredError()
         }
 
-        // Check if OTP matches
         if (session.code !== code) {
           await otpSessionPersistor.incrementAttempt(session.id)
 
@@ -66,37 +65,30 @@ export function makeUC(deps: Deps) {
           throw new OtpInvalidError()
         }
 
-        // Check if OTP has expired
         if (new Date() > session.expiresAt) {
           const { OtpExpiredError } =
             await import('../../../shared/errors/index.js')
           throw new OtpExpiredError()
         }
 
-        // Mark OTP as verified
         await otpSessionPersistor.markVerified(session.id)
       } else if (session) {
         await otpSessionPersistor.markVerified(session.id)
       }
 
-      // Look up existing user
       let user = await userLoader.getUserByPhone(phone)
       let isNewUser = false
 
       if (!user) {
-        // Only CUSTOMER can self-register via OTP.
-        // DRIVER accounts are pre-created manually in the DB.
         isNewUser = true
         user = await userPersistor.createUser({
           phone,
-          fullName: 'New User', // Will be updated in profile step
+          fullName: 'New User',
           role: UserRole.CUSTOMER,
         })
       } else if (user.role === UserRole.DRIVER) {
-        // Driver already exists — just log them in, no changes needed.
-        // If somehow a DRIVER doesn't exist, they cannot self-register.
+        // Driver already exists — just log them in
       } else if (user.role === UserRole.ADMIN || user.role === UserRole.OPS) {
-        // Admin/Ops must use email+password login, not OTP.
         const { AuthenticationError } =
           await import('../../../shared/errors/index.js')
         throw new AuthenticationError(
@@ -104,7 +96,6 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      // Check if user is active
       if (!user.isActive) {
         const { AuthenticationError } =
           await import('../../../shared/errors/index.js')
@@ -113,14 +104,12 @@ export function makeUC(deps: Deps) {
         )
       }
 
-      // Generate JWT access token — 100-year expiry for mobile forever session
       const accessToken = jwt.sign(
         { sub: user.id, role: user.role, phone: user.phone },
         jwtSecret as jwt.Secret,
         { expiresIn: '36500d' }
       )
 
-      // Generate refresh token
       const refreshTokenValue = crypto.randomUUID()
       const refreshExpiresAt = parseExpiration(jwtRefreshExpirationMobile)
 
@@ -132,11 +121,10 @@ export function makeUC(deps: Deps) {
         ipAddress,
       })
 
-      // Strip password from user response
       const { password: _, ...userWithoutPassword } = user
 
-      // Onboarding is complete once the user has a saved delivery location
-      const primaryLocation = await deliveryLocationLoader.getPrimaryLocationByUserId(user.id)
+      const primaryLocation =
+        await deliveryLocationLoader.getPrimaryLocationByUserId(user.id)
       const onboardingComplete = primaryLocation !== null
 
       return {
@@ -151,7 +139,7 @@ export function makeUC(deps: Deps) {
           accessToken,
           refreshToken: refreshTokenValue,
           tokenType: 'Bearer',
-          accessExpiresIn: 36500 * 24 * 60 * 60, // 100 years in seconds
+          accessExpiresIn: 36500 * 24 * 60 * 60,
           refreshExpiresIn: parseExpirationSeconds(jwtRefreshExpirationMobile),
           isNewUser,
         },
