@@ -43,6 +43,7 @@ export type DeliveryDayInput = {
   date: string
   mealType: 'executive' | 'salad'
   mealName: null
+  selectedMealId: null
   status: 'scheduled'
   deliveredAt: null
 }
@@ -59,6 +60,7 @@ export function buildDeliveryDayInputs(
     date,
     mealType,
     mealName: null,
+    selectedMealId: null,
     status: 'scheduled',
     deliveredAt: null,
   }))

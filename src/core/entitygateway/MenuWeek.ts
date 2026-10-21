@@ -20,8 +20,23 @@ export interface MenuWeekLoader {
 
 export interface MenuWeekPersistor {
   ensureWeekExists(params: EnsureWeekParams): Promise<{ week: MenuWeek; slots: MenuSlot[] }>
+  createSlot(slot: {
+    id: string
+    weekId: string
+    deliveryDate: string
+    mealType: 'executive' | 'salad'
+    mealId?: string | null
+    isDefault?: boolean
+  }): Promise<MenuSlot>
   assignMealToSlot(slotId: string, mealId: string): Promise<MenuSlot>
+  setDayDefault(
+    weekId: string,
+    deliveryDate: string,
+    mealType: 'executive' | 'salad',
+    mealId: string
+  ): Promise<MenuSlot>
   clearSlot(slotId: string): Promise<MenuSlot>
+  deleteSlot(slotId: string): Promise<void>
   publishWeek(weekId: string, publishedBy: string): Promise<MenuWeek>
   unpublishWeek(weekId: string): Promise<MenuWeek>
   transitionPastWeeks(): Promise<void>

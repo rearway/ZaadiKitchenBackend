@@ -22,6 +22,11 @@ export class OtpSessionModel extends Model {
   declare phone: string
 
   @AllowNull(false)
+  @Default('sms')
+  @Column(DataType.STRING(20))
+  declare channel: string
+
+  @AllowNull(false)
   @Column(DataType.STRING)
   declare code: string
 

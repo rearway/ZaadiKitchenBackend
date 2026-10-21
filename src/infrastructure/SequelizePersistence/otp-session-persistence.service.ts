@@ -22,7 +22,6 @@ export class OtpSessionPersistenceService
       },
       order: [['createdAt', 'DESC']],
     })
-    console.log('model is ', model)
     return model ? this.toEntity(model) : null
   }
 
@@ -54,6 +53,7 @@ export class OtpSessionPersistenceService
   async createSession(request: CreateOtpSessionRequest): Promise<OtpSession> {
     const model = await OtpSessionModel.create({
       phone: request.phone,
+      channel: request.channel,
       code: request.code,
       expiresAt: request.expiresAt,
       attemptCount: 0,
@@ -91,6 +91,7 @@ export class OtpSessionPersistenceService
     return {
       id: model.id,
       phone: model.phone,
+      channel: model.channel === 'sms' ? 'sms' : 'whatsapp',
       code: model.code,
       attemptCount: model.attemptCount,
       isVerified: model.isVerified,

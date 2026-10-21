@@ -6,8 +6,11 @@ export interface OtpSessionLoader {
   getLockedSession(phone: string): Promise<OtpSession | null>
 }
 
+import type { OtpChannel } from '../../shared/otp/otpConstants.js'
+
 export interface CreateOtpSessionRequest {
   phone: string
+  channel: OtpChannel
   code: string
   expiresAt: Date
 }

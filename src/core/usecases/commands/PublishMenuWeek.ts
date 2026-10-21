@@ -2,7 +2,9 @@ import type { Deps } from '../../entitygateway/index.js'
 import {
   ResourceNotFoundError,
   WeekAlreadyPublishedError,
+  WeekNotCompleteError,
 } from '../../../shared/errors/domain.errors.js'
+import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
 
 export interface PublishMenuWeekInput {
   weekId: string
@@ -25,6 +27,7 @@ export function makeUC(deps: Deps) {
       logger,
       menuWeekLoader,
       menuWeekPersistor,
+      mealLoader,
       mealPersistor,
       userLoader,
     } = deps
@@ -36,16 +39,23 @@ export function makeUC(deps: Deps) {
       if (week.status === 'published') throw new WeekAlreadyPublishedError()
 
       const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
+      const mealIds = [
+        ...new Set(allSlots.filter(s => s.mealId).map(s => s.mealId as string)),
+      ]
+      const meals =
+        mealIds.length > 0 ? await mealLoader.getMealsByIds(mealIds) : []
+      const readiness = evaluateWeekPublishReadiness(allSlots, meals)
+      if (!readiness.publishReady) {
+        throw new WeekNotCompleteError(
+          readiness.blockedReason ?? 'Menu week is not ready to publish'
+        )
+      }
 
       const publishedWeek = await menuWeekPersistor.publishWeek(
         input.weekId,
         input.publishedByUserId
       )
 
-      // Update last_served and times_served only for slots that have a meal
-      const mealIds = allSlots
-        .filter(s => s.mealId)
-        .map(s => s.mealId as string)
       await mealPersistor.updateLastServed(mealIds, week.dateFrom)
       await mealPersistor.incrementTimesServed(mealIds)
 

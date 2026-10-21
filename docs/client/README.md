@@ -18,6 +18,7 @@
 | [PLAN_PROMOTION.md](./PLAN_PROMOTION.md) | Plan upgrade tiers, checkout credit, delivery anchor rules |
 | [SKIP_PAUSE_FLEX.md](./SKIP_PAUSE_FLEX.md) | Shared skip/pause allowance, day flags, pause schedule/cancel/resume |
 | [SKIP_PAUSE_API_UI.md](./SKIP_PAUSE_API_UI.md) | **UI handoff:** new/changed JSON fields and examples |
+| [MEAL_OPTIONS_API_UI.md](./MEAL_OPTIONS_API_UI.md) | **UI handoff:** multiple dishes per day, customer pick, effective meal |
 
 ---
 

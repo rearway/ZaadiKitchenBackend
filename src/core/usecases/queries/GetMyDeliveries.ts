@@ -15,6 +15,7 @@ export interface GetMyDeliveriesOutput {
   deliveries: Array<{
     delivery_id: string
     customer_name: string
+    customer_phone: string | null
     building: string | null
     floor: string | null
     desk_area: string | null
@@ -49,6 +50,7 @@ export function makeUC(deps: Deps) {
       const deliveries = rows.map(row => ({
         delivery_id: row.deliveryDayId,
         customer_name: row.customerName,
+        customer_phone: row.customerPhone,
         building: row.buildingName,
         floor: row.floor,
         desk_area: row.deskArea,

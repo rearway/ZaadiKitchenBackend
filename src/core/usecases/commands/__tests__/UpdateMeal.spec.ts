@@ -87,6 +87,7 @@ describe('UpdateMeal', () => {
         mealId: meal.id,
         deliveryDate: '2026-10-17',
         mealType: 'executive',
+        isDefault: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       },

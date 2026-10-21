@@ -63,7 +63,10 @@ export function makeUC(deps: Deps) {
       const total = mealCounts.reduce((sum, r) => sum + r.count, 0)
       const rows = mealCounts.map(r => ({
         type: r.mealType,
-        label: r.mealType === 'executive' ? 'Executive' : 'Salad',
+        meal_id: r.mealId,
+        label:
+          r.mealName ??
+          (r.mealType === 'executive' ? 'Executive' : 'Salad'),
         count: r.count,
         pct: total > 0 ? Math.round((r.count / total) * 100) : 0,
       }))

@@ -48,7 +48,12 @@ import { WalletPersistenceService } from '../infrastructure/SequelizePersistence
 import { ReferralPersistenceService } from '../infrastructure/SequelizePersistence/referral-persistence.service.js'
 import { MealPersistenceService } from '../infrastructure/SequelizePersistence/meal-persistence.service.js'
 import { MenuWeekPersistenceService } from '../infrastructure/SequelizePersistence/menu-week-persistence.service.js'
-import { OtpStubService, SnsOtpService } from '../infrastructure/OtpService/index.js'
+import {
+  OtpStubService,
+  SnsOtpService,
+  TwilioWhatsAppOtpService,
+  RoutingOtpService,
+} from '../infrastructure/OtpService/index.js'
 import { OtpService } from '../core/entitygateway/OtpService.js'
 import { MockPaymentGatewayService } from '../infrastructure/MockPayment/mock-payment-gateway.service.js'
 import { MoyasarPaymentGatewayService } from '../infrastructure/MoyasarPayment/moyasar-payment-gateway.service.js'
@@ -111,10 +116,17 @@ import { coreAdapterService } from './coreadapter.service.js'
     // External services
     {
       provide: OtpServiceS,
-      useFactory: (): OtpService => {
-        const skipOtp = process.env.SKIP_OTP === 'true'
-        return skipOtp ? new OtpStubService() : new SnsOtpService()
+      useFactory: (configService: ConfigService): OtpService => {
+        const skipOtp = configService.get<string>('SKIP_OTP', 'true') === 'true'
+        if (skipOtp) {
+          return new OtpStubService()
+        }
+        return new RoutingOtpService(
+          new SnsOtpService(),
+          new TwilioWhatsAppOtpService(configService)
+        )
       },
+      inject: [ConfigService],
     },
     { 
       provide: PaymentGatewayS, 

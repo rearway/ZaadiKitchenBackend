@@ -60,8 +60,16 @@ function drawMealBadge(
   y: number
 ): number {
   const badgeColor = row.mealType === 'executive' ? '#E4281D' : '#16A34A'
-  const badgeText =
-    row.mealType === 'executive' ? 'Executive Meal' : 'Salad Meal'
+  const typeLabel = row.mealType === 'executive' ? 'Exec' : 'Salad'
+  const dish =
+    row.mealName && row.mealName.length > 22
+      ? `${row.mealName.slice(0, 21)}…`
+      : row.mealName
+  const badgeText = dish
+    ? `${typeLabel} · ${dish}`
+    : row.mealType === 'executive'
+      ? 'Executive Meal'
+      : 'Salad Meal'
   const badgeFontSize = 7
   const badgePaddingX = 6
   const badgeHeight = 13
@@ -94,20 +102,32 @@ function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
     .fontSize(13.6)
     .text(row.customerName, MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 41
+  y = 39
+  if (row.customerPhone) {
+    doc
+      .fillColor('#444444')
+      .font('Montserrat-Bold')
+      .fontSize(8.5)
+      .text(row.customerPhone, MARGIN, y, { width: CONTENT_WIDTH })
+    y = 49
+  } else {
+    y = 41
+  }
+
   doc
     .fillColor('#333333')
     .font('Montserrat')
     .fontSize(9)
     .text(row.buildingName || '—', MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 52
+  y += 11
   const addressLine = [row.floor, row.deskArea, row.gate]
     .filter(Boolean)
     .join(' · ')
   doc.fontSize(9).text(addressLine || '—', MARGIN, y, { width: CONTENT_WIDTH })
 
-  y = 65
+  // One blank line between last address line and delivery preference (font 9 ≈ 11pt line step).
+  y = doc.y + 11
   doc
     .fillColor('#555555')
     .font('Montserrat')

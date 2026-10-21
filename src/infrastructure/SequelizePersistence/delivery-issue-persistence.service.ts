@@ -7,6 +7,7 @@ import {
 } from '../../core/entitygateway/DeliveryIssue.js'
 import { DeliveryIssue, IssueStatus } from '../../core/entities/DeliveryIssue.js'
 import { DeliveryIssueModel } from './models/DeliveryIssueModel.js'
+import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 
 @Injectable()
 export class DeliveryIssuePersistenceService
@@ -82,7 +83,7 @@ export class DeliveryIssuePersistenceService
                 di.description,
                 di.created_at as submitted_at,
                 di.delivery_date,
-                dd.meal_name,
+                COALESCE(em.name_en, dd.meal_name) as meal_name,
                 dd.meal_type,
                 p.price_per_meal_sar as plan_price_per_meal_sar,
                 di.status,
@@ -95,6 +96,7 @@ export class DeliveryIssuePersistenceService
          JOIN subscriptions s ON s.id = di.subscription_id
          JOIN plans p ON p.id = s.plan_id
          LEFT JOIN delivery_days dd ON dd.subscription_id = di.subscription_id AND dd.date = di.delivery_date
+         ${effectiveMealLateralJoin()}
          LEFT JOIN delivery_locations dl ON dl.user_id = di.user_id AND dl.is_primary = true
          ${where}
          ORDER BY di.id, dd.meal_type

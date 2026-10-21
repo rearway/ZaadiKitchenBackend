@@ -84,12 +84,31 @@ export function getNextSaudiWorkWeekBounds(referenceDate: Date): SaudiWeekBounds
   return getSaudiWorkWeekBounds(new Date(nextSundayStr + 'T12:00:00Z'))
 }
 
-/** Returns slot ID for a given week, date and meal type. */
-export function makeSlotId(weekId: string, deliveryDate: string, mealType: 'executive' | 'salad'): string {
+/** Returns slot ID for a given week, date and meal type. Index 1 has no suffix (legacy). */
+export function makeSlotId(
+  weekId: string,
+  deliveryDate: string,
+  mealType: 'executive' | 'salad',
+  index: number = 1
+): string {
   const d = new Date(deliveryDate)
   const dayAbbr = DAY_ABBR[d.getDay()]
   const typeAbbr = mealType === 'executive' ? 'exec' : 'salad'
-  return `slot_${weekId}_${dayAbbr}_${typeAbbr}`
+  const base = `slot_${weekId}_${dayAbbr}_${typeAbbr}`
+  return index <= 1 ? base : `${base}_${index}`
+}
+
+export function parseSlotIndex(slotId: string): number {
+  const match = slotId.match(/_(?:exec|salad)_(\d+)$/)
+  return match ? Number(match[1]) : 1
+}
+
+export function nextAvailableSlotIndex(existingSlotIds: string[]): number | null {
+  const used = new Set(existingSlotIds.map(parseSlotIndex))
+  for (let i = 1; i <= 3; i++) {
+    if (!used.has(i)) return i
+  }
+  return null
 }
 
 /** Returns the day label (e.g. "Sun", "Mon") for a delivery date. */

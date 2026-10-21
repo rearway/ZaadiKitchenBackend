@@ -5,6 +5,7 @@ function makeRow(overrides: Record<string, unknown> = {}) {
   return {
     deliveryDayId: 'dd-1',
     customerName: 'Ahmed Al-Rashidi',
+    customerPhone: '+966501234567',
     buildingName: 'Al Nakheel Tower',
     floor: 'Floor 7',
     deskArea: 'Desk B12',

@@ -1043,7 +1043,7 @@
                 }
               ]
             },
-            "description": "Each delivery includes photo_url. Per row: skip_available (prefer over skippable), undoable, is_skipped, skip_reason. Top-level skip_limit_reached. See SKIP_PAUSE_API_UI.md."
+            "description": "Each delivery: meal_id, meal_name, photo_url of the effective dish (pick or default), selected_meal_id, can_change. Skip flags unchanged. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },
@@ -1126,8 +1126,61 @@
                 "2025-06-05",
                 "salad"
               ],
-              "description": "true = switch to salad for this day, false = switch back to executive"
+              "description": "true = switch to salad for this day, false = switch back to executive. Clears the dish pick for that day."
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal Choice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/deliveries/{{delivery_date}}/meal-choice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "deliveries",
+                "{{delivery_date}}",
+                "meal-choice"
+              ]
+            },
+            "description": "options lists every dish that day (Executive + Salad). can_change is false after 18:00 KSA cutoff or when fewer than 2 dishes total. See MEAL_OPTIONS_API_UI.md."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Meal Choice",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/deliveries/{{delivery_date}}/meal-choice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "deliveries",
+                "{{delivery_date}}",
+                "meal-choice"
+              ]
+            },
+            "description": "Pick any dish on that day. Picking the other stream switches that day's meal_type. 422 PAST_CUTOFF after 6 PM KSA the day before. 400 if the dish is not on that day's menu or the day is not scheduled. PATCH salad/meal-type still clears this pick."
           },
           "response": []
         },
@@ -1561,7 +1614,7 @@
                 "this-week"
               ]
             },
-            "description": "Each card: skip_available, undoable, is_skipped, skip_reason; CTA Skip/Undo/Browse only. Paused sub → browse_only."
+            "description": "One card per date = effective dish. Also executive_options, salad_options, selected_meal_id, can_change. Skip/Undo/Browse CTAs unchanged."
           },
           "response": []
         }
@@ -1608,7 +1661,7 @@
                 }
               ]
             },
-            "description": "Day cards: skip_available, undoable, is_skipped, skip_reason, card_state (skipped when is_skipped)."
+            "description": "One card per date (not per slot). Face = effective_meal. Always includes executive_options + salad_options, selected_meal_id, can_change. Skip flags still on the day card. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },
@@ -1634,7 +1687,7 @@
                 }
               ]
             },
-            "description": "Pass delivery_date from the card. Adds skip_available, undoable, is_skipped, skip_reason."
+            "description": "Pass delivery_date from the card. Skip flags plus is_default, is_selected, is_effective, can_select (PUT meal-choice when true)."
           },
           "response": []
         },
@@ -1788,6 +1841,11 @@
     {
       "key": "delivery_day_id",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "delivery_date",
+      "value": "2026-06-05",
       "type": "string"
     }
   ]

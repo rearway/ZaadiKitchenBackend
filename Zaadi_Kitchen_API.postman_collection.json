@@ -1204,7 +1204,7 @@
                 }
               ]
             },
-            "description": "Per delivery: skip_available, skippable (deprecated), undoable, is_skipped, skip_reason. skip_limit_reached at root. See SKIP_PAUSE_API_UI.md."
+            "description": "Per delivery: meal_id, meal_name, photo_url of the effective dish (pick or default), selected_meal_id, can_change. Skip flags unchanged. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },
@@ -1435,6 +1435,71 @@
                 "meal-type"
               ]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meal Choice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/deliveries/{{delivery_date}}/meal-choice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "deliveries",
+                "{{delivery_date}}",
+                "meal-choice"
+              ]
+            },
+            "description": "options lists every dish that day (Executive + Salad). can_change is false after 18:00 KSA cutoff or when fewer than 2 dishes total. See MEAL_OPTIONS_API_UI.md."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Meal Choice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/subscriptions/me/deliveries/{{delivery_date}}/meal-choice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "me",
+                "deliveries",
+                "{{delivery_date}}",
+                "meal-choice"
+              ]
+            },
+            "description": "Pick any dish on that day. Picking the other stream switches that day's meal_type. 422 PAST_CUTOFF after 6 PM KSA the day before. PATCH salad/meal-type still clears this pick."
           },
           "response": []
         },
@@ -2038,6 +2103,84 @@
           "response": []
         },
         {
+          "name": "Add Day Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_type\": \"executive\",\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/days/{{delivery_date}}/slots",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "menu",
+                "weeks",
+                "{{week_id}}",
+                "days",
+                "{{delivery_date}}",
+                "slots"
+              ]
+            },
+            "description": "Add an extra Executive or Salad slot (max 3 per stream)."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Day Default",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_type\": \"executive\",\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/days/{{delivery_date}}/default",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "menu",
+                "weeks",
+                "{{week_id}}",
+                "days",
+                "{{delivery_date}}",
+                "default"
+              ]
+            },
+            "description": "Set the default dish for a stream on that date."
+          },
+          "response": []
+        },
+        {
           "name": "Assign Meal to Slot",
           "request": {
             "method": "POST",
@@ -2141,6 +2284,7 @@
         {
           "name": "Get My Deliveries",
           "request": {
+            "description": "Each delivery includes meal_name (effective dish from menu pick/default) and customer_phone.",
             "method": "GET",
             "header": [
               {
@@ -2730,7 +2874,7 @@
                 "this-week"
               ]
             },
-            "description": "Cards: skip_available, undoable, is_skipped, skip_reason; CTAs Skip/Undo/Browse only."
+            "description": "One card per date = effective dish. Also executive_options, salad_options, selected_meal_id, can_change. Skip/Undo/Browse CTAs unchanged."
           },
           "response": []
         }
@@ -2789,7 +2933,7 @@
                 }
               ]
             },
-            "description": "Day cards: skip flags + card_state skipped when is_skipped."
+            "description": "One card per date (not per slot). Face = effective_meal. Always includes executive_options + salad_options, selected_meal_id, can_change. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },
@@ -2821,7 +2965,7 @@
                 }
               ]
             },
-            "description": "Query delivery_date recommended. Response includes skip_available, undoable, is_skipped, skip_reason."
+            "description": "Pass delivery_date from the card. Skip flags plus is_default, is_selected, is_effective, can_select."
           },
           "response": []
         }
@@ -3256,6 +3400,11 @@
     {
       "key": "meal_id",
       "value": "your-meal-uuid",
+      "type": "string"
+    },
+    {
+      "key": "delivery_date",
+      "value": "2026-06-05",
       "type": "string"
     },
     {

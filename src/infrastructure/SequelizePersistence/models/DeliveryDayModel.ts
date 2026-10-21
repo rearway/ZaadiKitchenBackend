@@ -8,7 +8,9 @@ import {
   AllowNull,
   CreatedAt,
   UpdatedAt,
+  ForeignKey,
 } from 'sequelize-typescript'
+import { MealModel } from './MealModel.js'
 
 export type DeliveryDayStatus =
   | 'scheduled'
@@ -43,6 +45,11 @@ export class DeliveryDayModel extends Model {
   @AllowNull(true)
   @Column(DataType.STRING)
   declare mealName: string | null
+
+  @ForeignKey(() => MealModel)
+  @AllowNull(true)
+  @Column(DataType.UUID)
+  declare selectedMealId: string | null
 
   @AllowNull(false)
   @Default('scheduled')

@@ -7,6 +7,7 @@ function makeRow(overrides: Record<string, unknown> = {}) {
   return {
     deliveryDayId: 'dd-uuid-1',
     customerName: 'Ahmed Al-Rashidi',
+    customerPhone: '+966501234567',
     buildingName: 'Al Nakheel Tower',
     floor: 'Floor 7',
     deskArea: 'Desk B12',
@@ -42,6 +43,8 @@ describe('GetMyDeliveries', () => {
     expect(result.deliveries[0]).toMatchObject({
       delivery_id: 'dd-uuid-1',
       customer_name: 'Ahmed Al-Rashidi',
+      customer_phone: '+966501234567',
+      meal_name: 'Lamb Kabsa',
       status: 'pending',
     })
   })

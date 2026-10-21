@@ -5,6 +5,7 @@ function makeRow(overrides: Record<string, unknown> = {}) {
   return {
     deliveryDayId: 'dd-1',
     customerName: 'Ahmed Al-Rashidi',
+    customerPhone: '+966501234567',
     buildingName: 'Al Nakheel Tower',
     floor: 'Floor 7',
     deskArea: 'Desk B12',
@@ -47,6 +48,10 @@ describe('GetDeliveryLabels', () => {
       '#PL-2026-08-02-0002',
     ])
     expect(result.areas[1]).toMatchObject({ area_name: 'Olaya', count: 1 })
+    expect(result.areas[0].labels[0]).toMatchObject({
+      meal_name: 'Lamb Kabsa',
+      customer_phone: '+966501234567',
+    })
   })
 
   it('narrows filtered_count by meal_type but keeps total_count unfiltered', async () => {

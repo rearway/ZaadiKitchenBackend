@@ -26,8 +26,8 @@ describe('getPublishedWeeksBlockingMealEdit', () => {
 
   it('returns published week ids where the meal is assigned', async () => {
     const loader = makeLoader([
-      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.dateFrom, mealType: 'executive', id: 's1', createdAt: new Date(), updatedAt: new Date() },
-      { weekId: nextWeek.weekId, mealId, deliveryDate: nextWeek.dateFrom, mealType: 'executive', id: 's2', createdAt: new Date(), updatedAt: new Date() },
+      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.dateFrom, mealType: 'executive', id: 's1', isDefault: true, createdAt: new Date(), updatedAt: new Date() },
+      { weekId: nextWeek.weekId, mealId, deliveryDate: nextWeek.dateFrom, mealType: 'executive', id: 's2', isDefault: true, createdAt: new Date(), updatedAt: new Date() },
     ])
 
     const result = await getPublishedWeeksBlockingMealEdit(mealId, loader, referenceDate)
@@ -37,7 +37,7 @@ describe('getPublishedWeeksBlockingMealEdit', () => {
 
   it('returns an empty list when the meal is not in current or next published weeks', async () => {
     const loader = makeLoader([
-      { weekId: 'w2026-10', mealId: 'other-meal', deliveryDate: thisWeek.dateFrom, mealType: 'executive', id: 's1', createdAt: new Date(), updatedAt: new Date() },
+      { weekId: 'w2026-10', mealId: 'other-meal', deliveryDate: thisWeek.dateFrom, mealType: 'executive', id: 's1', isDefault: true, createdAt: new Date(), updatedAt: new Date() },
     ])
 
     const result = await getPublishedWeeksBlockingMealEdit(mealId, loader, referenceDate)
@@ -47,8 +47,8 @@ describe('getPublishedWeeksBlockingMealEdit', () => {
 
   it('deduplicates week ids when the meal appears on multiple days', async () => {
     const loader = makeLoader([
-      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.deliveryDates[0], mealType: 'executive', id: 's1', createdAt: new Date(), updatedAt: new Date() },
-      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.deliveryDates[1], mealType: 'executive', id: 's2', createdAt: new Date(), updatedAt: new Date() },
+      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.deliveryDates[0], mealType: 'executive', id: 's1', isDefault: true, createdAt: new Date(), updatedAt: new Date() },
+      { weekId: thisWeek.weekId, mealId, deliveryDate: thisWeek.deliveryDates[1], mealType: 'executive', id: 's2', isDefault: true, createdAt: new Date(), updatedAt: new Date() },
     ])
 
     const result = await getPublishedWeeksBlockingMealEdit(mealId, loader, referenceDate)

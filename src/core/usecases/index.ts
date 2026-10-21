@@ -34,6 +34,7 @@ import * as CancelSubscription from './commands/CancelSubscription.js'
 import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
 import * as ToggleSaladForDay from './commands/ToggleSaladForDay.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
+import * as SetMealChoice from './commands/SetMealChoice.js'
 import * as ValidateReferral from './commands/ValidateReferral.js'
 import * as CreateMeal from './commands/CreateMeal.js'
 import * as DeleteMeal from './commands/DeleteMeal.js'
@@ -41,6 +42,8 @@ import * as UpdateMeal from './commands/UpdateMeal.js'
 import * as UpdateMealStatus from './commands/UpdateMealStatus.js'
 import * as ImportMeals from './commands/ImportMeals.js'
 import * as AssignMealToSlot from './commands/AssignMealToSlot.js'
+import * as AddMenuSlot from './commands/AddMenuSlot.js'
+import * as SetMenuDayDefault from './commands/SetMenuDayDefault.js'
 import * as ClearMenuSlot from './commands/ClearMenuSlot.js'
 import * as PublishMenuWeek from './commands/PublishMenuWeek.js'
 import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
@@ -81,6 +84,7 @@ import * as GetOrder from './queries/GetOrder.js'
 import * as GetSubscription from './queries/GetSubscription.js'
 import * as GetPlanChangeOptions from './queries/GetPlanChangeOptions.js'
 import * as GetSubscriptionDeliveries from './queries/GetSubscriptionDeliveries.js'
+import * as GetMealChoice from './queries/GetMealChoice.js'
 import * as GetWallet from './queries/GetWallet.js'
 import * as GetWalletTransactions from './queries/GetWalletTransactions.js'
 import * as GetPaymentTransactions from './queries/GetPaymentTransactions.js'
@@ -327,6 +331,12 @@ export function initUseCases(deps: Deps) {
     SwitchMealType.name,
     ...defaultWrappers
   )
+  const setMealChoice = wrapUC(
+    deps,
+    SetMealChoice.makeUC(deps),
+    SetMealChoice.name,
+    ...defaultWrappers
+  )
 
   // Referral commands
   const validateReferral = wrapUC(
@@ -371,6 +381,18 @@ export function initUseCases(deps: Deps) {
     deps,
     AssignMealToSlot.makeUC(deps),
     AssignMealToSlot.name,
+    ...defaultWrappers
+  )
+  const addMenuSlot = wrapUC(
+    deps,
+    AddMenuSlot.makeUC(deps),
+    AddMenuSlot.name,
+    ...defaultWrappers
+  )
+  const setMenuDayDefault = wrapUC(
+    deps,
+    SetMenuDayDefault.makeUC(deps),
+    SetMenuDayDefault.name,
     ...defaultWrappers
   )
   const clearMenuSlot = wrapUC(
@@ -601,6 +623,12 @@ export function initUseCases(deps: Deps) {
     deps,
     GetSubscriptionDeliveries.makeUC(deps),
     GetSubscriptionDeliveries.name,
+    ...defaultWrappers
+  )
+  const getMealChoice = wrapUC(
+    deps,
+    GetMealChoice.makeUC(deps),
+    GetMealChoice.name,
     ...defaultWrappers
   )
   const getWallet = wrapUC(
@@ -835,6 +863,7 @@ export function initUseCases(deps: Deps) {
       getSubscription,
       getPlanChangeOptions,
       getSubscriptionDeliveries,
+      getMealChoice,
       getWallet,
       getWalletTransactions,
       getPaymentTransactions,
@@ -908,6 +937,7 @@ export function initUseCases(deps: Deps) {
       expireSubscriptions,
       toggleSaladForDay,
       switchMealType,
+      setMealChoice,
       validateReferral,
       createMeal,
       deleteMeal,
@@ -915,6 +945,8 @@ export function initUseCases(deps: Deps) {
       updateMealStatus,
       importMeals,
       assignMealToSlot,
+      addMenuSlot,
+      setMenuDayDefault,
       clearMenuSlot,
       publishMenuWeek,
       unpublishMenuWeek,

@@ -1,4 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
+import type { DeliveryDay } from '../../entities/DeliveryDay.js'
+import type { MenuSlotWithMeal } from '../../entities/MenuSlot.js'
+import type { Subscription } from '../../entities/Subscription.js'
 import {
   getSaudiWorkWeekBounds,
   getNextSaudiWorkWeekBounds,
@@ -10,6 +13,16 @@ import {
   resolveDayActionFlags,
 } from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import {
+  canChangeMealChoice,
+  resolveDayEffectiveMeal,
+  slotsForDate,
+  streamOptions,
+  toMealSummary,
+  uniqueSortedDates,
+  type MealOptionCard,
+  type MealSummary,
+} from '../services/customerMenuDay.js'
 
 export interface GetCustomerMenuWeekInput {
   userId: string
@@ -18,13 +31,7 @@ export interface GetCustomerMenuWeekInput {
 
 type CardState = 'today' | 'upcoming' | 'past' | 'skipped'
 
-interface MealCard {
-  meal_id: string
-  name_en: string
-  meal_type: string
-  kcal: number
-  emoji: string
-  photo_url: string | null
+export interface DayMenu {
   delivery_date: string
   day_label: string
   card_state: CardState
@@ -33,15 +40,26 @@ interface MealCard {
   undoable: boolean
   is_skipped: boolean
   skip_reason: string | null
-  /** True when this card is a meal day on the user's plan (scheduled or skipped). */
+  /** True when this date is a meal day on the user's plan (scheduled). */
   is_deliverable: boolean
+  meal_type: string | null
+  meal_id: string | null
+  name_en: string | null
+  kcal: number | null
+  emoji: string | null
+  photo_url: string | null
+  selected_meal_id: string | null
+  can_change: boolean
+  effective_meal: MealSummary | null
+  executive_options: MealOptionCard[]
+  salad_options: MealOptionCard[]
 }
 
 interface WeekSection {
   label: string
   date_from: string
   date_to: string
-  days: MealCard[]
+  days: DayMenu[]
 }
 
 export interface GetCustomerMenuWeekOutput {
@@ -53,6 +71,82 @@ function buildDayLabel(deliveryDate: string, isToday: boolean): string {
   if (isToday) return 'TODAY'
   const d = new Date(deliveryDate)
   return `${getDayLabel(deliveryDate)} ${d.getUTCDate()}`
+}
+
+export function buildCustomerDayMenu(input: {
+  date: string
+  slots: MenuSlotWithMeal[]
+  day: DeliveryDay | undefined
+  subscription: Subscription | null
+  now: Date
+  todayStr: string
+}): DayMenu {
+  const { date, slots, day, subscription: sub, now, todayStr } = input
+  const isToday = date === todayStr
+  const isPast = date < todayStr
+  const dayStatus = day?.status ?? null
+  const assignedMealType = (day?.mealType ?? sub?.mealType) as
+    | 'executive'
+    | 'salad'
+    | undefined
+  const selectedMealId = day?.selectedMealId ?? null
+  const flags = resolveDayActionFlags({
+    subscription: sub,
+    deliveryDate: date,
+    mealType: assignedMealType,
+    assignedMealType,
+    dayStatus,
+    now,
+  })
+
+  let card_state: CardState
+  if (flags.is_skipped) card_state = 'skipped'
+  else if (isPast) card_state = 'past'
+  else if (isToday) card_state = 'today'
+  else card_state = 'upcoming'
+
+  const executive_options = streamOptions(slots, 'executive', selectedMealId)
+  const salad_options = streamOptions(slots, 'salad', selectedMealId)
+  const effective =
+    assignedMealType != null
+      ? resolveDayEffectiveMeal(assignedMealType, selectedMealId, slots)
+      : null
+  const summary = effective ? toMealSummary(effective) : null
+  const optionCount = executive_options.length + salad_options.length
+
+  return {
+    delivery_date: date,
+    day_label: buildDayLabel(date, isToday),
+    card_state,
+    is_today: isToday,
+    skip_available: flags.skip_available,
+    undoable: flags.undoable,
+    is_skipped: flags.is_skipped,
+    skip_reason: flags.skip_reason,
+    is_deliverable: isDeliverableMenuDay({
+      subscription: sub,
+      mealType: assignedMealType,
+      assignedMealType,
+      dayStatus,
+    }),
+    meal_type: assignedMealType ?? null,
+    meal_id: summary?.meal_id ?? null,
+    name_en: summary?.name_en ?? null,
+    kcal: summary?.kcal ?? null,
+    emoji: summary?.emoji ?? null,
+    photo_url: summary?.photo_url ?? null,
+    selected_meal_id: selectedMealId,
+    can_change: canChangeMealChoice({
+      subscription: sub,
+      dayStatus,
+      deliveryDate: date,
+      optionCount,
+      now,
+    }),
+    effective_meal: summary,
+    executive_options,
+    salad_options,
+  }
 }
 
 export function makeUC(deps: Deps) {
@@ -67,6 +161,10 @@ export function makeUC(deps: Deps) {
       const todayStr = now.toISOString().slice(0, 10)
       const thisWeek = getSaudiWorkWeekBounds(now)
       const nextWeek = getNextSaudiWorkWeekBounds(now)
+
+      // meal_type remains on the query for client compatibility; both streams
+      // are always returned so the picker can show Executive and Salad.
+      void input.mealType
 
       let sub = await subscriptionLoader.getActiveSubscriptionByUserId(
         input.userId
@@ -88,93 +186,36 @@ export function makeUC(deps: Deps) {
         : []
       const dayByDate = new Map(deliveryDays.map(d => [d.date, d]))
 
-      const mealTypeFilter = input.mealType ?? 'all'
-
-      const toCard = (slot: (typeof allSlots)[0]): MealCard | null => {
-        if (!slot.meal) return null
-        if (
-          mealTypeFilter !== 'all' &&
-          slot.meal.mealType !== mealTypeFilter
-        ) {
-          return null
-        }
-
-        const isToday = slot.deliveryDate === todayStr
-        const isPast = slot.deliveryDate < todayStr
-        const day = dayByDate.get(slot.deliveryDate)
-        const dayStatus = day?.status ?? null
-        const assignedMealType = day?.mealType ?? sub?.mealType
-        const flags = resolveDayActionFlags({
+      const toDay = (date: string): DayMenu =>
+        buildCustomerDayMenu({
+          date,
+          slots: slotsForDate(allSlots, date),
+          day: dayByDate.get(date),
           subscription: sub,
-          deliveryDate: slot.deliveryDate,
-          mealType: slot.meal.mealType,
-          assignedMealType,
-          dayStatus,
           now,
+          todayStr,
         })
-
-        let card_state: CardState
-        if (flags.is_skipped) card_state = 'skipped'
-        else if (isPast) card_state = 'past'
-        else if (isToday) card_state = 'today'
-        else card_state = 'upcoming'
-
-        return {
-          meal_id: slot.meal.id,
-          name_en: slot.meal.nameEn,
-          meal_type: slot.meal.mealType,
-          kcal: slot.meal.kcal,
-          emoji: slot.meal.emoji,
-          photo_url: slot.meal.photoUrl ?? null,
-          delivery_date: slot.deliveryDate,
-          day_label: buildDayLabel(slot.deliveryDate, isToday),
-          card_state,
-          is_today: isToday,
-          skip_available: flags.skip_available,
-          undoable: flags.undoable,
-          is_skipped: flags.is_skipped,
-          skip_reason: flags.skip_reason,
-          is_deliverable: isDeliverableMenuDay({
-            subscription: sub,
-            mealType: slot.meal.mealType,
-            assignedMealType,
-            dayStatus,
-          }),
-        }
-      }
-
-      const thisWeekSlots = allSlots
-        .filter(
-          s =>
-            s.deliveryDate >= thisWeek.dateFrom &&
-            s.deliveryDate <= thisWeek.dateTo
-        )
-        .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
-        .map(toCard)
-        .filter((c): c is MealCard => c !== null)
-
-      const nextWeekSlots = allSlots
-        .filter(
-          s =>
-            s.deliveryDate >= nextWeek.dateFrom &&
-            s.deliveryDate <= nextWeek.dateTo
-        )
-        .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
-        .map(toCard)
-        .filter((c): c is MealCard => c !== null)
 
       return {
         this_week: {
           label: `This week · ${formatWeekRangeLabel(thisWeek.dateFrom, thisWeek.dateTo)}`,
           date_from: thisWeek.dateFrom,
           date_to: thisWeek.dateTo,
-          days: thisWeekSlots,
+          days: uniqueSortedDates(
+            allSlots,
+            thisWeek.dateFrom,
+            thisWeek.dateTo
+          ).map(toDay),
         },
         next_week: {
           label: `Next week · ${formatWeekRangeLabel(nextWeek.dateFrom, nextWeek.dateTo)}`,
           date_from: nextWeek.dateFrom,
           date_to: nextWeek.dateTo,
-          days: nextWeekSlots,
+          days: uniqueSortedDates(
+            allSlots,
+            nextWeek.dateFrom,
+            nextWeek.dateTo
+          ).map(toDay),
         },
       }
     } catch (error) {

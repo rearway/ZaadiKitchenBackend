@@ -665,7 +665,8 @@
                 "meals",
                 "{{meal_id}}"
               ]
-            }
+            },
+            "description": "Draft: applies live immediately. Active/updated: saves pending_changes and sets status updated. Live menu unchanged until Activate with confirm_published_edit."
           },
           "response": []
         },
@@ -676,7 +677,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"status\": \"active\"\n}",
+              "raw": "{\n    \"status\": \"active\",\n    \"confirm_published_edit\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -694,7 +695,8 @@
                 "{{meal_id}}",
                 "status"
               ]
-            }
+            },
+            "description": "Draft meals become assignable only after active. If status is updated (pending edits), send confirm_published_edit: true after a confirm popup — live slots then get the pending fields, including days already past cutoff."
           },
           "response": []
         },
@@ -838,6 +840,73 @@
                 "weeks",
                 "{{week_id}}"
               ]
+            },
+            "description": "Days grouped with executive/salad slot arrays, defaults, and can_add flags. is_editable is true for draft and published weeks (past is locked). Min 1+1 max 3+3 per stream to publish."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Day Slot",
+          "request": {
+            "description": "Add an extra Executive or Salad slot (max 3 per stream) on draft or published weeks. 409 MEAL_ALREADY_ON_DAY if that dish is already on the date. Optional meal_id assigns immediately.",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_type\": \"executive\",\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/days/{{delivery_date}}/slots",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "menu",
+                "weeks",
+                "{{week_id}}",
+                "days",
+                "{{delivery_date}}",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Day Default",
+          "request": {
+            "description": "Mark which dish is the default for Executive or Salad on that date. Customer receives this unless they pick another dish.",
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_type\": \"executive\",\n    \"meal_id\": \"{{meal_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/menu/weeks/{{week_id}}/days/{{delivery_date}}/default",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "menu",
+                "weeks",
+                "{{week_id}}",
+                "days",
+                "{{delivery_date}}",
+                "default"
+              ]
             }
           },
           "response": []
@@ -845,7 +914,7 @@
         {
           "name": "Assign Meal to Slot",
           "request": {
-            "description": "Any ACTIVE meal (executive or salad) can go in any slot; the same meal may repeat across the week. Errors: 422 MEAL_IS_DRAFT, 409 DAY_MEAL_TYPE_ALREADY_ASSIGNED (another slot on that day already holds a dish of the same type: max 1 executive + 1 salad per day), 422 SLOT_NOT_EDITABLE (published/past week), 404 week/slot/meal. List meals for the modal with GET /admin/meals?status=active.",
+            "description": "Active or updated meals only (422 MEAL_IS_DRAFT). Allowed on draft and published weeks (not past). 409 MEAL_ALREADY_ON_DAY if that dish is already on the date. List assignable meals with GET /admin/meals?status=active (picker=true).",
             "method": "POST",
             "header": [],
             "body": {
@@ -878,6 +947,7 @@
         {
           "name": "Clear Slot",
           "request": {
+            "description": "Allowed on draft and published weeks. 409 CANNOT_CLEAR_LAST_STREAM_MEAL if this is the last Executive or Salad dish on a published day. Past weeks return 422 SLOT_NOT_EDITABLE.",
             "method": "DELETE",
             "header": [],
             "url": {
@@ -923,7 +993,8 @@
                 "{{week_id}}",
                 "publish"
               ]
-            }
+            },
+            "description": "Requires min 1 Executive + 1 Salad per day, max 3 of each, and a default on every filled stream. 422 WEEK_NOT_COMPLETE with reason if not ready."
           },
           "response": []
         }
@@ -1488,7 +1559,8 @@
                   "description": "YYYY-MM-DD, defaults to today if omitted"
                 }
               ]
-            }
+            },
+            "description": "meal_breakdown.rows is per dish (meal_id + label = dish name), not only Executive vs Salad. Counts use the effective dish (customer pick or default)."
           },
           "response": []
         },
@@ -1735,6 +1807,7 @@
         {
           "name": "Get Delivery Labels",
           "request": {
+            "description": "Each label includes meal_name (effective dish) and customer_phone. PDF download uses the same data.",
             "method": "GET",
             "header": [],
             "url": {
@@ -1777,7 +1850,8 @@
                   "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Each label includes meal_name of the effective dish (customer pick or default)."
           },
           "response": []
         },

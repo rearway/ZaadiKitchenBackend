@@ -3,6 +3,16 @@ import {
   getReviewOtpCode,
   isReviewPhone,
 } from '../services/otpReviewUtils.js'
+import {
+  OTP_EXPIRY_SECONDS,
+  normalizeOtpChannel,
+  isTwilioWhatsAppConfigured,
+  isOtpCodeInResponseEnabled,
+} from '../../../shared/otp/otpConstants.js'
+import {
+  authPhoneValidationMessage,
+  isAllowedAuthPhone,
+} from '../../../shared/phone/authPhone.js'
 
 export interface SendOtpInput {
   phone: string
@@ -30,19 +40,29 @@ export function makeUC(deps: Deps) {
     } = deps
 
     try {
-      const { phone, channel } = input
+      const { phone } = input
+      if (!isAllowedAuthPhone(phone)) {
+        const { ValidationError } =
+          await import('../../../shared/errors/index.js')
+        throw new ValidationError(authPhoneValidationMessage())
+      }
+
+      const channel = normalizeOtpChannel(input.channel)
       const reviewFixedCode = getReviewOtpCode(phone)
       const isReviewAccount = isReviewPhone(phone)
 
-      // // Validate phone format (Saudi: +966XXXXXXXXX)
-      // const phoneRegex = /^\+966[0-9]{9}$/
-      // if (!phoneRegex.test(phone)) {
-      //   const { ValidationError } =
-      //     await import('../../../shared/errors/index.js')
-      //   throw new ValidationError(
-      //     'Invalid phone number format. Expected +966XXXXXXXXX'
-      //   )
-      // }
+      if (
+        channel === 'whatsapp' &&
+        !skipOtp &&
+        !isReviewAccount &&
+        !isTwilioWhatsAppConfigured()
+      ) {
+        const { ValidationError } =
+          await import('../../../shared/errors/index.js')
+        throw new ValidationError(
+          'WhatsApp OTP is not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM.'
+        )
+      }
 
       // Check if phone is locked out
       const lockedSession = await otpSessionLoader.getLockedSession(phone)
@@ -70,7 +90,6 @@ export function makeUC(deps: Deps) {
       )
 
       if (!isReviewAccount && recentCount >= maxAttempts) {
-        // Lock the phone for 30 minutes
         const lockDurationMinutes = 30
         const lockedUntil = new Date(
           Date.now() + lockDurationMinutes * 60 * 1000
@@ -85,30 +104,28 @@ export function makeUC(deps: Deps) {
         )
       }
 
+      const expirySeconds = OTP_EXPIRY_SECONDS
+
       // Generate 4-digit OTP (fixed for Play Store review accounts when enabled)
       const code =
         reviewFixedCode ?? Math.floor(1000 + Math.random() * 9000).toString()
 
-      // OTP expires in 120 seconds
-      const expirySeconds = 120
       const expiresAt = new Date(Date.now() + expirySeconds * 1000)
 
-      // Store OTP session
       await otpSessionPersistor.createSession({
         phone,
+        channel,
         code,
         expiresAt,
       })
 
-      // Send OTP via WhatsApp/SMS — skip gracefully if not configured
       try {
-        await otpService.sendOtp(phone, code)
+        await otpService.sendOtp(phone, code, channel)
       } catch (sendError) {
         logger.error(
-          'OTP notification failed (WhatsApp/SMS not configured)',
+          'OTP notification failed',
           sendError instanceof Error ? sendError.message : String(sendError)
         )
-        // Do not rethrow — OTP is still valid in DB, dev can read it from response
       }
 
       return {
@@ -117,7 +134,9 @@ export function makeUC(deps: Deps) {
           phone,
           channel,
           expiresInSeconds: expirySeconds,
-          ...((skipOtp || isReviewAccount) && { otpCode: code }),
+          ...((skipOtp || isReviewAccount || isOtpCodeInResponseEnabled()) && {
+            otpCode: code,
+          }),
         },
       }
     } catch (error) {

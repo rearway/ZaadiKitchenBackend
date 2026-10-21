@@ -32,6 +32,7 @@ export const makeAdminUser = (overrides: Record<string, unknown> = {}) =>
 export const makeOtpSession = (overrides: Record<string, unknown> = {}) => ({
   id: 'otp-uuid-1',
   phone: '+966512345678',
+  channel: 'sms' as const,
   code: '1234',
   expiresAt: new Date(Date.now() + 120_000),
   isVerified: false,
@@ -161,6 +162,7 @@ export const makeDeliveryDay = (overrides: Record<string, unknown> = {}) => ({
   date: '2025-06-01',
   mealType: 'executive' as const,
   mealName: null as string | null,
+  selectedMealId: null as string | null,
   status: 'scheduled' as const,
   deliveredAt: null as Date | null,
   createdAt: new Date(),
@@ -391,10 +393,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
       getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
-      getMealBreakdownByDate: jest.fn().mockResolvedValue([
-        { mealType: 'executive', count: 0 },
-        { mealType: 'salad', count: 0 },
-      ]),
+      getMealBreakdownByDate: jest.fn().mockResolvedValue([]),
     } as unknown as Deps['deliveryDayLoader'],
 
     deliveryDayPersistor: {
@@ -403,6 +402,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       markDeliveryDelivered: jest.fn().mockResolvedValue(makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })),
       bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
       updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
+      updateSelectedMeal: jest.fn().mockResolvedValue(makeDeliveryDay()),
       deleteScheduledDeliveryDaysOutsideDates: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['deliveryDayPersistor'],
 
@@ -478,9 +478,13 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     menuWeekPersistor: {
       ensureWeekExists: jest.fn().mockResolvedValue({ week: null, slots: [] }),
+      createSlot: jest.fn().mockResolvedValue(null),
       assignMealToSlot: jest.fn().mockResolvedValue(null),
+      setDayDefault: jest.fn().mockResolvedValue(null),
       clearSlot: jest.fn().mockResolvedValue(null),
+      deleteSlot: jest.fn().mockResolvedValue(undefined),
       publishWeek: jest.fn().mockResolvedValue(null),
+      unpublishWeek: jest.fn().mockResolvedValue(null),
       transitionPastWeeks: jest.fn().mockResolvedValue(undefined),
     } as unknown as Deps['menuWeekPersistor'],
 

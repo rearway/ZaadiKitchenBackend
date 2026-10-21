@@ -48,8 +48,18 @@ describe('GetDailyOps', () => {
       deliveryDayLoader: {
         ...buildDeps().deliveryDayLoader,
         getMealBreakdownByDate: jest.fn().mockResolvedValue([
-          { mealType: 'executive', count: 3 },
-          { mealType: 'salad', count: 2 },
+          {
+            mealType: 'executive',
+            mealId: 'meal-kabsa',
+            mealName: 'Lamb Kabsa',
+            count: 3,
+          },
+          {
+            mealType: 'salad',
+            mealId: 'meal-caesar',
+            mealName: 'Caesar',
+            count: 2,
+          },
         ]),
       },
     })
@@ -63,8 +73,20 @@ describe('GetDailyOps', () => {
     expect(result.meal_breakdown).toEqual({
       total: 5,
       rows: [
-        { type: 'executive', label: 'Executive', count: 3, pct: 60 },
-        { type: 'salad', label: 'Salad', count: 2, pct: 40 },
+        {
+          type: 'executive',
+          meal_id: 'meal-kabsa',
+          label: 'Lamb Kabsa',
+          count: 3,
+          pct: 60,
+        },
+        {
+          type: 'salad',
+          meal_id: 'meal-caesar',
+          label: 'Caesar',
+          count: 2,
+          pct: 40,
+        },
       ],
     })
   })

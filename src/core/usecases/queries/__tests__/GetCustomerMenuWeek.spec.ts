@@ -35,6 +35,7 @@ function makeSlot(deliveryDate: string, meal: Meal = makeMeal()): MenuSlotWithMe
     deliveryDate,
     mealType: meal.mealType,
     mealId: meal.id,
+    isDefault: true,
     meal,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -146,7 +147,7 @@ describe('GetCustomerMenuWeek', () => {
     })
   })
 
-  it('sets is_deliverable only on the plan meal-type card with a scheduled row', async () => {
+  it('returns one card per day with both streams and marks only scheduled days deliverable', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ mealType: 'executive' }),
       slots: [
@@ -160,24 +161,24 @@ describe('GetCustomerMenuWeek', () => {
     const getCustomerMenuWeek = makeUC(deps)
 
     const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
-    const byDateType = (date: string, type: string) =>
-      result.this_week.days.find(
-        d => d.delivery_date === date && d.meal_type === type
-      )
+    const byDate = (date: string) =>
+      result.this_week.days.find(d => d.delivery_date === date)
 
-    expect(byDateType(TODAY, 'executive')).toMatchObject({
+    expect(byDate(TODAY)).toMatchObject({
+      meal_type: 'executive',
       is_deliverable: false,
       skip_reason: 'no_delivery',
     })
-    expect(byDateType(UPCOMING, 'executive')).toMatchObject({
+    expect(byDate(UPCOMING)).toMatchObject({
+      meal_type: 'executive',
       is_deliverable: true,
       skip_available: true,
     })
-    expect(byDateType(UPCOMING, 'salad')).toMatchObject({
-      is_deliverable: false,
-      skip_reason: 'meal_type_mismatch',
-    })
-    expect(byDateType('2026-09-15', 'executive')).toMatchObject({
+    expect(byDate(UPCOMING)?.executive_options).toHaveLength(1)
+    expect(byDate(UPCOMING)?.salad_options).toEqual([
+      expect.objectContaining({ meal_id: 'meal-salad' }),
+    ])
+    expect(byDate('2026-09-15')).toMatchObject({
       is_deliverable: false,
       skip_reason: 'no_delivery',
     })
@@ -205,7 +206,7 @@ describe('GetCustomerMenuWeek', () => {
     ).toMatchObject({ is_deliverable: false })
   })
 
-  it('shows undo only on the subscription meal type card when a day is skipped', async () => {
+  it('shows undo on the skipped day card while still listing both stream options', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ mealType: 'executive' }),
       slots: [
@@ -219,30 +220,26 @@ describe('GetCustomerMenuWeek', () => {
     const getCustomerMenuWeek = makeUC(deps)
 
     const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
-    const execCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
-    )
-    const saladCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    const cards = result.this_week.days.filter(
+      d => d.delivery_date === UPCOMING
     )
 
-    expect(execCard).toMatchObject({
+    expect(cards).toHaveLength(1)
+    expect(cards[0]).toMatchObject({
+      meal_type: 'executive',
       card_state: 'skipped',
       undoable: true,
       is_skipped: true,
       skip_reason: 'already_skipped',
       is_deliverable: false,
+      can_change: false,
     })
-    expect(saladCard).toMatchObject({
-      card_state: 'upcoming',
-      undoable: false,
-      is_skipped: false,
-      skip_reason: 'meal_type_mismatch',
-      is_deliverable: false,
-    })
+    expect(cards[0].salad_options).toEqual([
+      expect.objectContaining({ meal_id: 'meal-salad' }),
+    ])
   })
 
-  it('disables skip when menu card meal type does not match subscription', async () => {
+  it('uses the assigned stream for skip flags and effective meal', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ mealType: 'salad' }),
       slots: [
@@ -256,21 +253,19 @@ describe('GetCustomerMenuWeek', () => {
     const getCustomerMenuWeek = makeUC(deps)
 
     const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
-    const execCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
-    )
-    const saladCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    const card = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING
     )
 
-    expect(execCard).toMatchObject({
-      skip_available: false,
-      skip_reason: 'meal_type_mismatch',
-    })
-    expect(saladCard).toMatchObject({
+    expect(card).toMatchObject({
+      meal_type: 'salad',
+      meal_id: 'meal-salad',
       skip_available: true,
       skip_reason: null,
+      is_deliverable: true,
     })
+    expect(card?.executive_options).toHaveLength(1)
+    expect(card?.salad_options).toHaveLength(1)
   })
 
   it('marks the switched-day card deliverable after a per-day meal-type change', async () => {
@@ -291,23 +286,50 @@ describe('GetCustomerMenuWeek', () => {
     const getCustomerMenuWeek = makeUC(deps)
 
     const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
-    const execCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'executive'
-    )
-    const saladCard = result.this_week.days.find(
-      d => d.delivery_date === UPCOMING && d.meal_type === 'salad'
+    const card = result.this_week.days.find(
+      d => d.delivery_date === UPCOMING
     )
 
-    expect(execCard).toMatchObject({
+    expect(card).toMatchObject({
+      meal_type: 'executive',
       is_deliverable: true,
       skip_available: true,
       skip_reason: null,
     })
-    expect(saladCard).toMatchObject({
-      is_deliverable: false,
-      skip_available: false,
-      skip_reason: 'meal_type_mismatch',
+  })
+
+  it('uses the customer pick as the effective meal and enables can_change when there are options', async () => {
+    const execA = makeMeal({ id: 'exec-a', nameEn: 'Default Exec' })
+    const execB = makeMeal({ id: 'exec-b', nameEn: 'Picked Exec' })
+    const deps = makeDeps({
+      slots: [
+        { ...makeSlot(UPCOMING, execA), isDefault: true },
+        { ...makeSlot(UPCOMING, execB), id: 'slot-b', isDefault: false },
+      ],
+      days: [
+        makeDeliveryDay({
+          date: UPCOMING,
+          status: 'scheduled',
+          selectedMealId: execB.id,
+        }),
+      ],
     })
+    const getCustomerMenuWeek = makeUC(deps)
+
+    const result = await getCustomerMenuWeek({ userId: 'user-uuid-1' })
+    const card = result.this_week.days.find(d => d.delivery_date === UPCOMING)
+
+    expect(card).toMatchObject({
+      meal_id: 'exec-b',
+      name_en: 'Picked Exec',
+      selected_meal_id: 'exec-b',
+      can_change: true,
+      effective_meal: expect.objectContaining({ meal_id: 'exec-b' }),
+    })
+    expect(card?.executive_options).toEqual([
+      expect.objectContaining({ meal_id: 'exec-a', is_default: true, is_selected: false }),
+      expect.objectContaining({ meal_id: 'exec-b', is_default: false, is_selected: true }),
+    ])
   })
 
   it('does not treat skipped days as skipped when the subscription is paused', async () => {

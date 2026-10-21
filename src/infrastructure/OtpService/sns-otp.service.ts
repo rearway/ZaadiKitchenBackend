@@ -7,7 +7,11 @@ export class SnsOtpService implements OtpService {
   private readonly logger = new Logger('SnsOtpService')
   private readonly sns = new SNSClient({ region: 'ap-south-1' })
 
-  async sendOtp(phone: string, code: string): Promise<void> {
+  async sendOtp(
+    phone: string,
+    code: string,
+    _channel: 'sms' | 'whatsapp' = 'sms'
+  ): Promise<void> {
     const command = new PublishCommand({
       PhoneNumber: phone,
       Message: `Your Platio Kitchen verification code is: ${code}. Valid for 2 minutes.`,

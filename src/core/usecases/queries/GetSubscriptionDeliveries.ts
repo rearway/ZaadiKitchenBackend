@@ -2,6 +2,11 @@ import { Deps } from '../../entitygateway/index.js'
 import { resolveDayActionFlags } from '../services/dayActionFlags.js'
 import { getFlexDaysRemaining } from '../services/flexDays.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import {
+  canChangeMealChoice,
+  resolveDayEffectiveMeal,
+  slotsForDate,
+} from '../services/customerMenuDay.js'
 
 export interface GetSubscriptionDeliveriesInput {
   userId: string
@@ -12,10 +17,13 @@ export interface GetSubscriptionDeliveriesInput {
 export interface DeliveryItem {
   date: string
   label: string
+  meal_id: string | null
   meal_name: string | null
   photo_url: string | null
   meal_type: string
   status: string
+  selected_meal_id: string | null
+  can_change: boolean
   skip_available: boolean
   /** @deprecated Prefer skip_available */
   skippable: boolean
@@ -80,20 +88,13 @@ export function makeUC(deps: Deps) {
         }
       )
 
-      const photoByDateAndType = new Map<string, string | null>()
-      if (days.length > 0) {
-        const from = input.from ?? days[0].date
-        const to = input.to ?? days[days.length - 1].date
-        const slots = await menuWeekLoader.getMenuForDateRange(from, to)
-        for (const slot of slots) {
-          if (slot.meal) {
-            photoByDateAndType.set(
-              `${slot.deliveryDate}:${slot.mealType}`,
-              slot.meal.photoUrl ?? null
+      const slots =
+        days.length > 0
+          ? await menuWeekLoader.getMenuForDateRange(
+              input.from ?? days[0].date,
+              input.to ?? days[days.length - 1].date
             )
-          }
-        }
-      }
+          : []
 
       const today = new Date()
       const skipLimitReached = getFlexDaysRemaining(subscription) <= 0
@@ -107,15 +108,30 @@ export function makeUC(deps: Deps) {
           assignedMealType: day.mealType,
           dayStatus: day.status,
         })
+        const effective = resolveDayEffectiveMeal(
+          day.mealType,
+          day.selectedMealId,
+          slotsForDate(slots, day.date)
+        )
+        const optionCount = slotsForDate(slots, day.date).filter(
+          s => s.meal && s.mealId
+        ).length
 
         return {
           date: day.date,
           label: formatShortLabel(dayDate, today),
-          meal_name: day.mealName ?? null,
-          photo_url:
-            photoByDateAndType.get(`${day.date}:${day.mealType}`) ?? null,
+          meal_id: effective?.id ?? null,
+          meal_name: effective?.nameEn ?? day.mealName ?? null,
+          photo_url: effective?.photoUrl ?? null,
           meal_type: day.mealType,
           status: day.status,
+          selected_meal_id: day.selectedMealId ?? null,
+          can_change: canChangeMealChoice({
+            subscription,
+            dayStatus: day.status,
+            deliveryDate: day.date,
+            optionCount,
+          }),
           skip_available: flags.skip_available,
           skippable: flags.skip_available,
           skip_reason: flags.skip_reason,

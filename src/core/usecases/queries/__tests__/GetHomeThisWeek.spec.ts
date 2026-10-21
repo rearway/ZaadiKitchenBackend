@@ -34,6 +34,7 @@ function makeSlot(deliveryDate: string, meal: Meal = makeMeal()): MenuSlotWithMe
     deliveryDate,
     mealType: meal.mealType,
     mealId: meal.id,
+    isDefault: true,
     meal,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -149,6 +150,39 @@ describe('GetHomeThisWeek', () => {
 
     expect(result.cards[0].card_state).toBe('browse_only')
     expect(result.cards[0].action?.cta_label).toBe('Browse only')
+  })
+
+  it('returns one card per day using the selected dish when multiple options exist', async () => {
+    const execA = makeMeal({ id: 'exec-a', nameEn: 'Default Exec' })
+    const execB = makeMeal({ id: 'exec-b', nameEn: 'Picked Exec' })
+    const salad = makeMeal({ id: 'salad-a', mealType: 'salad', nameEn: 'Caesar' })
+    const deps = makeDeps({
+      slots: [
+        { ...makeSlot(UPCOMING, execA), isDefault: true },
+        { ...makeSlot(UPCOMING, execB), id: 'slot-b', isDefault: false },
+        { ...makeSlot(UPCOMING, salad), id: 'slot-s', isDefault: true },
+      ],
+      days: [
+        makeDeliveryDay({
+          date: UPCOMING,
+          status: 'scheduled',
+          selectedMealId: execB.id,
+        }),
+      ],
+    })
+    const getHomeThisWeek = makeUC(deps)
+
+    const result = await getHomeThisWeek({ userId: 'user-uuid-1' })
+
+    expect(result.cards).toHaveLength(1)
+    expect(result.cards[0]).toMatchObject({
+      meal_id: 'exec-b',
+      name_en: 'Picked Exec',
+      selected_meal_id: 'exec-b',
+      can_change: true,
+    })
+    expect(result.cards[0].executive_options).toHaveLength(2)
+    expect(result.cards[0].salad_options).toHaveLength(1)
   })
 
   it('does not load delivery days when there is no subscription', async () => {

@@ -1,16 +1,17 @@
 import { IsString, IsNotEmpty, Matches } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 
+import { IsAllowedAuthPhone } from '../validators/IsAllowedAuthPhone.js'
+
 export class SendOtpDTO {
-  // @ApiProperty({
-  //   description: 'Phone number in Saudi format (+966XXXXXXXXX)',
-  //   example: '+966500000000',
-  // })
+  @ApiProperty({
+    description:
+      'E.164 phone (+966 Saudi; +91 India when OTP_ALLOW_INDIAN_PHONES=true)',
+    example: '+966500000000',
+  })
   @IsString()
   @IsNotEmpty()
-  // @Matches(/^\+966[0-9]{9}$/, {
-  //   message: 'Phone must be in Saudi format: +966XXXXXXXXX',
-  // })
+  @IsAllowedAuthPhone()
   phone: string
 
   @ApiProperty({

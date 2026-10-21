@@ -25,11 +25,13 @@ export function makeUC(deps: Deps) {
 
       const sheetRows = rows.map(r => ({
         'Customer Name': r.customerName,
+        Phone: r.customerPhone ?? '',
         Building: r.buildingName ?? '',
         Floor: r.floor ?? '',
         'Desk/Area': r.deskArea ?? '',
         Gate: r.gate ?? '',
         'Meal Type': r.mealType === 'executive' ? 'Executive' : 'Salad',
+        'Meal Name': r.mealName ?? '',
         'Rider Notes': r.riderNotes ?? '',
       }))
 

@@ -37,6 +37,7 @@ function setup(meal: Meal | null, publishedSlots: Array<{ weekId: string; mealId
       mealId: s.mealId,
       deliveryDate: '2026-10-17',
       mealType: 'executive' as const,
+      isDefault: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     }))

@@ -9,6 +9,12 @@ import {
   resolveDayActionFlags,
 } from '../services/dayActionFlags.js'
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
+import {
+  canChangeMealChoice,
+  resolveDayEffectiveMeal,
+  slotsForDate,
+  streamOptions,
+} from '../services/customerMenuDay.js'
 
 export interface GetMealDetailInput {
   mealId: string
@@ -37,6 +43,11 @@ export interface GetMealDetailOutput {
   is_skipped: boolean
   skip_reason: string | null
   is_deliverable: boolean
+  is_default: boolean
+  is_selected: boolean
+  is_effective: boolean
+  can_select: boolean
+  selected_meal_id: string | null
 }
 
 export function makeUC(deps: Deps) {
@@ -70,7 +81,8 @@ export function makeUC(deps: Deps) {
           ) ?? slots.find(s => s.mealId === input.mealId)
         : slots.find(s => s.mealId === input.mealId)
 
-      const deliveryDate = matchingSlot?.deliveryDate ?? input.deliveryDate ?? null
+      const deliveryDate =
+        matchingSlot?.deliveryDate ?? input.deliveryDate ?? null
 
       let sub = await subscriptionLoader.getActiveSubscriptionByUserId(
         input.userId
@@ -81,6 +93,7 @@ export function makeUC(deps: Deps) {
 
       let dayStatus: string | null = null
       let assignedMealType: string | null | undefined = sub?.mealType
+      let selectedMealId: string | null = null
       if (sub && deliveryDate) {
         const day = await deliveryDayLoader.getDeliveryDayByDate(
           sub.id,
@@ -88,13 +101,14 @@ export function makeUC(deps: Deps) {
         )
         dayStatus = day?.status ?? null
         assignedMealType = day?.mealType ?? sub.mealType
+        selectedMealId = day?.selectedMealId ?? null
       }
 
       const flags = deliveryDate
         ? resolveDayActionFlags({
             subscription: sub,
             deliveryDate,
-            mealType: meal.mealType,
+            mealType: assignedMealType,
             assignedMealType,
             dayStatus,
             now,
@@ -105,6 +119,34 @@ export function makeUC(deps: Deps) {
             is_skipped: false,
             skip_reason: 'not_subscribed' as const,
           }
+
+      const daySlots = deliveryDate ? slotsForDate(slots, deliveryDate) : []
+      const executiveOptions = streamOptions(
+        daySlots,
+        'executive',
+        selectedMealId
+      )
+      const saladOptions = streamOptions(daySlots, 'salad', selectedMealId)
+      const dayOptions = [...executiveOptions, ...saladOptions]
+      const effective =
+        deliveryDate && assignedMealType
+          ? resolveDayEffectiveMeal(
+              assignedMealType as 'executive' | 'salad',
+              selectedMealId,
+              daySlots
+            )
+          : null
+      const onMenuThatDay = dayOptions.some(o => o.meal_id === meal.id)
+      const canSelect =
+        deliveryDate != null &&
+        onMenuThatDay &&
+        canChangeMealChoice({
+          subscription: sub,
+          dayStatus,
+          deliveryDate,
+          optionCount: dayOptions.length,
+          now,
+        })
 
       return {
         meal_id: meal.id,
@@ -128,10 +170,15 @@ export function makeUC(deps: Deps) {
         skip_reason: flags.skip_reason,
         is_deliverable: isDeliverableMenuDay({
           subscription: sub,
-          mealType: meal.mealType,
+          mealType: assignedMealType,
           assignedMealType,
           dayStatus,
         }),
+        is_default: matchingSlot?.isDefault ?? false,
+        is_selected: selectedMealId === meal.id,
+        is_effective: effective?.id === meal.id,
+        can_select: canSelect,
+        selected_meal_id: selectedMealId,
       }
     } catch (error) {
       logger.error(

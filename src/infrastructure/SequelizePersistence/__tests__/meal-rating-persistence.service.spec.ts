@@ -15,8 +15,11 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
   it('uses delivery-date and text-cast meal_type joins to avoid enum mismatch', async () => {
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.delivery_date = dd.date')
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.meal_type::text = dd.meal_type::text')
+    expect(PENDING_RATING_DAYS_SQL).toContain('dd.selected_meal_id')
+    expect(PENDING_RATING_DAYS_SQL).toContain('ms.is_default')
+    expect(PENDING_RATING_DAYS_SQL).toContain('INNER JOIN LATERAL')
     expect(PENDING_RATING_DAYS_SQL).not.toContain('ms.meal_type = dd.meal_type')
-    expect(PENDING_RATING_DAYS_SQL).toContain('m.photo_url')
+    expect(PENDING_RATING_DAYS_SQL).toContain('em.photo_url')
   })
 
   it('maps delivered unrated days from the query result', async () => {

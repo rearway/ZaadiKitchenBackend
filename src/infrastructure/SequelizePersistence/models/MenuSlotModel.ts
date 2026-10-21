@@ -4,6 +4,7 @@ import {
   Model,
   DataType,
   PrimaryKey,
+  Default,
   AllowNull,
   CreatedAt,
   UpdatedAt,
@@ -39,6 +40,11 @@ export class MenuSlotModel extends Model {
   @AllowNull(true)
   @Column(DataType.UUID)
   declare mealId: string | null
+
+  @AllowNull(false)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare isDefault: boolean
 
   @BelongsTo(() => MealModel, { foreignKey: 'mealId', as: 'Meal' })
   declare Meal?: MealModel

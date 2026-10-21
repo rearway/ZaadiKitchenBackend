@@ -192,9 +192,32 @@ export class DayMealTypeAlreadyAssignedError extends BaseError {
   }
 }
 
+export class DayMealTypeLimitError extends BaseError {
+  constructor(mealType: string, deliveryDate: string, limit: number) {
+    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    super(
+      'DAY_MEAL_TYPE_LIMIT',
+      409,
+      `${label} already has ${limit} dishes on ${deliveryDate}.`,
+      { meal_type: mealType, delivery_date: deliveryDate, limit }
+    )
+  }
+}
+
+export class CannotClearDefaultError extends BaseError {
+  constructor(deliveryDate: string, mealType: string) {
+    super(
+      'CANNOT_CLEAR_DEFAULT',
+      409,
+      `Set another ${mealType} default for ${deliveryDate} before clearing this dish.`,
+      { delivery_date: deliveryDate, meal_type: mealType }
+    )
+  }
+}
+
 export class WeekNotCompleteError extends BaseError {
-  constructor(unfilledSlots: unknown[]) {
-    super('WEEK_NOT_COMPLETE', 409, `Cannot publish. ${unfilledSlots.length} slot${unfilledSlots.length > 1 ? 's are' : ' is'} still unfilled.`, { unfilled_slots: unfilledSlots })
+  constructor(reason: string, details?: unknown) {
+    super('WEEK_NOT_COMPLETE', 409, reason, (details as object) ?? { reason })
   }
 }
 
@@ -206,7 +229,36 @@ export class WeekAlreadyPublishedError extends BaseError {
 
 export class SlotNotEditableError extends BaseError {
   constructor() {
-    super('SLOT_NOT_EDITABLE', 422, 'This slot belongs to a published week and cannot be modified.')
+    super(
+      'SLOT_NOT_EDITABLE',
+      422,
+      'This slot belongs to a past week and cannot be modified.'
+    )
+  }
+}
+
+export class MealAlreadyOnDayError extends BaseError {
+  constructor(deliveryDate: string, mealName?: string) {
+    super(
+      'MEAL_ALREADY_ON_DAY',
+      409,
+      mealName
+        ? `${mealName} is already on the menu for ${deliveryDate}.`
+        : `This dish is already on the menu for ${deliveryDate}.`,
+      { delivery_date: deliveryDate }
+    )
+  }
+}
+
+export class CannotClearLastStreamMealError extends BaseError {
+  constructor(deliveryDate: string, mealType: string) {
+    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    super(
+      'CANNOT_CLEAR_LAST_STREAM_MEAL',
+      409,
+      `Published weeks must keep at least one ${label} dish on ${deliveryDate}.`,
+      { delivery_date: deliveryDate, meal_type: mealType }
+    )
   }
 }
 

@@ -305,6 +305,7 @@ function generateDeliveryDays(
   date: string
   mealType: MealType
   mealName: null
+  selectedMealId: null
   status: 'scheduled'
   deliveredAt: null
 }> {
@@ -314,6 +315,7 @@ function generateDeliveryDays(
     date: string
     mealType: MealType
     mealName: null
+    selectedMealId: null
     status: 'scheduled'
     deliveredAt: null
   }> = []
@@ -329,6 +331,7 @@ function generateDeliveryDays(
         date: dateStr,
         mealType,
         mealName: null,
+        selectedMealId: null,
         status: 'scheduled',
         deliveredAt: null,
       })
