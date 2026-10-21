@@ -7,6 +7,7 @@ import {
   OTP_EXPIRY_SECONDS,
   normalizeOtpChannel,
   isTwilioWhatsAppConfigured,
+  isOtpCodeInResponseEnabled,
 } from '../../../shared/otp/otpConstants.js'
 import {
   authPhoneValidationMessage,
@@ -133,7 +134,9 @@ export function makeUC(deps: Deps) {
           phone,
           channel,
           expiresInSeconds: expirySeconds,
-          ...((skipOtp || isReviewAccount) && { otpCode: code }),
+          ...((skipOtp || isReviewAccount || isOtpCodeInResponseEnabled()) && {
+            otpCode: code,
+          }),
         },
       }
     } catch (error) {

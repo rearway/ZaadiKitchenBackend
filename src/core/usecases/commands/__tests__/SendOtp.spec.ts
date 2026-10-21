@@ -90,6 +90,32 @@ describe('SendOtp', () => {
     })
   })
 
+  describe('OTP_RETURN_CODE_IN_RESPONSE', () => {
+    const envBackup = { ...process.env }
+
+    afterEach(() => {
+      process.env = { ...envBackup }
+    })
+
+    it('returns the code and still sends via WhatsApp when enabled', async () => {
+      process.env.OTP_RETURN_CODE_IN_RESPONSE = 'true'
+      process.env.TWILIO_ACCOUNT_SID = 'AC123'
+      process.env.TWILIO_AUTH_TOKEN = 'token'
+      process.env.TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'
+      const deps = buildDeps({ skipOtp: false })
+      const sendOtp = makeUC(deps)
+
+      const result = await sendOtp({ phone: validPhone, channel: 'whatsapp' })
+
+      expect(result.data.otpCode).toMatch(/^\d{4}$/)
+      expect(deps.otpService.sendOtp).toHaveBeenCalledWith(
+        validPhone,
+        result.data.otpCode,
+        'whatsapp'
+      )
+    })
+  })
+
   it('still succeeds when the OTP notification service throws (graceful degradation)', async () => {
     const deps = buildDeps({
       otpService: { sendOtp: jest.fn().mockRejectedValue(new Error('WhatsApp service down')) },

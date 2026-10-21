@@ -21,6 +21,8 @@ TWILIO_WHATSAPP_CONTENT_SID=
 
 With `SKIP_OTP=true` (local dev), codes are logged and returned in the API response; Twilio and SNS are not called.
 
+For testing real delivery while still seeing the code, set `SKIP_OTP=false` and `OTP_RETURN_CODE_IN_RESPONSE=true`: the code is sent on WhatsApp/SMS **and** returned as `otpCode`. Never enable this in production.
+
 ## Sandbox testing
 
 1. In the Twilio Console open **Messaging → Try it out → Send a WhatsApp message**.
