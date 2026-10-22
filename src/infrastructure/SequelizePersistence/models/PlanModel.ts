@@ -31,6 +31,10 @@ export class PlanModel extends Model {
   @Column(DataType.DECIMAL(10, 2))
   declare priceSar: number
 
+  @AllowNull(true)
+  @Column(DataType.DECIMAL(10, 2))
+  declare maxPriceSar: number | null
+
   @AllowNull(false)
   @Column(DataType.INTEGER)
   declare mealCount: number

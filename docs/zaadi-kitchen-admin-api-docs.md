@@ -63,6 +63,7 @@
     - [40. Add Building](#40-add-building)
     - [41. Update Building](#41-update-building)
     - [42. Delete Building](#42-delete-building)
+    - [Plans Pricing Module](#plans-pricing-module)
 11. [Rider App Module](#rider-app-module)
     - [43. Get My Deliveries (Rider)](#43-get-my-deliveries-rider)
     - [44. Mark Delivery as Delivered](#44-mark-delivery-as-delivered)
@@ -1870,6 +1871,87 @@ DELETE /admin/areas/{area_id}/buildings/{building_id}
   }
 }
 ```
+
+---
+
+## Plans Pricing Module
+
+Each plan has two prices:
+
+- `price_sar` — the **actual price** charged at checkout (unchanged behaviour).
+- `max_price_sar` — optional **original price** the app shows struck through. `null` means no discount.
+
+Customer plan APIs (`GET /api/v1/plans`, `GET /api/v1/plans/active`, `GET /api/v1/home`) now also return `max_price_sar` and `discount_percent` (whole number). Both are `null` when `max_price_sar` is empty or not higher than `price_sar`, so the app can hide the discount badge.
+
+Example: `price_sar: 50`, `max_price_sar: 100` → app shows ~~100 SAR~~ **50 SAR**, `discount_percent: 50`.
+
+### List Plans (Admin)
+
+```
+GET /api/v1/admin/plans
+```
+
+**Requires authentication. Role: `admin`, `ops`.** Returns all plans, including inactive ones.
+
+#### Success Response `200`
+
+```json
+{
+  "plans": [
+    {
+      "id": "4b1c…",
+      "slug": "week",
+      "name": "Week Plan",
+      "price_sar": 50,
+      "max_price_sar": 100,
+      "discount_percent": 50,
+      "meal_count": 5,
+      "price_per_meal_sar": 10,
+      "is_most_popular": false,
+      "is_active": true,
+      "updated_at": "2026-10-22T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Update Plan Pricing (Admin)
+
+```
+PATCH /api/v1/admin/plans/{plan_id}
+```
+
+**Requires authentication. Role: `admin`.** `plan_id` is the plan slug (`try_it`, `week`, `month`, `quarterly`) or its UUID.
+
+#### Request Body
+
+Send either field or both. `max_price_sar: null` removes the discount.
+
+```json
+{
+  "price_sar": 50,
+  "max_price_sar": 100
+}
+```
+
+- `price_per_meal_sar` is recalculated as `price_sar / meal_count` (2 decimals).
+- A new `price_sar` applies to new checkouts only; existing orders and subscriptions are unchanged.
+
+#### Success Response `200`
+
+```json
+{
+  "message": "Plan pricing updated successfully",
+  "data": { "...": "same shape as one item of List Plans" }
+}
+```
+
+#### Errors
+
+| Status | Code | When |
+|---|---|---|
+| `400` | `VALIDATION_ERROR` | No fields sent, `price_sar` ≤ 0, or `max_price_sar` lower than `price_sar` |
+| `404` | `RESOURCE_NOT_FOUND` | Unknown plan slug/UUID |
 
 ---
 

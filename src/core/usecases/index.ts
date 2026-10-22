@@ -19,6 +19,7 @@ import * as UpdateDeliveryArea from './commands/UpdateDeliveryArea.js'
 import * as AddBuilding from './commands/AddBuilding.js'
 import * as UpdateBuilding from './commands/UpdateBuilding.js'
 import * as DeleteBuilding from './commands/DeleteBuilding.js'
+import * as UpdatePlanPricing from './commands/UpdatePlanPricing.js'
 import * as CreateCheckoutSession from './commands/CreateCheckoutSession.js'
 import * as ApplyPromoCode from './commands/ApplyPromoCode.js'
 import * as RemovePromoCode from './commands/RemovePromoCode.js'
@@ -77,6 +78,7 @@ import * as GetAdminBuildingsForArea from './queries/GetAdminBuildingsForArea.js
 import * as GetOutOfZoneRequests from './queries/GetOutOfZoneRequests.js'
 import * as GetPlans from './queries/GetPlans.js'
 import * as GetActivePlans from './queries/GetActivePlans.js'
+import * as GetAdminPlans from './queries/GetAdminPlans.js'
 import * as GetCheckoutSession from './queries/GetCheckoutSession.js'
 import * as GetDeliveryStartDates from './queries/GetDeliveryStartDates.js'
 import * as GetPaymentMethods from './queries/GetPaymentMethods.js'
@@ -225,6 +227,12 @@ export function initUseCases(deps: Deps) {
     deps,
     DeleteBuilding.makeUC(deps),
     DeleteBuilding.name,
+    ...defaultWrappers
+  )
+  const updatePlanPricing = wrapUC(
+    deps,
+    UpdatePlanPricing.makeUC(deps),
+    UpdatePlanPricing.name,
     ...defaultWrappers
   )
   const updateDeliveryArea = wrapUC(
@@ -577,6 +585,12 @@ export function initUseCases(deps: Deps) {
     GetPlans.name,
     ...defaultWrappers
   )
+  const getAdminPlans = wrapUC(
+    deps,
+    GetAdminPlans.makeUC(deps),
+    GetAdminPlans.name,
+    ...defaultWrappers
+  )
   const getActivePlans = wrapUC(
     deps,
     GetActivePlans.makeUC(deps),
@@ -856,6 +870,7 @@ export function initUseCases(deps: Deps) {
       getOutOfZoneRequests,
       getPlans,
       getActivePlans,
+      getAdminPlans,
       getCheckoutSession,
       getDeliveryStartDates,
       getPaymentMethods,
@@ -922,6 +937,7 @@ export function initUseCases(deps: Deps) {
       addBuilding,
       updateBuilding,
       deleteBuilding,
+      updatePlanPricing,
       createCheckoutSession,
       applyPromoCode,
       removePromoCode,

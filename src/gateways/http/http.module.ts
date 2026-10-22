@@ -6,6 +6,7 @@ import { UserController } from './user.controller.js'
 import { DeliveryController } from './delivery.controller.js'
 import { AdminDeliveryController } from './admin-delivery.controller.js'
 import { PlansController } from './plans.controller.js'
+import { AdminPlansController } from './admin-plans.controller.js'
 import { CheckoutController } from './checkout.controller.js'
 import { PaymentController } from './payment.controller.js'
 import { OrdersController } from './orders.controller.js'
@@ -37,6 +38,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     DeliveryController,
     AdminDeliveryController,
     PlansController,
+    AdminPlansController,
     CheckoutController,
     PaymentController,
     OrdersController,
