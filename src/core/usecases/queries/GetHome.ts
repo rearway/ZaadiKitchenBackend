@@ -12,6 +12,7 @@ import {
 } from '../services/subscriptionServicePeriod.js'
 import { buildPauseHomeLabels } from '../services/pauseFrozenDays.js'
 import { todayKSA } from '../services/revenueUtils.js'
+import { toPlanDiscountFields } from '../services/planPricing.js'
 
 export interface GetHomeInput {
   userId: string
@@ -36,6 +37,8 @@ export interface GetHomeOutput {
     id: string
     name: string
     price_sar: number
+    max_price_sar: number | null
+    discount_percent: number | null
     meal_count: number
     price_per_meal_sar: number
     is_most_popular: boolean
@@ -204,6 +207,7 @@ function buildPlans(
       id: p.slug,
       name: p.name,
       price_sar: p.priceSar,
+      ...toPlanDiscountFields(p),
       meal_count: p.mealCount,
       price_per_meal_sar: p.pricePerMealSar,
       is_most_popular: p.isMostPopular,

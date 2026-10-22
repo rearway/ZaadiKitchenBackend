@@ -38,6 +38,40 @@ describe('GetActivePlans', () => {
     expect(result.plans[1].is_most_popular).toBe(true)
   })
 
+  it('returns max price and discount percent for discounted plans', async () => {
+    const plans = [
+      makePlan({ slug: 'week', priceSar: 50, maxPriceSar: 100 }),
+      makePlan({ slug: 'month', priceSar: 500, maxPriceSar: null }),
+    ]
+    const deps = buildDeps({
+      planLoader: {
+        ...buildDeps().planLoader,
+        getActivePlans: jest.fn().mockResolvedValue(plans),
+      },
+      orderLoader: {
+        ...buildDeps().orderLoader,
+        getLastOrderByUserId: jest.fn().mockResolvedValue(null),
+      },
+      walletLoader: {
+        ...buildDeps().walletLoader,
+        getBalanceByUserId: jest.fn().mockResolvedValue(0),
+      },
+    })
+    const getActivePlans = makeUC(deps)
+
+    const result = await getActivePlans(validInput)
+
+    expect(result.plans[0]).toMatchObject({
+      price_sar: 50,
+      max_price_sar: 100,
+      discount_percent: 50,
+    })
+    expect(result.plans[1]).toMatchObject({
+      max_price_sar: null,
+      discount_percent: null,
+    })
+  })
+
   it('returns the wallet balance', async () => {
     const deps = buildDeps({
       planLoader: {

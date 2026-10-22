@@ -1,4 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
+import { toPlanDiscountFields } from '../services/planPricing.js'
 
 export interface GetPlansInput {
   userId: string
@@ -9,6 +10,8 @@ export interface GetPlansOutput {
     id: string
     name: string
     price_sar: number
+    max_price_sar: number | null
+    discount_percent: number | null
     meal_count: number
     price_per_meal_sar: number
     skip_days_allowed: number
@@ -29,6 +32,7 @@ export function makeUC(deps: Deps) {
           id: p.slug,
           name: p.name,
           price_sar: p.priceSar,
+          ...toPlanDiscountFields(p),
           meal_count: p.mealCount,
           price_per_meal_sar: p.pricePerMealSar,
           skip_days_allowed: p.skipDaysAllowed,

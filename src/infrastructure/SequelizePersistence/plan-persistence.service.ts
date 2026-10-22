@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { PlanLoader, PlanPersistor } from '../../core/entitygateway/Plan.js'
+import {
+  PlanLoader,
+  PlanPersistor,
+  UpdatePlanPricingRequest,
+} from '../../core/entitygateway/Plan.js'
 import { Plan } from '../../core/entities/Plan.js'
 import { PlanModel } from './models/index.js'
 
@@ -35,12 +39,29 @@ export class PlanPersistenceService implements PlanLoader, PlanPersistor {
     return this.toEntity(model)
   }
 
+  async updatePlanPricing(
+    id: string,
+    request: UpdatePlanPricingRequest
+  ): Promise<Plan> {
+    const model = await PlanModel.findByPk(id)
+    if (!model) {
+      throw new Error(`Plan not found: ${id}`)
+    }
+    await model.update({
+      priceSar: request.priceSar,
+      maxPriceSar: request.maxPriceSar,
+      pricePerMealSar: request.pricePerMealSar,
+    })
+    return this.toEntity(model)
+  }
+
   private toEntity(model: PlanModel): Plan {
     return {
       id: model.id,
       name: model.name,
       slug: model.slug,
       priceSar: Number(model.priceSar),
+      maxPriceSar: model.maxPriceSar == null ? null : Number(model.maxPriceSar),
       mealCount: model.mealCount,
       pricePerMealSar: Number(model.pricePerMealSar),
       skipDaysAllowed: model.skipDaysAllowed,

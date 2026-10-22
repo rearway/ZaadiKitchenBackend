@@ -61,6 +61,7 @@ export const makePlan = (overrides: Record<string, unknown> = {}) => ({
   name: 'Month Plan',
   slug: 'month',
   priceSar: 500,
+  maxPriceSar: null as number | null,
   mealCount: 22,
   pricePerMealSar: 22.7,
   skipDaysAllowed: 66,
@@ -330,6 +331,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     planPersistor: {
       createPlan: jest.fn().mockResolvedValue(null),
+      updatePlanPricing: jest.fn().mockResolvedValue(makePlan()),
     } as unknown as Deps['planPersistor'],
 
     checkoutSessionLoader: {
