@@ -208,9 +208,58 @@ describe('CreateOrder', () => {
         referrerUserId: 'referrer-uuid-1',
         referredUserId: validInput.userId,
         referralCode: 'TESTREF10',
+        rewardCreditedSar: 50,
         isRewarded: true,
       })
     )
+  })
+
+  it('does not credit the referrer when the buyer is not on their first plan', async () => {
+    const referralPromo = makePromoCode({
+      type: 'referral',
+      ownerUserId: 'referrer-uuid-1',
+    })
+    const session = makeCheckoutSession({ promoCode: 'TESTREF10' })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      promoCodeLoader: {
+        getPromoByCode: jest.fn().mockResolvedValue(referralPromo),
+      },
+      orderLoader: {
+        ...buildDeps().orderLoader,
+        getLastOrderByUserId: jest.fn().mockResolvedValue(makeOrder()),
+      },
+    })
+    const createOrder = makeUC(deps)
+
+    await createOrder(validInput)
+
+    expect(deps.walletPersistor.createTransaction).not.toHaveBeenCalled()
+    expect(deps.referralPersistor.createReferral).not.toHaveBeenCalled()
+  })
+
+  it('does not credit a wallet when the buyer uses their own referral code', async () => {
+    const referralPromo = makePromoCode({
+      type: 'referral',
+      ownerUserId: validInput.userId,
+    })
+    const session = makeCheckoutSession({ promoCode: 'TESTREF10' })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      promoCodeLoader: {
+        getPromoByCode: jest.fn().mockResolvedValue(referralPromo),
+      },
+    })
+    const createOrder = makeUC(deps)
+
+    await createOrder(validInput)
+
+    expect(deps.walletPersistor.createTransaction).not.toHaveBeenCalled()
+    expect(deps.referralPersistor.createReferral).not.toHaveBeenCalled()
   })
 
   it('sets is_new_user=false when the user has a previous order', async () => {

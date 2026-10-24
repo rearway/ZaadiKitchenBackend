@@ -3,6 +3,10 @@ import type { CheckoutSession, MealType } from '../../entities/CheckoutSession.j
 import type { Plan } from '../../entities/Plan.js'
 import type { Order } from '../../entities/Order.js'
 import { findHardcodedMethod } from '../../constants/hardcoded-payment-methods.js'
+import {
+  REFERRAL_REWARD_RATE_PCT,
+  referralRewardSar,
+} from '../../constants/referral.js'
 import { promoteSubscriptionInPlace } from './PromoteSubscription.js'
 
 export interface CreateOrderInput {
@@ -242,13 +246,15 @@ async function applyReferralRewardIfEligible(
     session: CheckoutSession
     plan: Plan
     orderId: string
+    isNewUser: boolean
   }
 ): Promise<void> {
-  if (!input.session.promoCode) return
+  if (!input.session.promoCode || !input.isNewUser) return
   const promo = await deps.promoCodeLoader.getPromoByCode(input.session.promoCode)
   if (promo?.type !== 'referral' || !promo.ownerUserId) return
+  if (promo.ownerUserId === input.userId) return
 
-  const rewardSar = Math.round(input.plan.priceSar * 0.1)
+  const rewardSar = referralRewardSar(input.plan.priceSar)
 
   await deps.promoCodePersistor.incrementTimesUsed(promo.id)
 
@@ -257,7 +263,7 @@ async function applyReferralRewardIfEligible(
     type: 'credit',
     amountSar: rewardSar,
     label: 'Referral reward',
-    description: `10% of SAR ${input.plan.priceSar}`,
+    description: `${REFERRAL_REWARD_RATE_PCT}% of SAR ${input.plan.priceSar}`,
     referenceId: input.orderId,
   })
 
@@ -624,6 +630,7 @@ export function makeUC(deps: Deps) {
         session,
         plan,
         orderId: order.id,
+        isNewUser,
       })
 
       return toCreateOrderOutput(

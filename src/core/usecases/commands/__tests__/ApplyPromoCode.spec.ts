@@ -33,14 +33,14 @@ describe('ApplyPromoCode', () => {
       },
       checkoutSessionPersistor: {
         ...buildDeps().checkoutSessionPersistor,
-        updateSession: jest.fn().mockResolvedValue({
-          ...session,
-          promoCode: 'TESTREF10',
-          promoDiscountSar: promo.discountSar,
-          totalDueSar: Math.max(0, session.basePriceSar - session.walletCreditSar - (promo as any).discountSar),
-          promoAttemptCount: 0,
-          promoLocked: false,
-        }),
+        updateSession: jest
+          .fn()
+          .mockImplementation((_id: string, updates: Record<string, unknown>) => ({
+            ...session,
+            promoAttemptCount: session.promoAttemptCount,
+            promoLocked: session.promoLocked,
+            ...updates,
+          })),
       },
       orderLoader: {
         ...buildDeps().orderLoader,
@@ -56,9 +56,28 @@ describe('ApplyPromoCode', () => {
     const result = await applyPromoCode(validInput)
 
     expect(result.promo_code).toBe('TESTREF10')
-    expect(result.promo_discount_sar).toBe(100)
-    expect(result.total_due_sar).toBe(400) // 500 - 100
+    expect(result.promo_discount_sar).toBe(75) // 15% of 500
+    expect(result.total_due_sar).toBe(425) // 500 - 75
     expect(result.promo_locked).toBe(false)
+    expect(deps.checkoutSessionPersistor.updateSession).toHaveBeenCalledWith(
+      'sess-uuid-1',
+      expect.objectContaining({
+        promoCode: 'TESTREF10',
+        promoDiscountSar: 75,
+        totalDueSar: 425,
+      })
+    )
+  })
+
+  it('rejects a user applying their own referral code', async () => {
+    const deps = makeActiveDeps({}, { ownerUserId: validInput.userId })
+    const applyPromoCode = makeUC(deps)
+
+    await expect(applyPromoCode(validInput)).rejects.toMatchObject({
+      errorCode: 'INVALID_CODE',
+      statusCode: 422,
+    })
+    expect(deps.checkoutSessionPersistor.updateSession).not.toHaveBeenCalled()
   })
 
   it('applies a general promo code (non-referral) without checking new-user status', async () => {
