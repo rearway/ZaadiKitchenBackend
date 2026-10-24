@@ -51,6 +51,9 @@ import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
+import * as CreateDriver from './commands/CreateDriver.js'
+import * as UpdateDriver from './commands/UpdateDriver.js'
+import * as DeleteDriver from './commands/DeleteDriver.js'
 import * as DeleteAccount from './commands/DeleteAccount.js'
 import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
 import * as MarkDeliveryDelivered from './commands/MarkDeliveryDelivered.js'
@@ -109,6 +112,8 @@ import * as GetMealPhotoUploadUrl from './queries/GetMealPhotoUploadUrl.js'
 import * as GetAdminCustomers from './queries/GetAdminCustomers.js'
 import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
 import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
+import * as GetAdminDrivers from './queries/GetAdminDrivers.js'
+import * as GetAdminDriver from './queries/GetAdminDriver.js'
 import * as GetMyDeliveries from './queries/GetMyDeliveries.js'
 import * as GetDailyOps from './queries/GetDailyOps.js'
 import * as GetDeliveryLabels from './queries/GetDeliveryLabels.js'
@@ -439,6 +444,24 @@ export function initUseCases(deps: Deps) {
     deps,
     DeactivateCustomer.makeUC(deps),
     DeactivateCustomer.name,
+    ...defaultWrappers
+  )
+  const createDriver = wrapUC(
+    deps,
+    CreateDriver.makeUC(deps),
+    CreateDriver.name,
+    ...defaultWrappers
+  )
+  const updateDriver = wrapUC(
+    deps,
+    UpdateDriver.makeUC(deps),
+    UpdateDriver.name,
+    ...defaultWrappers
+  )
+  const deleteDriver = wrapUC(
+    deps,
+    DeleteDriver.makeUC(deps),
+    DeleteDriver.name,
     ...defaultWrappers
   )
   const deleteAccount = wrapUC(
@@ -781,6 +804,18 @@ export function initUseCases(deps: Deps) {
     GetAdminCustomerHistory.name,
     ...defaultWrappers
   )
+  const getAdminDrivers = wrapUC(
+    deps,
+    GetAdminDrivers.makeUC(deps),
+    GetAdminDrivers.name,
+    ...defaultWrappers
+  )
+  const getAdminDriver = wrapUC(
+    deps,
+    GetAdminDriver.makeUC(deps),
+    GetAdminDriver.name,
+    ...defaultWrappers
+  )
   const getMyDeliveries = wrapUC(
     deps,
     GetMyDeliveries.makeUC(deps),
@@ -917,6 +952,8 @@ export function initUseCases(deps: Deps) {
       getAdminCustomers,
       getAdminCustomer,
       getAdminCustomerHistory,
+      getAdminDrivers,
+      getAdminDriver,
       getMyDeliveries,
       getDailyOps,
       getDeliveryLabels,
@@ -984,6 +1021,9 @@ export function initUseCases(deps: Deps) {
       submitDeliveryIssue,
       submitMealRating,
       deactivateCustomer,
+      createDriver,
+      updateDriver,
+      deleteDriver,
       deleteAccount,
       adminCreditWallet,
       markDeliveryDelivered,

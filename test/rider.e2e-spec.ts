@@ -146,7 +146,7 @@ describe('GET /api/v1/rider/deliveries', () => {
     expect(mockUseCases.queries.getMyDeliveries).not.toHaveBeenCalled()
   })
 
-  it('two different DRIVER tokens querying the same date/area get identical delivery data — there is no per-rider filtering', async () => {
+  it('forwards each DRIVER subject as riderId; area filtering is enforced in the use case', async () => {
     const payload = {
       date: '2026-08-02',
       rider_name: '',

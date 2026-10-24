@@ -6,6 +6,7 @@ import { UserModel } from './models/UserModel.js'
 import { OtpSessionModel } from './models/OtpSessionModel.js'
 import { RefreshTokenModel } from './models/RefreshTokenModel.js'
 import { DeliveryAreaModel } from './models/DeliveryAreaModel.js'
+import { DriverAreaAssignmentModel } from './models/DriverAreaAssignmentModel.js'
 import { BuildingModel } from './models/BuildingModel.js'
 import { OutOfZoneInterestModel } from './models/OutOfZoneInterestModel.js'
 import { DeliveryLocationModel } from './models/DeliveryLocationModel.js'
@@ -62,6 +63,7 @@ import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
             OtpSessionModel,
             RefreshTokenModel,
             DeliveryAreaModel,
+            DriverAreaAssignmentModel,
             BuildingModel,
             OutOfZoneInterestModel,
             DeliveryLocationModel,
@@ -112,6 +114,7 @@ import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
       OtpSessionModel,
       RefreshTokenModel,
       DeliveryAreaModel,
+      DriverAreaAssignmentModel,
       BuildingModel,
       OutOfZoneInterestModel,
       DeliveryLocationModel,

@@ -208,8 +208,23 @@ export class SubscriptionPersistenceService
 
   async getRiderDeliveriesByDate(
     date: string,
-    areaId?: string
+    areaId?: string,
+    areaIds?: string[]
   ): Promise<RiderDeliveryRow[]> {
+    if (areaIds && areaIds.length === 0) {
+      return []
+    }
+
+    const filterByAreas = Boolean(areaIds && areaIds.length > 0)
+    const areaClause = filterByAreas
+      ? 'AND da.id IN (:areaIds)'
+      : areaId
+        ? 'AND da.id = :areaId'
+        : ''
+    const replacements: Record<string, unknown> = { date }
+    if (filterByAreas) replacements.areaIds = areaIds
+    else if (areaId) replacements.areaId = areaId
+
     const sequelize = DeliveryDayModel.sequelize!
 
     const rows = await sequelize.query<{
@@ -260,14 +275,14 @@ export class SubscriptionPersistenceService
          WHERE dd.date = :date
            AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
            AND s.status IN ('active', 'paused', 'cancelled')
-           ${areaId ? 'AND da.id = :areaId' : ''}
+           ${areaClause}
          ORDER BY dd.user_id,
                   CASE dd.status WHEN 'delivered' THEN 0 WHEN 'past_cutoff' THEN 1 ELSE 2 END,
                   s.created_at ASC
        ) one_per_user
        ORDER BY area_name ASC NULLS LAST, building_name ASC NULLS LAST, customer_name ASC`,
       {
-        replacements: areaId ? { date, areaId } : { date },
+        replacements,
         type: QueryTypes.SELECT,
       }
     )
