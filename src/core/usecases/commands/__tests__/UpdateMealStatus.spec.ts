@@ -162,6 +162,63 @@ describe('UpdateMealStatus', () => {
     expect(deps.mealPersistor.updateMealStatus).not.toHaveBeenCalled()
   })
 
+  it('applies a pending executive-to-salad type when activating with confirmation', async () => {
+    const meal = makeMeal({
+      status: 'updated',
+      mealType: 'executive',
+      pendingChanges: {
+        nameEn: 'Grilled Chicken',
+        mealType: 'salad',
+        kcal: 560,
+      },
+    })
+    const { updateStatus, deps } = setup(meal, [{ weekId: 'w2026-42', mealId: meal.id }])
+
+    const result = await updateStatus({
+      mealId: meal.id,
+      status: 'active',
+      confirmPublishedEdit: true,
+    })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'active',
+        mealType: 'salad',
+        kcal: 560,
+        pendingChanges: null,
+      })
+    )
+    expect(result.pending_applied).toBe(true)
+    expect(result.status).toBe('active')
+  })
+
+  it('applies a pending salad-to-executive type when activating with confirmation', async () => {
+    const meal = makeMeal({
+      status: 'updated',
+      mealType: 'salad',
+      pendingChanges: {
+        mealType: 'executive',
+      },
+    })
+    const { updateStatus, deps } = setup(meal, [])
+
+    await updateStatus({
+      mealId: meal.id,
+      status: 'active',
+      confirmPublishedEdit: true,
+    })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'active',
+        mealType: 'executive',
+        pendingChanges: null,
+      })
+    )
+  })
+
   it('clears pending when drafting an updated meal with confirmation', async () => {
     const meal = makeMeal({
       status: 'updated',

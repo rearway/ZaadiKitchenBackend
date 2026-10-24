@@ -3,6 +3,7 @@ import type { Meal, MealPendingChanges } from '../../entities/Meal.js'
 export type MealFieldUpdates = {
   nameEn?: string
   nameAr?: string
+  mealType?: 'executive' | 'salad'
   kcal?: number
   proteinG?: number
   carbsG?: number
@@ -17,6 +18,7 @@ export function hasMealFieldUpdates(updates: MealFieldUpdates): boolean {
   return (
     updates.nameEn !== undefined ||
     updates.nameAr !== undefined ||
+    updates.mealType !== undefined ||
     updates.kcal !== undefined ||
     updates.proteinG !== undefined ||
     updates.carbsG !== undefined ||
@@ -35,6 +37,7 @@ export function snapshotMealFields(
   return {
     nameEn: pending?.nameEn ?? meal.nameEn,
     nameAr: pending?.nameAr ?? meal.nameAr,
+    mealType: pending?.mealType ?? meal.mealType,
     kcal: pending?.kcal ?? meal.kcal,
     proteinG: pending?.proteinG ?? meal.proteinG,
     carbsG: pending?.carbsG ?? meal.carbsG,
@@ -53,6 +56,7 @@ export function mergeMealUpdates(
   const next: MealPendingChanges = { ...base }
   if (updates.nameEn !== undefined) next.nameEn = updates.nameEn
   if (updates.nameAr !== undefined) next.nameAr = updates.nameAr
+  if (updates.mealType !== undefined) next.mealType = updates.mealType
   if (updates.kcal !== undefined) next.kcal = updates.kcal
   if (updates.proteinG !== undefined) next.proteinG = updates.proteinG
   if (updates.carbsG !== undefined) next.carbsG = updates.carbsG
@@ -71,6 +75,7 @@ export function pendingToLiveUpdates(
   const updates: MealFieldUpdates = {}
   if (pending.nameEn !== undefined) updates.nameEn = pending.nameEn
   if (pending.nameAr !== undefined) updates.nameAr = pending.nameAr
+  if (pending.mealType !== undefined) updates.mealType = pending.mealType
   if (pending.kcal !== undefined) updates.kcal = pending.kcal
   if (pending.proteinG !== undefined) updates.proteinG = pending.proteinG
   if (pending.carbsG !== undefined) updates.carbsG = pending.carbsG
