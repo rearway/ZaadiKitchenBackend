@@ -28,6 +28,7 @@ import {
   RevenuePersistenceS,
   CommsPersistenceS,
   RiderPersistenceS,
+  DriverAdminPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
   UserDevicePersistenceS,
@@ -60,6 +61,7 @@ import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePers
 import { RevenuePersistenceService } from '../infrastructure/SequelizePersistence/revenue-persistence.service.js'
 import { CommsPersistenceService } from '../infrastructure/SequelizePersistence/comms-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
+import { DriverAdminPersistenceService } from '../infrastructure/SequelizePersistence/driver-admin-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { NotificationGateway } from '../core/entitygateway/Notification.js'
 import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
@@ -95,6 +97,7 @@ export const coreAdapterService: FactoryProvider = {
     revenuePersistence: RevenuePersistenceService,
     commsPersistence: CommsPersistenceService,
     riderPersistence: RiderPersistenceService,
+    driverAdminPersistence: DriverAdminPersistenceService,
     dailyOpsPersistence: DailyOpsPersistenceService,
     notificationService: NotificationGateway,
     userDevicePersistence: UserDevicePersistenceService,
@@ -170,6 +173,8 @@ export const coreAdapterService: FactoryProvider = {
       commsLoader: commsPersistence,
       commsPersistor: commsPersistence,
       riderIssuePersistor: riderPersistence,
+      driverAdminLoader: driverAdminPersistence,
+      driverAdminPersistor: driverAdminPersistence,
       dailyOpsDayLoader: dailyOpsPersistence,
       dailyOpsDayPersistor: dailyOpsPersistence,
       notificationGateway: notificationService,
@@ -206,6 +211,7 @@ export const coreAdapterService: FactoryProvider = {
     RevenuePersistenceS,
     CommsPersistenceS,
     RiderPersistenceS,
+    DriverAdminPersistenceS,
     DailyOpsPersistenceS,
     NotificationS,
     UserDevicePersistenceS,
