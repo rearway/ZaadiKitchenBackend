@@ -1,5 +1,13 @@
 import type { Deps } from '../../entitygateway/index.js'
-import { getSaudiWorkWeekBounds, getNextSaudiWorkWeekBounds, formatWeekRangeLabel } from '../services/weekUtils.js'
+import type { MenuWeek } from '../../entities/MenuWeek.js'
+import {
+  formatWeekRangeLabel,
+  getAdminPlannableWeeks,
+  getAdminVisibleWeeks,
+  getKsaSaudiWorkWeekBounds,
+  getSaudiWorkWeekBounds,
+  isAdminWeekLocked,
+} from '../services/weekUtils.js'
 import {
   evaluateWeekPublishReadiness,
   isWeekEditable,
@@ -34,23 +42,39 @@ export interface GetMenuWeeksOutput {
 }
 
 export function makeUC(deps: Deps) {
-  return async function getMenuWeeks(input: GetMenuWeeksInput): Promise<GetMenuWeeksOutput> {
+  return async function getMenuWeeks(
+    input: GetMenuWeeksInput
+  ): Promise<GetMenuWeeksOutput> {
     const { logger, menuWeekLoader, menuWeekPersistor } = deps
 
     try {
       const now = new Date()
-      const currentWeekBounds = getSaudiWorkWeekBounds(now)
-      const nextWeekBounds = getNextSaudiWorkWeekBounds(now)
+      const serviceWeek = getKsaSaudiWorkWeekBounds(now)
+      const plannable = getAdminPlannableWeeks(now)
+      const visible = getAdminVisibleWeeks(now)
 
-      // Auto-ensure current and next weeks exist
-      await Promise.all([
-        menuWeekPersistor.ensureWeekExists(currentWeekBounds),
-        menuWeekPersistor.ensureWeekExists(nextWeekBounds),
-      ])
+      // Current week and the immediate next week always exist.
+      // The week two ahead is created only after Thursday 18:00 Asia/Riyadh.
+      await Promise.all(
+        plannable.map(bounds => menuWeekPersistor.ensureWeekExists(bounds))
+      )
 
-      const count = Math.min(8, Math.max(1, input.count ?? 2))
-      const fromWeek = input.fromWeek ?? currentWeekBounds.weekId
-      const weeks = await menuWeekLoader.getWeeks({ fromWeek, count })
+      const plannerHome =
+        !input.fromWeek || input.fromWeek === serviceWeek.weekId
+      let weeks: MenuWeek[]
+      if (plannerHome) {
+        const loaded = await Promise.all(
+          visible.map(bounds => menuWeekLoader.getWeekById(bounds.weekId))
+        )
+        weeks = loaded.filter((week): week is MenuWeek => week != null)
+      } else {
+        const count = Math.min(8, Math.max(1, input.count ?? 2))
+        const listed = await menuWeekLoader.getWeeks({
+          fromWeek: input.fromWeek,
+          count,
+        })
+        weeks = listed.filter(week => !isAdminWeekLocked(week.dateFrom, now))
+      }
 
       const mappedWeeks = await Promise.all(
         weeks.map(async week => {
@@ -59,7 +83,7 @@ export function makeUC(deps: Deps) {
           const totalDays = readiness.totalDays || 5
           const filledDays = readiness.filledDays
 
-          const isCurrentWeek = week.id === currentWeekBounds.weekId
+          const isCurrentWeek = week.id === serviceWeek.weekId
           const isEditable = isWeekEditable(week.status)
           const isPublished = week.status === 'published'
 
@@ -75,7 +99,9 @@ export function makeUC(deps: Deps) {
           return {
             week_id: week.id,
             week_number: week.weekNumber,
-            label: isCurrentWeek ? `Week ${week.weekNumber} — Current` : `Week ${week.weekNumber}`,
+            label: isCurrentWeek
+              ? `Week ${week.weekNumber} — Current`
+              : `Week ${week.weekNumber}`,
             date_range: formatWeekRangeLabel(week.dateFrom, week.dateTo),
             date_from: week.dateFrom,
             date_to: week.dateTo,
@@ -119,7 +145,10 @@ export function makeUC(deps: Deps) {
         },
       }
     } catch (error) {
-      logger.error('GetMenuWeeks failed', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'GetMenuWeeks failed',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }

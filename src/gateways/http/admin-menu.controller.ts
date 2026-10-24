@@ -48,7 +48,8 @@ export class AdminMenuController {
 
   @Get('weeks')
   @ApiOperation({
-    summary: 'List week planner weeks (auto-creates current + next)',
+    summary:
+      'List planner weeks. Creates the current week and the immediate next week. The week two ahead is created only after Thursday 18:00 Asia/Riyadh.',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-menu-weeks')
@@ -149,7 +150,7 @@ export class AdminMenuController {
   @ApiOperation({
     summary: 'Publish a week',
     description:
-      'Requires min 1 Executive and 1 Salad per day, max 3 of each, and a default for each stream.',
+      'Requires min 1 Executive and 1 Salad per day, max 3 of each, and a default for each stream. The week two ahead stays locked until Thursday 18:00 Asia/Riyadh (422 WEEK_NOT_YET_UNLOCKED).',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('publish-menu-week')

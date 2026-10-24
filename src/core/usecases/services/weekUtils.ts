@@ -149,3 +149,89 @@ export function compareDateStrings(a: string, b: string): number {
 export function isAfterSkipCutoff(deliveryDate: string, now: Date = new Date()): boolean {
   return now.getTime() >= getSkipCutoffTimestamp(deliveryDate).getTime()
 }
+
+/** Asia/Riyadh is UTC+3 year-round. 18:00 KSA = 15:00 UTC, same as the skip cutoff. */
+const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000
+
+function riyadhCivilDate(now: Date): { year: number; month: number; day: number; dayOfWeek: number } {
+  const shifted = new Date(now.getTime() + RIYADH_OFFSET_MS)
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+    dayOfWeek: shifted.getUTCDay(),
+  }
+}
+
+function utcNoonFromCivil(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month, day, 12, 0, 0, 0))
+}
+
+/**
+ * Saudi work week for an Asia/Riyadh civil date.
+ * Friday and Saturday roll forward to the upcoming Sunday, matching
+ * {@link getSaudiWorkWeekBounds}, but the weekday is taken from KSA not the server zone.
+ */
+export function getKsaSaudiWorkWeekBounds(now: Date): SaudiWeekBounds {
+  const { year, month, day } = riyadhCivilDate(now)
+  return getSaudiWorkWeekBounds(utcNoonFromCivil(year, month, day))
+}
+
+/**
+ * Sun–Thu week that owns the current KSA Thursday.
+ * Friday and Saturday stay on the work week that just ended, so the
+ * Thursday 18:00 unlock does not shift a day early.
+ */
+export function getAnchorSaudiWorkWeek(now: Date): SaudiWeekBounds {
+  const civil = riyadhCivilDate(now)
+  let day = civil.day
+  if (civil.dayOfWeek === 5) day -= 1
+  else if (civil.dayOfWeek === 6) day -= 2
+  return getSaudiWorkWeekBounds(utcNoonFromCivil(civil.year, civil.month, day))
+}
+
+function weekAfter(week: SaudiWeekBounds): SaudiWeekBounds {
+  return getNextSaudiWorkWeekBounds(new Date(week.dateFrom + 'T12:00:00Z'))
+}
+
+/** Thursday 18:00 Asia/Riyadh of the anchor work week (15:00 UTC). */
+export function getAdminAheadWeekUnlockAt(anchor: SaudiWeekBounds): Date {
+  return new Date(`${anchor.dateTo}T15:00:00.000Z`)
+}
+
+/** True from Thursday 18:00 Asia/Riyadh of the anchor week onward. */
+export function isAdminTwoWeeksAheadUnlocked(now: Date = new Date()): boolean {
+  const anchor = getAnchorSaudiWorkWeek(now)
+  return now.getTime() >= getAdminAheadWeekUnlockAt(anchor).getTime()
+}
+
+/**
+ * Weeks admin may create or publish.
+ * Before Thursday 18:00 KSA: the in-progress week and the immediate next week.
+ * At and after that cutoff: those two, plus the week two ahead.
+ */
+export function getAdminPlannableWeeks(now: Date = new Date()): SaudiWeekBounds[] {
+  const anchor = getAnchorSaudiWorkWeek(now)
+  const immediate = weekAfter(anchor)
+  const weeks = [anchor, immediate]
+  if (isAdminTwoWeeksAheadUnlocked(now)) {
+    weeks.push(weekAfter(immediate))
+  }
+  return weeks
+}
+
+/**
+ * Weeks the planner should show.
+ * On Friday and Saturday (KSA) the ended anchor week drops off, leaving the next two work weeks.
+ */
+export function getAdminVisibleWeeks(now: Date = new Date()): SaudiWeekBounds[] {
+  const service = getKsaSaudiWorkWeekBounds(now)
+  return getAdminPlannableWeeks(now).filter(week => week.dateFrom >= service.dateFrom)
+}
+
+/** A week strictly after the unlocked horizon cannot be added or published. */
+export function isAdminWeekLocked(dateFrom: string, now: Date = new Date()): boolean {
+  const horizon = getAdminPlannableWeeks(now).at(-1)
+  if (!horizon) return false
+  return dateFrom > horizon.dateFrom
+}
