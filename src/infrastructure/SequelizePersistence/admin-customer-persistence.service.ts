@@ -40,6 +40,17 @@ interface CountRow {
   count: string
 }
 
+function subscriptionDateKey(
+  subscriptionId: string,
+  date: string | Date
+): string {
+  const day =
+    date instanceof Date
+      ? date.toISOString().slice(0, 10)
+      : String(date).slice(0, 10)
+  return `${subscriptionId}|${day}`
+}
+
 @Injectable()
 export class AdminCustomerPersistenceService
   implements AdminCustomerLoader, AdminCustomerPersistor
@@ -300,19 +311,56 @@ export class AdminCustomerPersistenceService
       mealName: d.meal_name,
     }))
 
+    const planNameBySubscriptionId = new Map(
+      subscriptionModels.map(s => [s.id, planMap.get(s.planId) ?? null])
+    )
+
     const issueModels = await DeliveryIssueModel.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
     })
 
+    const mealRows = issueModels.length
+      ? await DeliveryDayModel.sequelize!.query<{
+          subscription_id: string
+          date: string
+          meal_name: string | null
+        }>(
+          `SELECT DISTINCT ON (dd.subscription_id, dd.date)
+                  dd.subscription_id,
+                  dd.date,
+                  COALESCE(em.name_en, dd.meal_name) AS meal_name
+           FROM delivery_days dd
+           ${effectiveMealLateralJoin()}
+           WHERE dd.user_id = :userId
+           ORDER BY dd.subscription_id, dd.date, dd.meal_type`,
+          { replacements: { userId }, type: QueryTypes.SELECT }
+        )
+      : []
+    const mealNameBySubscriptionDate = new Map(
+      mealRows.map(row => [
+        subscriptionDateKey(row.subscription_id, row.date),
+        row.meal_name,
+      ])
+    )
+
     const issues: CustomerHistoryIssue[] = issueModels.map(i => ({
       id: i.id,
+      subscriptionId: i.subscriptionId,
       deliveryDate: i.deliveryDate,
       issueType: i.issueType,
+      description: i.description ?? null,
       status: i.status,
       creditedAmountSar: i.creditedAmountSar !== null ? Number(i.creditedAmountSar) : null,
       rejectionReason: i.rejectionReason,
+      rejectionNotes: i.rejectionNotes ?? null,
       createdAt: i.createdAt,
+      resolvedAt: i.status === 'open' ? null : i.updatedAt,
+      planName: planNameBySubscriptionId.get(i.subscriptionId) ?? null,
+      mealName:
+        mealNameBySubscriptionDate.get(
+          subscriptionDateKey(i.subscriptionId, i.deliveryDate)
+        ) ?? null,
     }))
 
     return { subscriptions, deliveries, issues }
