@@ -93,6 +93,7 @@ export function toPendingApi(pending: MealPendingChanges | null | undefined) {
   return {
     name_en: pending.nameEn,
     name_ar: pending.nameAr,
+    meal_type: pending.mealType,
     kcal: pending.kcal,
     macros: {
       protein_g: pending.proteinG,

@@ -38,6 +38,35 @@ function setup(meal: Meal | null) {
 }
 
 describe('UpdateMeal', () => {
+  it('applies meal_type immediately on a draft meal', async () => {
+    const meal = makeMeal({ status: 'draft', mealType: 'salad' })
+    const { update, deps } = setup(meal)
+
+    await update({ mealId: meal.id, mealType: 'executive' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({ mealType: 'executive' })
+    )
+  })
+
+  it('stores meal_type in pending changes on an active meal', async () => {
+    const meal = makeMeal({ status: 'active', mealType: 'salad' })
+    const { update, deps } = setup(meal)
+
+    await update({ mealId: meal.id, mealType: 'executive' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'updated',
+        pendingChanges: expect.objectContaining({ mealType: 'executive' }),
+      })
+    )
+    const saved = jest.mocked(deps.mealPersistor.updateMeal).mock.calls[0][1]
+    expect(saved.mealType).toBeUndefined()
+  })
+
   it('applies field updates immediately on a draft meal', async () => {
     const meal = makeMeal({ status: 'draft' })
     const { update, deps } = setup(meal)

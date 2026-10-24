@@ -12,6 +12,14 @@ export class GetAdminCustomersQueryDTO {
   q?: string
 
   @ApiPropertyOptional({
+    description: 'Alias for q — search by name, phone, or email',
+    example: 'Ahmed',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string
+
+  @ApiPropertyOptional({
     description: 'Filter by subscription status',
     enum: ['active', 'paused', 'cancelled', 'expired', 'churned'],
     example: 'active',
