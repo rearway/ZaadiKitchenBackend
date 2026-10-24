@@ -96,6 +96,7 @@ import * as GetReferral from './queries/GetReferral.js'
 import * as GetPublicHolidays from './queries/GetPublicHolidays.js'
 import * as GetAdminMeals from './queries/GetAdminMeals.js'
 import * as GetAdminMeal from './queries/GetAdminMeal.js'
+import * as GetAdminMealRatings from './queries/GetAdminMealRatings.js'
 import * as GetMenuWeeks from './queries/GetMenuWeeks.js'
 import * as GetMenuWeek from './queries/GetMenuWeek.js'
 import * as GetHome from './queries/GetHome.js'
@@ -701,6 +702,12 @@ export function initUseCases(deps: Deps) {
     GetAdminMeal.name,
     ...defaultWrappers
   )
+  const getAdminMealRatings = wrapUC(
+    deps,
+    GetAdminMealRatings.makeUC(deps),
+    GetAdminMealRatings.name,
+    ...defaultWrappers
+  )
   const getMenuWeeks = wrapUC(
     deps,
     GetMenuWeeks.makeUC(deps),
@@ -888,6 +895,7 @@ export function initUseCases(deps: Deps) {
       getPublicHolidays,
       getAdminMeals,
       getAdminMeal,
+      getAdminMealRatings,
       getMenuWeeks,
       getMenuWeek,
       getHome,

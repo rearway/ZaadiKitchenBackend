@@ -32,6 +32,7 @@ import { JwtAuthGuard, RolesGuard, Roles } from '../../infrastructure/Auth/index
 import { HandleErrors } from '../../shared/decorators/index.js'
 import {
   GetAdminMealsQueryDTO,
+  GetAdminMealRatingsQueryDTO,
   CreateMealDTO,
   UpdateMealDTO,
   UpdateMealStatusDTO,
@@ -58,6 +59,25 @@ export class AdminMealsController {
       page: query.page,
       perPage: query.per_page,
       context: query.context,
+    })
+  }
+
+  @Get(':meal_id/ratings')
+  @ApiOperation({
+    summary: 'List ratings for a meal (admin)',
+    description:
+      'Meal-wide average_rating plus a paginated ratings list. Each row includes id, user_id, phone, full_name, stars, tags, delivery_date, and created_at. average_rating is null when the meal has no ratings. Unknown meal ids return 404.',
+  })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('get-admin-meal-ratings')
+  async getMealRatings(
+    @Param('meal_id') mealId: string,
+    @Query(ValidationPipe) query: GetAdminMealRatingsQueryDTO
+  ) {
+    return this.useCases.queries.getAdminMealRatings({
+      mealId,
+      page: query.page,
+      perPage: query.per_page,
     })
   }
 

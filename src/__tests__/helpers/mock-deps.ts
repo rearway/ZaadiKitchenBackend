@@ -523,6 +523,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getRatingByDeliveryDay: jest.fn().mockResolvedValue(null),
       getPendingRatingDays: jest.fn().mockResolvedValue([]),
       getRatingsByUser: jest.fn().mockResolvedValue({ ratings: [], total: 0 }),
+      getRatingsByMeal: jest.fn().mockResolvedValue({ ratings: [], total: 0, averageRating: null }),
     } as unknown as Deps['mealRatingLoader'],
 
     adminCustomerLoader: {
