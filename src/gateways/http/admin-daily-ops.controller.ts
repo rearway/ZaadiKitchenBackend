@@ -28,12 +28,14 @@ import { HandleErrors } from '../../shared/decorators/index.js'
 import {
   GetDailyOpsQueryDTO,
   AdvancePipelineStageDTO,
+  ForcePipelineLockDTO,
   CreditDeliveryIssueDTO,
   RejectDeliveryIssueDTO,
   GetDeliveryLabelsQueryDTO,
 } from './dto/index.js'
 import { UserRole } from '../../codecs/enums.js'
 import { resolveDeliveryDayFilter } from '../../core/usecases/services/deliveryDayFilterUtils.js'
+import { ForcePipelineLockEnabledGuard } from './force-pipeline-lock.guard.js'
 
 interface AuthenticatedStaff {
   id: string
@@ -80,6 +82,33 @@ export class AdminDailyOpsController {
       fromStage: dto.from_stage,
       toStage: dto.to_stage,
       advancedByUserId: user.id,
+    })
+  }
+
+  @Post('pipeline/force-lock')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(ForcePipelineLockEnabledGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Staging only: force a delivery date to the locked cutoff',
+    description:
+      'Requires ALLOW_FORCE_PIPELINE_LOCK=true and NODE_ENV other than production. ' +
+      'Otherwise 404 and no state change. Uses the same 18:00 KSA cutoff as Daily Ops locked ' +
+      'and the ERP daily-orders freeze. Admin only. The override lasts until this process restarts.',
+  })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 404,
+    description: 'Gate unset, off, or NODE_ENV=production',
+  })
+  @HandleErrors('force-pipeline-lock')
+  async forcePipelineLock(
+    @Body(ValidationPipe) dto: ForcePipelineLockDTO,
+    @CurrentUser() user: AuthenticatedStaff
+  ) {
+    return this.useCases.commands.forcePipelineLock({
+      date: dto.date,
+      forcedByUserId: user.id,
     })
   }
 
