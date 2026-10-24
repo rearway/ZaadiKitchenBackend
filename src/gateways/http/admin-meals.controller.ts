@@ -115,6 +115,7 @@ export class AdminMealsController {
       mealId,
       nameEn: dto.name_en,
       nameAr: dto.name_ar,
+      mealType: dto.meal_type,
       kcal: dto.kcal,
       proteinG: dto.macros?.protein_g,
       carbsG: dto.macros?.carbs_g,
