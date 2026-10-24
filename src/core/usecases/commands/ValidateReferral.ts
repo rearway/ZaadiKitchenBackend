@@ -1,4 +1,8 @@
 import { Deps } from '../../entitygateway/index.js'
+import {
+  REFERRAL_FRIEND_DISCOUNT_PCT,
+  referralFriendDiscountSar,
+} from '../../constants/referral.js'
 
 export interface ValidateReferralInput {
   userId: string
@@ -43,8 +47,19 @@ export function makeUC(deps: Deps) {
         }
       }
 
+      if (promo.type === 'referral' && promo.ownerUserId === userId) {
+        return {
+          valid: false,
+          error_code: 'INVALID_CODE',
+          message: "You can't use your own referral code.",
+        }
+      }
+
       // Check if this user has already used this code on a previous order
-      const alreadyUsed = await orderLoader.hasUserUsedPromoCode(userId, code)
+      const alreadyUsed = await orderLoader.hasUserUsedPromoCode(
+        userId,
+        promo.code
+      )
       if (alreadyUsed) {
         return {
           valid: false,
@@ -57,7 +72,11 @@ export function makeUC(deps: Deps) {
       const plan = planId ? await planLoader.getPlanBySlug(planId) : null
 
       // Check plan match for scoped codes
-      if (promo.validForPlanSlug && plan && promo.validForPlanSlug !== plan.slug) {
+      if (
+        promo.validForPlanSlug &&
+        plan &&
+        promo.validForPlanSlug !== plan.slug
+      ) {
         return {
           valid: false,
           error_code: 'PLAN_MISMATCH',
@@ -78,21 +97,22 @@ export function makeUC(deps: Deps) {
         }
       }
 
-      // For referral codes: discount is 20% of the plan price, computed dynamically.
-      // For promo codes: discount is the fixed SAR amount stored on the record.
+      // Referral codes discount the friend's first plan by a fixed percent.
+      // Promo codes use the fixed SAR amount stored on the record.
       const discountSar =
         promo.type === 'referral'
           ? plan
-            ? Math.round(plan.priceSar * 0.2)
+            ? referralFriendDiscountSar(plan.priceSar)
             : 0
           : promo.discountSar
 
       return {
         valid: true,
-        code,
+        code: promo.code,
         discount_type: promo.type,
         discount_sar: discountSar,
-        discount_pct: promo.type === 'referral' ? 20 : null,
+        discount_pct:
+          promo.type === 'referral' ? REFERRAL_FRIEND_DISCOUNT_PCT : null,
         description:
           promo.type === 'referral' ? 'Referral discount' : 'Promo discount',
       }

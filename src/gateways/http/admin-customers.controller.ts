@@ -45,7 +45,7 @@ export class AdminCustomersController {
   @HandleErrors('list-admin-customers')
   async listCustomers(@Query(ValidationPipe) query: GetAdminCustomersQueryDTO) {
     return this.useCases.queries.getAdminCustomers({
-      q: query.q,
+      q: query.q ?? query.search,
       status: query.status,
       filter: query.filter,
       plan: query.plan,

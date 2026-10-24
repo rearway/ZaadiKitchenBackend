@@ -227,6 +227,18 @@ export class WeekAlreadyPublishedError extends BaseError {
   }
 }
 
+export class WeekNotYetUnlockedError extends BaseError {
+  constructor(unlocksAt: Date) {
+    const when = unlocksAt.toISOString()
+    super(
+      'WEEK_NOT_YET_UNLOCKED',
+      422,
+      `This menu week is locked until Thursday 18:00 Asia/Riyadh (${when}).`,
+      { unlocks_at: when, timezone: 'Asia/Riyadh' }
+    )
+  }
+}
+
 export class SlotNotEditableError extends BaseError {
   constructor() {
     super(

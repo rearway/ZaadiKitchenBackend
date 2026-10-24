@@ -3,8 +3,14 @@ import {
   ResourceNotFoundError,
   WeekAlreadyPublishedError,
   WeekNotCompleteError,
+  WeekNotYetUnlockedError,
 } from '../../../shared/errors/domain.errors.js'
 import { evaluateWeekPublishReadiness } from '../services/menuWeekPublish.js'
+import {
+  getAdminAheadWeekUnlockAt,
+  getAnchorSaudiWorkWeek,
+  isAdminWeekLocked,
+} from '../services/weekUtils.js'
 
 export interface PublishMenuWeekInput {
   weekId: string
@@ -37,6 +43,13 @@ export function makeUC(deps: Deps) {
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 
       if (week.status === 'published') throw new WeekAlreadyPublishedError()
+
+      const now = new Date()
+      if (isAdminWeekLocked(week.dateFrom, now)) {
+        throw new WeekNotYetUnlockedError(
+          getAdminAheadWeekUnlockAt(getAnchorSaudiWorkWeek(now))
+        )
+      }
 
       const allSlots = await menuWeekLoader.getSlotsByWeekId(input.weekId)
       const mealIds = [

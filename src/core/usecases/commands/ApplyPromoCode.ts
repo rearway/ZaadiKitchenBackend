@@ -1,4 +1,5 @@
 import { Deps } from '../../entitygateway/index.js'
+import { referralFriendDiscountSar } from '../../constants/referral.js'
 
 export interface ApplyPromoCodeInput {
   userId: string
@@ -76,6 +77,12 @@ export function makeUC(deps: Deps) {
         })
       }
 
+      if (promo.type === 'referral' && promo.ownerUserId === userId) {
+        const { InvalidCodeError } =
+          await import('../../../shared/errors/index.js')
+        throw new InvalidCodeError("You can't use your own referral code.")
+      }
+
       // Validate plan match if scoped
       const plan = await planLoader.getPlanById(session.planId)
       if (
@@ -104,12 +111,11 @@ export function makeUC(deps: Deps) {
         }
       }
 
-      // For referral codes the discount is 20% of the plan price, computed
-      // dynamically so the correct amount applies regardless of which plan
-      // the user selected. For promo codes, use the fixed SAR from the record.
+      // Referral codes discount the friend's first plan by a fixed percent,
+      // computed from the selected plan. Promo codes use the stored SAR amount.
       const discountSar =
         promo.type === 'referral' && plan
-          ? Math.round(plan.priceSar * 0.2)
+          ? referralFriendDiscountSar(plan.priceSar)
           : promo.discountSar
 
       const newTotal = Math.max(
@@ -118,14 +124,14 @@ export function makeUC(deps: Deps) {
       )
 
       const updated = await checkoutSessionPersistor.updateSession(sessionId, {
-        promoCode: code,
+        promoCode: promo.code,
         promoDiscountSar: discountSar,
         totalDueSar: newTotal,
       })
 
       return {
         session_id: sessionId,
-        promo_code: code,
+        promo_code: promo.code,
         discount_type: promo.type,
         promo_discount_sar: discountSar,
         total_due_sar: updated.totalDueSar,

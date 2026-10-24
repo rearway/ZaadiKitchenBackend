@@ -252,6 +252,18 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       anonymizeAccountForDeletion: jest.fn().mockResolvedValue(makeUser()),
     } as unknown as Deps['userPersistor'],
 
+    driverAdminLoader: {
+      listDrivers: jest.fn().mockResolvedValue([]),
+      getDriverById: jest.fn().mockResolvedValue(null),
+      getAssignedAreaIds: jest.fn().mockResolvedValue([]),
+    } as unknown as Deps['driverAdminLoader'],
+
+    driverAdminPersistor: {
+      createDriver: jest.fn().mockResolvedValue(null),
+      updateDriver: jest.fn().mockResolvedValue(null),
+      softDeleteDriver: jest.fn().mockResolvedValue(new Date('2026-10-24T00:00:00Z')),
+    } as unknown as Deps['driverAdminPersistor'],
+
     otpSessionLoader: {
       getActiveSession: jest.fn().mockResolvedValue(null),
       getLockedSession: jest.fn().mockResolvedValue(null),

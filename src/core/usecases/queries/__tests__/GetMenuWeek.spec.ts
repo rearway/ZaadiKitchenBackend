@@ -4,6 +4,50 @@ import type { MenuSlot } from '../../../entities/MenuSlot.js'
 import type { Meal } from '../../../entities/Meal.js'
 
 describe('GetMenuWeek', () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('does not create the week two ahead before Thursday 18:00 Asia/Riyadh', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-10-22T14:59:59.000Z'))
+    const base = buildDeps()
+    const deps = buildDeps({
+      menuWeekLoader: {
+        ...base.menuWeekLoader,
+        getWeekById: jest.fn().mockResolvedValue(null),
+      },
+    })
+
+    await expect(makeUC(deps)({ weekId: 'w2026-44' })).rejects.toMatchObject({
+      errorCode: 'RESOURCE_NOT_FOUND',
+    })
+    expect(deps.menuWeekPersistor.ensureWeekExists).not.toHaveBeenCalled()
+  })
+
+  it('creates the week two ahead at Thursday 18:00 Asia/Riyadh', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-10-22T15:00:00.000Z'))
+    const base = buildDeps()
+    const deps = buildDeps({
+      menuWeekLoader: {
+        ...base.menuWeekLoader,
+        getWeekById: jest.fn().mockResolvedValue({
+          id: 'w2026-44',
+          weekNumber: 44,
+          status: 'draft',
+        }),
+        getSlotsByWeekId: jest.fn().mockResolvedValue([]),
+      },
+    })
+
+    await makeUC(deps)({ weekId: 'w2026-44' })
+
+    expect(deps.menuWeekPersistor.ensureWeekExists).toHaveBeenCalledWith(
+      expect.objectContaining({ weekId: 'w2026-44', dateFrom: '2026-11-01' })
+    )
+  })
+
   it('returns grouped slots, defaults, and add flags', async () => {
     const slots: MenuSlot[] = [
       {

@@ -1,10 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError } from '../../../shared/errors/domain.errors.js'
-import {
-  getSaudiWorkWeekBounds,
-  getNextSaudiWorkWeekBounds,
-  getDayLabel,
-} from '../services/weekUtils.js'
+import { getAdminPlannableWeeks, getDayLabel } from '../services/weekUtils.js'
 import {
   canAddStreamSlot,
   evaluateWeekPublishReadiness,
@@ -90,11 +86,8 @@ export function makeUC(deps: Deps) {
 
     try {
       const now = new Date()
-      const currentBounds = getSaudiWorkWeekBounds(now)
-      const nextBounds = getNextSaudiWorkWeekBounds(now)
-
-      if (input.weekId === currentBounds.weekId || input.weekId === nextBounds.weekId) {
-        const bounds = input.weekId === currentBounds.weekId ? currentBounds : nextBounds
+      const bounds = getAdminPlannableWeeks(now).find(week => week.weekId === input.weekId)
+      if (bounds) {
         await menuWeekPersistor.ensureWeekExists(bounds)
       }
 

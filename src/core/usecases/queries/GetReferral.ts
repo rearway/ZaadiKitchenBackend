@@ -1,5 +1,9 @@
 import { Deps } from '../../entitygateway/index.js'
 import type { ReferralHistoryEntry } from '../../entitygateway/Referral.js'
+import {
+  REFERRAL_FRIEND_DISCOUNT_PCT,
+  REFERRAL_REWARD_RATE_PCT,
+} from '../../constants/referral.js'
 
 export interface GetReferralInput {
   userId: string
@@ -43,13 +47,13 @@ export function makeUC(deps: Deps) {
 
       const shareText =
         `Hey! Try Platio Kitchen — fresh lunch delivered to your desk every day. ` +
-        `Use my code ${stats.referralCode} for 20% off your first plan. 🍛`
+        `Use my code ${stats.referralCode} for ${REFERRAL_FRIEND_DISCOUNT_PCT}% off your first plan. 🍛`
 
       return {
         referral_code: stats.referralCode,
         friends_joined: stats.friendsJoined,
         total_earned_sar: stats.totalEarnedSar,
-        reward_rate_pct: 10,
+        reward_rate_pct: REFERRAL_REWARD_RATE_PCT,
         whatsapp_share_text: shareText,
         referred_friends: history.map(toFriend),
       }

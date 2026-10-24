@@ -42,6 +42,9 @@ export class RiderController {
   @ApiOperation({
     summary: "Get the rider's delivery list for a date (defaults to today)",
     description:
+      "Returns deliveries whose area is one of the authenticated driver's assigned areas. " +
+      'A driver with no assigned areas gets an empty list. area_id further narrows that set; ' +
+      'an area the driver is not assigned to also returns an empty list. ' +
       'Each delivery includes meal_name (effective dish) and customer_phone for contact.',
   })
   @ApiResponse({ status: 200 })

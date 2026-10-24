@@ -31,6 +31,25 @@ WHERE mr.meal_id = :mealId
 ORDER BY mr.created_at DESC
 LIMIT :limit OFFSET :offset`
 
+/**
+ * Delivered for rating: the rider marked the stop, or Daily Ops closed that
+ * date. Rows stay until a meal_ratings row exists — there is no date window
+ * that drops them when the pipeline day ends. Skipped and paused stops are
+ * excluded from the ops-closed branch because those meals were not sent.
+ */
+export const PENDING_RATING_DELIVERED_SQL = `(
+         dd.status = 'delivered'
+         OR (
+           dd.status IN ('scheduled', 'past_cutoff')
+           AND EXISTS (
+             SELECT 1
+             FROM daily_ops_days ops
+             WHERE ops.date = dd.date
+               AND ops.delivered_at IS NOT NULL
+           )
+         )
+       )`
+
 export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
               dd.date as delivery_date,
               em.meal_id as meal_id,
@@ -43,11 +62,18 @@ export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
        ${effectiveMealLateralJoin({ join: 'inner' })}
        LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
        WHERE dd.subscription_id = :subscriptionId
-         AND dd.status = 'delivered'
+         AND ${PENDING_RATING_DELIVERED_SQL}
          AND mr.id IS NULL
          AND em.meal_id IS NOT NULL
        ORDER BY dd.date DESC
        LIMIT :limit`
+
+export const PENDING_RATING_COUNT_SQL = `SELECT COUNT(dd.id) as count
+       FROM delivery_days dd
+       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
+       WHERE dd.subscription_id = :subscriptionId
+         AND ${PENDING_RATING_DELIVERED_SQL}
+         AND mr.id IS NULL`
 
 @Injectable()
 export class MealRatingPersistenceService
@@ -110,12 +136,7 @@ export class MealRatingPersistenceService
   ): Promise<number> {
     const sequelize = DeliveryDayModel.sequelize!
     const rows = await sequelize.query<{ count: string }>(
-      `SELECT COUNT(dd.id) as count
-       FROM delivery_days dd
-       LEFT JOIN meal_ratings mr ON mr.delivery_day_id = dd.id AND mr.user_id = :userId
-       WHERE dd.subscription_id = :subscriptionId
-         AND dd.status = 'delivered'
-         AND mr.id IS NULL`,
+      PENDING_RATING_COUNT_SQL,
       {
         replacements: { userId, subscriptionId },
         type: QueryTypes.SELECT,

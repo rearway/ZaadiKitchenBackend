@@ -1,3 +1,4 @@
+import { isDeliveryDateForceLocked } from './forcePipelineLock.js'
 import { todayKSA } from './revenueUtils.js'
 
 export const ERP_TIMEZONE = process.env.ERP_TIMEZONE ?? 'Asia/Riyadh'
@@ -36,6 +37,7 @@ export function formatCutoffAtIso(deliveryDate: string): string {
 }
 
 export function isAfterErpCutoff(deliveryDate: string, now: Date = new Date()): boolean {
+  if (isDeliveryDateForceLocked(deliveryDate)) return true
   return now.getTime() >= getErpCutoffForDeliveryDate(deliveryDate).getTime()
 }
 

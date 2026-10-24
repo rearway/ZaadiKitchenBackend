@@ -66,12 +66,18 @@ export interface CustomerHistoryDelivery {
 
 export interface CustomerHistoryIssue {
   id: string
+  subscriptionId: string
   deliveryDate: string
   issueType: string
+  description: string | null
   status: string
   creditedAmountSar: number | null
   rejectionReason: string | null
+  rejectionNotes: string | null
   createdAt: Date
+  resolvedAt: Date | null
+  planName: string | null
+  mealName: string | null
 }
 
 export interface AdminCustomerLoader {

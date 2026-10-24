@@ -18,7 +18,8 @@ export interface DeliveryDayLoader {
   ): Promise<{ days: DeliveryHistoryEntry[]; total: number }>
   getRiderDeliveriesByDate(
     date: string,
-    areaId?: string
+    areaId?: string,
+    areaIds?: string[]
   ): Promise<RiderDeliveryRow[]>
   getMealBreakdownByDate(
     date: string

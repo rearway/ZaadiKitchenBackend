@@ -159,6 +159,124 @@ describe('UpdateMeal', () => {
     )
   })
 
+  it('persists mealType immediately when a draft meal changes from executive to salad', async () => {
+    const meal = makeMeal({ status: 'draft', mealType: 'executive' })
+    const { update, deps } = setup(meal)
+
+    const result = await update({ mealId: meal.id, mealType: 'salad' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({ mealType: 'salad' })
+    )
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.not.objectContaining({ status: 'updated' })
+    )
+    expect(result.data.mealType).toBe('salad')
+    expect(result.data.status).toBe('draft')
+  })
+
+  it('persists mealType immediately when a draft meal changes from salad to executive', async () => {
+    const meal = makeMeal({ status: 'draft', mealType: 'salad' })
+    const { update, deps } = setup(meal)
+
+    const result = await update({ mealId: meal.id, mealType: 'executive' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({ mealType: 'executive' })
+    )
+    expect(result.data.mealType).toBe('executive')
+    expect(result.data.status).toBe('draft')
+  })
+
+  it('stores an executive-to-salad change as pending and leaves the live type unchanged', async () => {
+    const meal = makeMeal({ status: 'active', mealType: 'executive' })
+    const { update, deps } = setup(meal)
+
+    await update({ mealId: meal.id, mealType: 'salad' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'updated',
+        pendingChanges: expect.objectContaining({
+          mealType: 'salad',
+          nameEn: 'Grilled Chicken',
+        }),
+      })
+    )
+    const saved = jest.mocked(deps.mealPersistor.updateMeal).mock.calls[0][1]
+    expect(saved.mealType).toBeUndefined()
+    expect(saved.kcal).toBeUndefined()
+  })
+
+  it('stores a salad-to-executive change on an updated meal and keeps other pending fields', async () => {
+    const meal = makeMeal({
+      status: 'updated',
+      mealType: 'salad',
+      pendingChanges: {
+        nameEn: 'Grilled Chicken',
+        nameAr: 'دجاج',
+        mealType: 'salad',
+        kcal: 560,
+        proteinG: 40,
+        carbsG: 20,
+        fatG: 10,
+        chefNote: 'slow cooked',
+        keyIngredients: ['chicken'],
+        emoji: '🍛',
+        photoUrl: 'https://img/chicken.jpg',
+      },
+    })
+    const { update, deps } = setup(meal)
+
+    await update({ mealId: meal.id, mealType: 'executive' })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'updated',
+        pendingChanges: expect.objectContaining({
+          mealType: 'executive',
+          kcal: 560,
+          chefNote: 'slow cooked',
+        }),
+      })
+    )
+    const saved = jest.mocked(deps.mealPersistor.updateMeal).mock.calls[0][1]
+    expect(saved.mealType).toBeUndefined()
+  })
+
+  it('keeps a pending mealType when a later edit changes another field', async () => {
+    const meal = makeMeal({
+      status: 'updated',
+      mealType: 'executive',
+      pendingChanges: {
+        nameEn: 'Grilled Chicken',
+        mealType: 'salad',
+        kcal: 500,
+      },
+    })
+    const { update, deps } = setup(meal)
+
+    await update({ mealId: meal.id, kcal: 610 })
+
+    expect(deps.mealPersistor.updateMeal).toHaveBeenCalledWith(
+      meal.id,
+      expect.objectContaining({
+        status: 'updated',
+        pendingChanges: expect.objectContaining({
+          mealType: 'salad',
+          kcal: 610,
+        }),
+      })
+    )
+    const saved = jest.mocked(deps.mealPersistor.updateMeal).mock.calls[0][1]
+    expect(saved.mealType).toBeUndefined()
+  })
+
   it('throws when the meal does not exist', async () => {
     const { update } = setup(null)
 

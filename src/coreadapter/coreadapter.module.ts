@@ -27,6 +27,7 @@ import {
   RevenuePersistenceS,
   CommsPersistenceS,
   RiderPersistenceS,
+  DriverAdminPersistenceS,
   DailyOpsPersistenceS,
   NotificationS,
   UserDevicePersistenceS,
@@ -65,6 +66,7 @@ import { AdminCustomerPersistenceService } from '../infrastructure/SequelizePers
 import { RevenuePersistenceService } from '../infrastructure/SequelizePersistence/revenue-persistence.service.js'
 import { CommsPersistenceService } from '../infrastructure/SequelizePersistence/comms-persistence.service.js'
 import { RiderPersistenceService } from '../infrastructure/SequelizePersistence/rider-persistence.service.js'
+import { DriverAdminPersistenceService } from '../infrastructure/SequelizePersistence/driver-admin-persistence.service.js'
 import { DailyOpsPersistenceService } from '../infrastructure/SequelizePersistence/daily-ops-persistence.service.js'
 import { ConsoleNotificationService } from '../infrastructure/Notification/console-notification.service.js'
 import { SnsNotificationService } from '../infrastructure/SNSNotification/sns-notification.service.js'
@@ -144,6 +146,7 @@ import { coreAdapterService } from './coreadapter.service.js'
     { provide: RevenuePersistenceS, useClass: RevenuePersistenceService },
     { provide: CommsPersistenceS, useClass: CommsPersistenceService },
     { provide: RiderPersistenceS, useClass: RiderPersistenceService },
+    { provide: DriverAdminPersistenceS, useClass: DriverAdminPersistenceService },
     { provide: DailyOpsPersistenceS, useClass: DailyOpsPersistenceService },
     { 
       provide: NotificationS, 
