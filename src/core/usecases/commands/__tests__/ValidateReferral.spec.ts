@@ -48,11 +48,51 @@ describe('ValidateReferral', () => {
     if (result.valid) {
       expect(result.code).toBe('TESTREF10')
       expect(result.discount_type).toBe('referral')
-      // 20% of plan priceSar=500
-      expect(result.discount_sar).toBe(100)
-      expect(result.discount_pct).toBe(20)
+      // 15% of plan priceSar=500
+      expect(result.discount_sar).toBe(75)
+      expect(result.discount_pct).toBe(15)
       expect(result.description).toBe('Referral discount')
     }
+  })
+
+  it.each([
+    [28, 4],
+    [125, 19],
+    [500, 75],
+    [1300, 195],
+  ])(
+    'applies a 15%% friend discount on the first plan (price %s → %s SAR)',
+    async (priceSar, discountSar) => {
+      const deps = makeValidDeps({ type: 'referral' }, false)
+      ;(deps.planLoader.getPlanBySlug as jest.Mock).mockResolvedValue(
+        makePlan({ priceSar, slug: 'month' })
+      )
+      const validateReferral = makeUC(deps)
+
+      const result = await validateReferral(validInput)
+
+      expect(result).toMatchObject({
+        valid: true,
+        discount_type: 'referral',
+        discount_pct: 15,
+        discount_sar: discountSar,
+      })
+    }
+  )
+
+  it('returns INVALID_CODE when a user validates their own referral code', async () => {
+    const deps = makeValidDeps(
+      { type: 'referral', ownerUserId: validInput.userId },
+      false
+    )
+    const validateReferral = makeUC(deps)
+
+    const result = await validateReferral(validInput)
+
+    expect(result).toMatchObject({
+      valid: false,
+      error_code: 'INVALID_CODE',
+    })
   })
 
   it('returns CODE_ALREADY_USED when the user has already used this code', async () => {

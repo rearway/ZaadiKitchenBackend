@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Op } from 'sequelize'
+import { Op, fn, col, where as sqlWhere } from 'sequelize'
 import {
   CheckoutSessionLoader,
   CheckoutSessionPersistor,
@@ -10,7 +10,11 @@ import {
 } from '../../core/entitygateway/PromoCode.js'
 import { CheckoutSession } from '../../core/entities/CheckoutSession.js'
 import { PromoCode } from '../../core/entities/PromoCode.js'
-import { CheckoutSessionModel, PromoCodeModel } from './models/index.js'
+import {
+  CheckoutSessionModel,
+  PromoCodeModel,
+  UserModel,
+} from './models/index.js'
 
 @Injectable()
 export class CheckoutSessionPersistenceService
@@ -76,10 +80,53 @@ export class CheckoutSessionPersistenceService
   }
 
   async getPromoByCode(code: string): Promise<PromoCode | null> {
+    const normalized = code.trim()
+    if (!normalized) return null
+
     const model = await PromoCodeModel.findOne({
-      where: { code, isActive: true },
+      where: { code: normalized, isActive: true },
     })
-    return model ? this.toPromoEntity(model) : null
+    if (model) return this.toPromoEntity(model)
+
+    // Issued codes are stored on users.referral_code and are not copied into
+    // promo_codes. Resolve those here so validate and checkout can see them.
+    return this.findIssuedReferralPromo(normalized)
+  }
+
+  private async findIssuedReferralPromo(
+    code: string
+  ): Promise<PromoCode | null> {
+    const exact = await UserModel.findOne({
+      where: { referralCode: code },
+      attributes: ['id', 'referralCode', 'createdAt', 'updatedAt'],
+    })
+    const user =
+      exact ??
+      (code.toUpperCase() === code
+        ? null
+        : await UserModel.findOne({
+            where: sqlWhere(
+              fn('UPPER', col('referral_code')),
+              code.toUpperCase()
+            ),
+            attributes: ['id', 'referralCode', 'createdAt', 'updatedAt'],
+          }))
+
+    if (!user?.referralCode) return null
+
+    return {
+      id: user.id,
+      code: user.referralCode,
+      type: 'referral',
+      discountSar: 0,
+      ownerUserId: user.id,
+      validForPlanSlug: null,
+      maxUses: null,
+      timesUsed: 0,
+      isActive: true,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }
   }
 
   async createPromo(
