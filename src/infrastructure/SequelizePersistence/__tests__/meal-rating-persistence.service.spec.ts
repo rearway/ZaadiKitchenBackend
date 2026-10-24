@@ -1,7 +1,9 @@
 import { QueryTypes } from 'sequelize'
 import {
   MealRatingPersistenceService,
+  PENDING_RATING_COUNT_SQL,
   PENDING_RATING_DAYS_SQL,
+  PENDING_RATING_DELIVERED_SQL,
 } from '../meal-rating-persistence.service.js'
 import { DeliveryDayModel } from '../models/DeliveryDayModel.js'
 
@@ -14,12 +16,33 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
 
   it('uses delivery-date and text-cast meal_type joins to avoid enum mismatch', async () => {
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.delivery_date = dd.date')
-    expect(PENDING_RATING_DAYS_SQL).toContain('ms.meal_type::text = dd.meal_type::text')
+    expect(PENDING_RATING_DAYS_SQL).toContain(
+      'ms.meal_type::text = dd.meal_type::text'
+    )
     expect(PENDING_RATING_DAYS_SQL).toContain('dd.selected_meal_id')
     expect(PENDING_RATING_DAYS_SQL).toContain('ms.is_default')
     expect(PENDING_RATING_DAYS_SQL).toContain('INNER JOIN LATERAL')
     expect(PENDING_RATING_DAYS_SQL).not.toContain('ms.meal_type = dd.meal_type')
     expect(PENDING_RATING_DAYS_SQL).toContain('em.photo_url')
+  })
+
+  it('keeps unrated meals pending after Daily Ops closes the day', () => {
+    expect(PENDING_RATING_DAYS_SQL).toContain(PENDING_RATING_DELIVERED_SQL)
+    expect(PENDING_RATING_COUNT_SQL).toContain(PENDING_RATING_DELIVERED_SQL)
+    expect(PENDING_RATING_DELIVERED_SQL).toContain("dd.status = 'delivered'")
+    expect(PENDING_RATING_DELIVERED_SQL).toContain(
+      "dd.status IN ('scheduled', 'past_cutoff')"
+    )
+    expect(PENDING_RATING_DELIVERED_SQL).toContain('daily_ops_days')
+    expect(PENDING_RATING_DELIVERED_SQL).toContain(
+      'ops.delivered_at IS NOT NULL'
+    )
+    expect(PENDING_RATING_DELIVERED_SQL).not.toContain('skipped')
+    expect(PENDING_RATING_DELIVERED_SQL).not.toContain('paused')
+    expect(PENDING_RATING_DAYS_SQL).not.toContain('CURRENT_DATE')
+    expect(PENDING_RATING_COUNT_SQL).not.toContain('CURRENT_DATE')
+    expect(PENDING_RATING_DAYS_SQL).toContain('mr.id IS NULL')
+    expect(PENDING_RATING_COUNT_SQL).toContain('mr.id IS NULL')
   })
 
   it('maps delivered unrated days from the query result', async () => {
@@ -40,12 +63,20 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
       value: { query },
     })
 
-    const result = await service.getPendingRatingDays('user-uuid-1', 'sub-uuid-1', 5)
+    const result = await service.getPendingRatingDays(
+      'user-uuid-1',
+      'sub-uuid-1',
+      5
+    )
 
     expect(query).toHaveBeenCalledWith(
       PENDING_RATING_DAYS_SQL,
       expect.objectContaining({
-        replacements: { userId: 'user-uuid-1', subscriptionId: 'sub-uuid-1', limit: 5 },
+        replacements: {
+          userId: 'user-uuid-1',
+          subscriptionId: 'sub-uuid-1',
+          limit: 5,
+        },
         type: QueryTypes.SELECT,
       })
     )
@@ -82,7 +113,11 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
       value: { query },
     })
 
-    const result = await service.getPendingRatingDays('user-uuid-1', 'sub-uuid-1', 5)
+    const result = await service.getPendingRatingDays(
+      'user-uuid-1',
+      'sub-uuid-1',
+      5
+    )
 
     expect(result[0].photoUrl).toBe(
       'https://test-bucket.s3.ap-south-1.amazonaws.com/meals/meal-uuid-2/photo.jpeg'

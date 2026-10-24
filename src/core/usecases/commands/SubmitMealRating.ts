@@ -2,6 +2,8 @@ import { Deps } from '../../entitygateway/index.js'
 import { MealRating, RATING_TAGS, RatingTag } from '../../entities/MealRating.js'
 import { ValidationError, ResourceNotFoundError } from '../../../shared/errors/index.js'
 import { RatingAlreadySubmittedError } from '../../../shared/errors/domain.errors.js'
+import { computeEffectiveStage } from '../services/dailyOpsStage.js'
+import { isDeliveryEligibleForRating } from '../services/ratingEligibility.js'
 
 export interface SubmitMealRatingInput {
   userId: string
@@ -20,7 +22,14 @@ export function makeUC(deps: Deps) {
   return async function submitMealRating(
     input: SubmitMealRatingInput
   ): Promise<SubmitMealRatingOutput> {
-    const { logger, subscriptionLoader, deliveryDayLoader, mealRatingPersistor, mealRatingLoader } = deps
+    const {
+      logger,
+      subscriptionLoader,
+      deliveryDayLoader,
+      dailyOpsDayLoader,
+      mealRatingPersistor,
+      mealRatingLoader,
+    } = deps
 
     try {
       const { userId, mealId, deliveryDayId, stars, tags } = input
@@ -44,7 +53,9 @@ export function makeUC(deps: Deps) {
 
       const day = await deliveryDayLoader.getDeliveryDayById(deliveryDayId)
       if (!day || day.userId !== userId) throw new ResourceNotFoundError('DeliveryDay', deliveryDayId)
-      if (day.status !== 'delivered') {
+      const opsDay = await dailyOpsDayLoader.getByDate(day.date)
+      const opsDelivered = computeEffectiveStage(opsDay, day.date) === 'delivered'
+      if (!isDeliveryEligibleForRating(day.status, opsDelivered)) {
         throw new ValidationError('Only delivered meals can be rated')
       }
 
