@@ -1,3 +1,5 @@
+import { isDeliveryDateForceLocked } from './forcePipelineLock.js'
+
 const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
 /**
@@ -145,8 +147,11 @@ export function compareDateStrings(a: string, b: string): number {
 
 /**
  * Determines if the skip cutoff has passed for a given delivery date.
+ * A staging force-lock uses this same check: the date is treated as past
+ * 18:00 Asia/Riyadh the day before, and only while that gate is enabled.
  */
 export function isAfterSkipCutoff(deliveryDate: string, now: Date = new Date()): boolean {
+  if (isDeliveryDateForceLocked(deliveryDate)) return true
   return now.getTime() >= getSkipCutoffTimestamp(deliveryDate).getTime()
 }
 

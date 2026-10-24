@@ -8,6 +8,8 @@ export const MANUAL_STAGE_ORDER: PipelineStage[] = ['locked', 'dispatch', 'deliv
 /**
  * The pipeline stage is derived, not stored, for 'pending'/'locked' — it only
  * becomes persisted state once a manual advance (dispatch/delivered) happens.
+ * 'locked' is the 18:00 KSA day-before cutoff, including a staging force-lock
+ * of that same cutoff.
  */
 export function computeEffectiveStage(day: DailyOpsDay | null, date: string): PipelineStage {
   if (day?.deliveredAt) return 'delivered'

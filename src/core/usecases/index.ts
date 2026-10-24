@@ -56,6 +56,7 @@ import * as AdminCreditWallet from './commands/AdminCreditWallet.js'
 import * as MarkDeliveryDelivered from './commands/MarkDeliveryDelivered.js'
 import * as ReportRiderIssue from './commands/ReportRiderIssue.js'
 import * as AdvancePipelineStage from './commands/AdvancePipelineStage.js'
+import * as ForcePipelineLock from './commands/ForcePipelineLock.js'
 import * as CreditDeliveryIssue from './commands/CreditDeliveryIssue.js'
 import * as RejectDeliveryIssue from './commands/RejectDeliveryIssue.js'
 import * as RegisterDevice from './commands/RegisterDevice.js'
@@ -468,6 +469,12 @@ export function initUseCases(deps: Deps) {
     deps,
     AdvancePipelineStage.makeUC(deps),
     AdvancePipelineStage.name,
+    ...defaultWrappers
+  )
+  const forcePipelineLock = wrapUC(
+    deps,
+    ForcePipelineLock.makeUC(deps),
+    ForcePipelineLock.name,
     ...defaultWrappers
   )
   const creditDeliveryIssue = wrapUC(
@@ -982,6 +989,7 @@ export function initUseCases(deps: Deps) {
       markDeliveryDelivered,
       reportRiderIssue,
       advancePipelineStage,
+      forcePipelineLock,
       creditDeliveryIssue,
       rejectDeliveryIssue,
       registerDevice,
