@@ -3,6 +3,7 @@ export type MealStatus = 'draft' | 'active' | 'updated'
 export interface MealPendingChanges {
   nameEn?: string
   nameAr?: string
+  mealType?: 'executive' | 'salad'
   kcal?: number
   proteinG?: number
   carbsG?: number
