@@ -3,6 +3,11 @@ import {
   isAfterSkipCutoff,
   getSaudiWorkWeekBounds,
   getNextSaudiWorkWeekBounds,
+  getAdminPlannableWeeks,
+  getAdminVisibleWeeks,
+  isAdminWeekLocked,
+  getAdminAheadWeekUnlockAt,
+  getAnchorSaudiWorkWeek,
 } from '../weekUtils.js'
 
 describe('Saudi work week bounds', () => {
@@ -55,5 +60,48 @@ describe('weekUtils skip cutoff', () => {
     const after = new Date('2025-06-09T15:00:01.000Z')
     expect(isAfterSkipCutoff(deliveryDate, before)).toBe(false)
     expect(isAfterSkipCutoff(deliveryDate, after)).toBe(true)
+  })
+})
+
+describe('admin week horizon (Thursday 18:00 Asia/Riyadh)', () => {
+  const justBefore = new Date('2026-10-22T14:59:59.000Z') // Thu 17:59:59 KSA
+  const atCutoff = new Date('2026-10-22T15:00:00.000Z') // Thu 18:00:00 KSA
+  const justAfter = new Date('2026-10-22T15:00:01.000Z') // Thu 18:00:01 KSA
+  const fridayOpen = new Date('2026-10-22T21:00:00.000Z') // Fri 00:00:00 KSA
+
+  const currentFrom = '2026-10-18'
+  const immediateNextFrom = '2026-10-25'
+  const twoAheadFrom = '2026-11-01'
+
+  it('keeps the current week and the immediate next week before Thursday 18:00 KSA', () => {
+    const plannable = getAdminPlannableWeeks(justBefore).map(w => w.dateFrom)
+    expect(plannable).toEqual([currentFrom, immediateNextFrom])
+    expect(isAdminWeekLocked(twoAheadFrom, justBefore)).toBe(true)
+    expect(isAdminWeekLocked(currentFrom, justBefore)).toBe(false)
+    expect(isAdminWeekLocked(immediateNextFrom, justBefore)).toBe(false)
+    expect(
+      getAdminAheadWeekUnlockAt(
+        getAnchorSaudiWorkWeek(justBefore)
+      ).toISOString()
+    ).toBe('2026-10-22T15:00:00.000Z')
+  })
+
+  it('unlocks the week two ahead at Thursday 18:00 Asia/Riyadh', () => {
+    const plannable = getAdminPlannableWeeks(atCutoff).map(w => w.dateFrom)
+    expect(plannable).toEqual([currentFrom, immediateNextFrom, twoAheadFrom])
+    expect(isAdminWeekLocked(twoAheadFrom, atCutoff)).toBe(false)
+    expect(isAdminWeekLocked(currentFrom, atCutoff)).toBe(false)
+  })
+
+  it('keeps two weeks ahead available after Thursday 18:00 Asia/Riyadh', () => {
+    const plannable = getAdminPlannableWeeks(justAfter).map(w => w.dateFrom)
+    expect(plannable).toEqual([currentFrom, immediateNextFrom, twoAheadFrom])
+    expect(isAdminWeekLocked(twoAheadFrom, justAfter)).toBe(false)
+  })
+
+  it('shows the next two work weeks when Friday opens in Asia/Riyadh', () => {
+    const visible = getAdminVisibleWeeks(fridayOpen).map(w => w.dateFrom)
+    expect(visible).toEqual([immediateNextFrom, twoAheadFrom])
+    expect(getSaudiWorkWeekBounds(fridayOpen).dateFrom).toBe(currentFrom)
   })
 })
