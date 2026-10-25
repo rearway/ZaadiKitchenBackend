@@ -88,6 +88,10 @@ export class MealModel extends Model {
   @Column(DataType.INTEGER)
   declare timesServed: number
 
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  declare deletedAt: Date | null
+
   @CreatedAt
   declare createdAt: Date
 

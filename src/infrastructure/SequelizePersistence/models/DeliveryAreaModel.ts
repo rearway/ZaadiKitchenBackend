@@ -30,6 +30,10 @@ export class DeliveryAreaModel extends Model {
   @Column(DataType.ENUM('active', 'coming_soon', 'paused'))
   declare status: 'active' | 'coming_soon' | 'paused'
 
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  declare deletedAt: Date | null
+
   @CreatedAt
   declare createdAt: Date
 

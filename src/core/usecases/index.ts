@@ -16,6 +16,7 @@ import * as DeleteDeliveryLocation from './commands/DeleteDeliveryLocation.js'
 import * as SetPrimaryDeliveryLocation from './commands/SetPrimaryDeliveryLocation.js'
 import * as CreateDeliveryArea from './commands/CreateDeliveryArea.js'
 import * as UpdateDeliveryArea from './commands/UpdateDeliveryArea.js'
+import * as DeleteDeliveryArea from './commands/DeleteDeliveryArea.js'
 import * as AddBuilding from './commands/AddBuilding.js'
 import * as UpdateBuilding from './commands/UpdateBuilding.js'
 import * as DeleteBuilding from './commands/DeleteBuilding.js'
@@ -246,6 +247,12 @@ export function initUseCases(deps: Deps) {
     deps,
     UpdateDeliveryArea.makeUC(deps),
     UpdateDeliveryArea.name,
+    ...defaultWrappers
+  )
+  const deleteDeliveryArea = wrapUC(
+    deps,
+    DeleteDeliveryArea.makeUC(deps),
+    DeleteDeliveryArea.name,
     ...defaultWrappers
   )
 
@@ -986,6 +993,7 @@ export function initUseCases(deps: Deps) {
       setPrimaryDeliveryLocation,
       createDeliveryArea,
       updateDeliveryArea,
+      deleteDeliveryArea,
       addBuilding,
       updateBuilding,
       deleteBuilding,

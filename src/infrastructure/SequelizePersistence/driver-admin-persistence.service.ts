@@ -160,7 +160,7 @@ export class DriverAdminPersistenceService
   ): Promise<AssignedArea[]> {
     if (areaIds.length === 0) return []
     const areas = await DeliveryAreaModel.findAll({
-      where: { id: { [Op.in]: areaIds } },
+      where: { id: { [Op.in]: areaIds }, deletedAt: null },
       transaction,
     })
     return areas

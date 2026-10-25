@@ -271,7 +271,7 @@ export class SubscriptionPersistenceService
            ORDER BY l.updated_at DESC
            LIMIT 1
          ) dl ON true
-         LEFT JOIN delivery_areas da ON da.id = dl.area_id
+         LEFT JOIN delivery_areas da ON da.id = dl.area_id AND da.deleted_at IS NULL
          WHERE dd.date = :date
            AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
            AND s.status IN ('active', 'paused', 'cancelled')

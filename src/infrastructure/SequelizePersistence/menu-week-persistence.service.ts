@@ -50,6 +50,7 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
           model: MealModel,
           as: 'Meal',
           required: false,
+          where: { deletedAt: null },
         },
         {
           model: MenuWeekModel,
@@ -67,7 +68,7 @@ export class MenuWeekPersistenceService implements MenuWeekLoader, MenuWeekPersi
     return slots.map(s => {
       const mealModel = (s as MenuSlotModel & { Meal?: MealModel }).Meal
       const slot = this.toSlotEntity(s)
-      if (!mealModel) return slot as MenuSlotWithMeal
+      if (!mealModel || mealModel.deletedAt) return slot as MenuSlotWithMeal
 
       return {
         ...slot,

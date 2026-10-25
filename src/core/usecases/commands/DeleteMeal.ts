@@ -1,4 +1,5 @@
-import { Deps } from '../../entitygateway/index.js'
+import type { Deps } from '../../entitygateway/index.js'
+import { ResourceNotFoundError } from '../../../shared/errors/index.js'
 
 export interface DeleteMealInput {
   mealId: string
@@ -6,6 +7,11 @@ export interface DeleteMealInput {
 
 export interface DeleteMealOutput {
   message: string
+  data: {
+    id: string
+    deleted: boolean
+    deletedAt: string
+  }
 }
 
 export function makeUC(deps: Deps) {
@@ -13,23 +19,23 @@ export function makeUC(deps: Deps) {
     input: DeleteMealInput
   ): Promise<DeleteMealOutput> {
     const { logger, mealLoader, mealPersistor } = deps
+
     try {
-      const { mealId } = input
-
-      const meal = await mealLoader.getMealById(mealId)
-      if (!meal) {
-        const { ResourceNotFoundError } = await import('../../../shared/errors/index.js')
-        throw new ResourceNotFoundError('Meal')
+      const existing = await mealLoader.getMealById(input.mealId)
+      if (!existing) {
+        throw new ResourceNotFoundError('Meal', input.mealId)
       }
 
-      if (meal.status === 'active' || meal.status === 'updated') {
-        const { ValidationError } = await import('../../../shared/errors/index.js')
-        throw new ValidationError('Cannot delete a live meal. Draft it first.')
+      const deletedAt = await mealPersistor.softDeleteMeal(input.mealId)
+
+      return {
+        message: 'Meal deleted successfully',
+        data: {
+          id: input.mealId,
+          deleted: true,
+          deletedAt: deletedAt.toISOString(),
+        },
       }
-
-      await mealPersistor.deleteMeal(mealId)
-
-      return { message: 'Meal deleted successfully' }
     } catch (error) {
       logger.error(
         'Failed to delete meal',

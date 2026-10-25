@@ -22,6 +22,7 @@ import {
   BuildingModel,
   OutOfZoneInterestModel,
   DeliveryLocationModel,
+  DriverAreaAssignmentModel,
 } from './models/index.js'
 
 @Injectable()
@@ -38,14 +39,14 @@ export class DeliveryPersistenceService
 {
   async getActiveAreas(): Promise<DeliveryArea[]> {
     const models = await DeliveryAreaModel.findAll({
-      where: { status: 'active' },
+      where: { status: 'active', deletedAt: null },
       order: [['name', 'ASC']],
     })
     return models.map(m => this.toDeliveryAreaEntity(m))
   }
 
   async getAllAreas(status?: string): Promise<DeliveryArea[]> {
-    const whereClause: { status?: string } = {}
+    const whereClause: Record<string, unknown> = { deletedAt: null }
     if (status) {
       whereClause.status = status
     }
@@ -60,6 +61,7 @@ export class DeliveryPersistenceService
     const models = await DeliveryAreaModel.findAll({
       where: {
         status: 'active',
+        deletedAt: null,
         name: { [Op.iLike]: `%${query}%` },
       },
       order: [['name', 'ASC']],
@@ -68,7 +70,9 @@ export class DeliveryPersistenceService
   }
 
   async getAreaById(areaId: string): Promise<DeliveryArea | null> {
-    const model = await DeliveryAreaModel.findByPk(areaId)
+    const model = await DeliveryAreaModel.findOne({
+      where: { id: areaId, deletedAt: null },
+    })
     return model ? this.toDeliveryAreaEntity(model) : null
   }
 
@@ -76,7 +80,10 @@ export class DeliveryPersistenceService
     name: string,
     excludeId?: string
   ): Promise<DeliveryArea | null> {
-    const where: Record<string, unknown> = { name: { [Op.iLike]: name } }
+    const where: Record<string, unknown> = {
+      name: { [Op.iLike]: name },
+      deletedAt: null,
+    }
     if (excludeId) where['id'] = { [Op.ne]: excludeId }
     const model = await DeliveryAreaModel.findOne({ where })
     return model ? this.toDeliveryAreaEntity(model) : null
@@ -97,10 +104,32 @@ export class DeliveryPersistenceService
     id: string,
     data: Partial<DeliveryArea>
   ): Promise<DeliveryArea> {
-    const model = await DeliveryAreaModel.findByPk(id)
+    const model = await DeliveryAreaModel.findOne({
+      where: { id, deletedAt: null },
+    })
     if (!model) throw new Error(`DeliveryArea ${id} not found`)
     await model.update(data)
     return this.toDeliveryAreaEntity(model)
+  }
+
+  async softDeleteDeliveryArea(areaId: string): Promise<Date> {
+    const sequelize = DeliveryAreaModel.sequelize
+    if (!sequelize) throw new Error('Database not initialized')
+    return sequelize.transaction(async transaction => {
+      const model = await DeliveryAreaModel.findOne({
+        where: { id: areaId, deletedAt: null },
+        transaction,
+      })
+      if (!model) throw new Error(`DeliveryArea ${areaId} not found`)
+
+      const deletedAt = new Date()
+      await model.update({ deletedAt }, { transaction })
+      await DriverAreaAssignmentModel.destroy({
+        where: { areaId },
+        transaction,
+      })
+      return deletedAt
+    })
   }
 
   async getBuildingsByArea(areaId: string): Promise<Building[]> {
@@ -294,6 +323,7 @@ export class DeliveryPersistenceService
       name: model.name,
       description: model.description || undefined,
       status: model.status,
+      ...(model.deletedAt ? { deletedAt: model.deletedAt } : {}),
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

@@ -43,7 +43,7 @@ export interface MealPersistor {
   bulkCreateMeals(
     meals: CreateMealInput[]
   ): Promise<{ created: Meal[]; skipped: number; errors: ImportError[] }>
-  deleteMeal(id: string): Promise<void>
+  softDeleteMeal(id: string): Promise<Date>
   incrementTimesServed(mealIds: string[]): Promise<void>
   updateLastServed(mealIds: string[], date: string): Promise<void>
 }
