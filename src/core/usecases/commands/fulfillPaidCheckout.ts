@@ -117,6 +117,21 @@ function resolvePromotionDiscountLabel(priorCredit: number): string {
     : 'Plan upgrade'
 }
 
+/** No card charge — wallet (and promo) cover the full checkout amount. */
+export function resolveWalletOnlyCheckoutPayment(
+  paymentMethodId: string
+): { hardcoded: boolean; method: ResolvedPaymentMethod } {
+  return {
+    hardcoded: true,
+    method: {
+      id: paymentMethodId,
+      type: 'wallet',
+      label: 'Wallet',
+      token: '',
+    },
+  }
+}
+
 export async function resolveCheckoutPaymentMethod(
   deps: Deps,
   userId: string,

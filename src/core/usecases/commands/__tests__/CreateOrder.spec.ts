@@ -628,6 +628,57 @@ describe('CreateOrder', () => {
     expect(result.summary.total_paid_sar).toBe(0)
   })
 
+  it('wallet-only checkout works without a real card when mock payments are off', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 28,
+      totalDueSar: 0,
+      basePriceSar: 28,
+    })
+    const deps = makeOrderDeps({
+      useMockPayment: false,
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(50) },
+    })
+
+    const result = await makeUC(deps)({
+      ...validInput,
+      paymentMethodId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.createSubscription).toHaveBeenCalled()
+    expect(result.summary.wallet_credit_sar).toBe(28)
+    expect(result.summary.total_paid_sar).toBe(0)
+  })
+
+  it('refreshes wallet credit at order time when the session was created before wallet balance existed', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 0,
+      totalDueSar: 28,
+      basePriceSar: 28,
+    })
+    const deps = makeOrderDeps({
+      useMockPayment: false,
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(50) },
+    })
+
+    await makeUC(deps)(validInput)
+
+    expect(deps.checkoutSessionPersistor.updateSession).toHaveBeenCalledWith(
+      validInput.sessionId,
+      { walletCreditSar: 28, totalDueSar: 0 }
+    )
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.walletPersistor.createDebitIfSufficient).toHaveBeenCalledWith(
+      expect.objectContaining({ amountSar: -28 })
+    )
+  })
+
   it('does not charge or debit when the wallet no longer covers the session credit', async () => {
     const session = makeCheckoutSession({
       walletCreditSar: 50,

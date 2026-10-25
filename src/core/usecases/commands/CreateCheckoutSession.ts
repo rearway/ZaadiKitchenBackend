@@ -5,6 +5,7 @@ import {
   computePromotionAmounts,
   normalizePlanSlug,
 } from '../services/planPromotionUtils.js'
+import { canUpgradeSubscriptionPlan } from '../services/subscriptionServicePeriod.js'
 
 export interface CreateCheckoutSessionInput {
   userId: string
@@ -61,11 +62,11 @@ export function makeUC(deps: Deps) {
       let basePriceSar = plan.priceSar
 
       if (existingSub) {
-        if (existingSub.status !== 'active') {
+        if (!canUpgradeSubscriptionPlan(existingSub)) {
           const { ActiveSubscriptionCheckoutBlockedError } =
             await import('../../../shared/errors/index.js')
           throw new ActiveSubscriptionCheckoutBlockedError(
-            'Checkout is only available for plan upgrades while your subscription is active, or after your plan has expired.'
+            'Checkout is only available for plan upgrades while your subscription is active or cancelled with deliveries remaining, or after your plan has expired.'
           )
         }
 

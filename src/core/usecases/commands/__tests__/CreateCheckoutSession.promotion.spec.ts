@@ -61,6 +61,48 @@ describe('CreateCheckoutSession promotion', () => {
     )
   })
 
+  it('allows promotion checkout when subscription is cancelled in-cycle', async () => {
+    const week = makePlan({ id: 'plan-week', slug: 'week', priceSar: 125 })
+    const month = makePlan({ id: 'plan-month', slug: 'month', priceSar: 500 })
+    const sub = makeSubscription({
+      status: 'cancelled',
+      planId: 'plan-week',
+      orderId: 'order-1',
+      endDate: '2099-12-31',
+    })
+    const order = makeOrder({ id: 'order-1', totalPaidSar: 125 })
+    const session = makeCheckoutSession({ totalDueSar: 375, priorPlanCreditSar: 125 })
+
+    const deps = buildDeps({
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanBySlug: jest.fn().mockResolvedValue(month),
+        getPlanById: jest.fn().mockResolvedValue(week),
+      },
+      subscriptionLoader: {
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+        getSubscriptionById: jest.fn(),
+      },
+      orderLoader: {
+        ...buildDeps().orderLoader,
+        getOrderById: jest.fn().mockResolvedValue(order),
+      },
+      checkoutSessionPersistor: {
+        ...buildDeps().checkoutSessionPersistor,
+        createSession: jest.fn().mockResolvedValue(session),
+      },
+    })
+
+    const result = await makeUC(deps)({
+      userId,
+      planId: 'month',
+      mealType: 'executive',
+    })
+
+    expect(result.promotion).toBe(true)
+    expect(result.current_plan_id).toBe('week')
+  })
+
   it('rejects same plan while active', async () => {
     const month = makePlan({ id: 'plan-month', slug: 'month', priceSar: 500 })
     const sub = makeSubscription({ status: 'active', planId: 'plan-month' })

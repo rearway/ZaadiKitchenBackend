@@ -16,8 +16,15 @@ import {
   fulfillPaidCheckout,
   fulfillmentIsStale,
   resolveCheckoutPaymentMethod,
+  resolveWalletOnlyCheckoutPayment,
   type CreateOrderOutput,
 } from './fulfillPaidCheckout.js'
+import { canUpgradeSubscriptionPlan } from '../services/subscriptionServicePeriod.js'
+import {
+  computeCheckoutWalletAndDue,
+  needsGatewayCharge,
+  shouldRefreshCheckoutWallet,
+} from '../services/checkoutWalletUtils.js'
 
 export type { CreateOrderOutput } from './fulfillPaidCheckout.js'
 
@@ -43,17 +50,11 @@ function pickPaymentIntent(
   )
 }
 
-function needsGatewayCharge(totalDueSar: number): boolean {
-  return Math.round(totalDueSar * 100) > 0
-}
-
-async function assertWalletCoversSession(
-  deps: Deps,
-  userId: string,
+function assertWalletCoversSession(
+  balanceSar: number,
   walletCreditSar: number
-): Promise<void> {
-  const balance = await deps.walletLoader.getBalanceByUserId(userId)
-  if (!walletCoversDebit(balance, walletCreditSar)) {
+): void {
+  if (!walletCoversDebit(balanceSar, walletCreditSar)) {
     throw new InsufficientWalletBalanceError()
   }
 }
@@ -67,7 +68,7 @@ export function makeUC(deps: Deps) {
     try {
       const { userId, sessionId, paymentMethodId, startDate } = input
 
-      const session = await deps.checkoutSessionLoader.getSessionById(sessionId)
+      let session = await deps.checkoutSessionLoader.getSessionById(sessionId)
       if (
         !session ||
         session.userId !== userId ||
@@ -81,6 +82,23 @@ export function makeUC(deps: Deps) {
         throw new SessionExpiredError(
           'Your 10-minute checkout session has expired. Your plan selection is saved — just start checkout again.'
         )
+      }
+
+      let walletBalanceAtCheckout: number | undefined
+      if (session.status === 'active') {
+        walletBalanceAtCheckout =
+          await deps.walletLoader.getBalanceByUserId(userId)
+        const { walletCreditSar, totalDueSar } = computeCheckoutWalletAndDue(
+          session,
+          walletBalanceAtCheckout
+        )
+        if (shouldRefreshCheckoutWallet(session, { walletCreditSar, totalDueSar })) {
+          await deps.checkoutSessionPersistor.updateSession(sessionId, {
+            walletCreditSar,
+            totalDueSar,
+          })
+          session = { ...session, walletCreditSar, totalDueSar }
+        }
       }
 
       const existingTxs =
@@ -110,11 +128,9 @@ export function makeUC(deps: Deps) {
       }
 
       const methodId = openTx?.paymentMethodId || paymentMethodId
-      const resolved = await resolveCheckoutPaymentMethod(
-        deps,
-        userId,
-        methodId
-      )
+      const resolved = needsGatewayCharge(session.totalDueSar)
+        ? await resolveCheckoutPaymentMethod(deps, userId, methodId)
+        : resolveWalletOnlyCheckoutPayment(methodId)
 
       const plan = await deps.planLoader.getPlanById(session.planId)
       if (!plan) throw new ResourceNotFoundError('Plan', session.planId)
@@ -127,7 +143,7 @@ export function makeUC(deps: Deps) {
           if (
             !liveSub ||
             liveSub.id !== promotionSubscriptionId ||
-            liveSub.status !== 'active'
+            !canUpgradeSubscriptionPlan(liveSub)
           ) {
             throw new ActiveSubscriptionCheckoutBlockedError(
               'Your subscription changed after checkout started. Please start checkout again.'
@@ -139,7 +155,10 @@ export function makeUC(deps: Deps) {
       }
 
       if (session.walletCreditSar > 0 && !openTx) {
-        await assertWalletCoversSession(deps, userId, session.walletCreditSar)
+        const balance =
+          walletBalanceAtCheckout ??
+          (await deps.walletLoader.getBalanceByUserId(userId))
+        assertWalletCoversSession(balance, session.walletCreditSar)
       }
 
       if (session.status === 'active') {
@@ -246,7 +265,10 @@ export function makeUC(deps: Deps) {
           )
         }
         if (session.walletCreditSar > 0) {
-          await assertWalletCoversSession(deps, userId, session.walletCreditSar)
+          const balance =
+            walletBalanceAtCheckout ??
+            (await deps.walletLoader.getBalanceByUserId(userId))
+          assertWalletCoversSession(balance, session.walletCreditSar)
         }
       }
 
