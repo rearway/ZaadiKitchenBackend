@@ -230,7 +230,9 @@ export class AdminCustomerPersistenceService
     })
     let primaryAddress: CustomerAddress | null = null
     if (location) {
-      const area = await DeliveryAreaModel.findByPk(location.areaId)
+      const area = await DeliveryAreaModel.findOne({
+        where: { id: location.areaId, deletedAt: null },
+      })
       primaryAddress = {
         buildingName: location.buildingName,
         floor: location.floor,

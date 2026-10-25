@@ -21,7 +21,7 @@ export function effectiveMealLateralJoin(opts?: {
          m.photo_url,
          m.erp_code
   FROM menu_slots ms
-  INNER JOIN meals m ON m.id = ms.meal_id
+  INNER JOIN meals m ON m.id = ms.meal_id AND m.deleted_at IS NULL
   INNER JOIN menu_weeks mw
     ON mw.id = ms.week_id
    AND mw.date_from <= dd.date

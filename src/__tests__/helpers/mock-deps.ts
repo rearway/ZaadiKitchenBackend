@@ -301,6 +301,9 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     deliveryAreaPersistor: {
       createArea: jest.fn().mockResolvedValue(null),
+      softDeleteDeliveryArea: jest
+        .fn()
+        .mockResolvedValue(new Date('2026-10-25T00:00:00Z')),
     } as unknown as Deps['deliveryAreaPersistor'],
 
     buildingLoader: {
@@ -474,7 +477,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     mealPersistor: {
       createMeal: jest.fn().mockResolvedValue(null),
-      deleteMeal: jest.fn().mockResolvedValue(undefined),
+      softDeleteMeal: jest.fn().mockResolvedValue(new Date('2026-10-25T00:00:00Z')),
       updateMeal: jest.fn().mockResolvedValue(null),
       updateMealStatus: jest.fn().mockResolvedValue(null),
       bulkCreateMeals: jest.fn().mockResolvedValue({ created: [], skipped: 0, errors: [] }),

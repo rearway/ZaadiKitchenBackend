@@ -33,6 +33,7 @@ export interface Meal {
   lastServed?: string
   timesServed: number
   pendingChanges?: MealPendingChanges | null
+  deletedAt?: Date
   createdAt: Date
   updatedAt: Date
 }
