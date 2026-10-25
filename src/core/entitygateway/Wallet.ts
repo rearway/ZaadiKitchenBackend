@@ -12,4 +12,11 @@ export interface WalletPersistor {
   createTransaction(
     input: Omit<WalletTransaction, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<WalletTransaction>
+  /**
+   * Insert a debit only when the locked balance still covers it.
+   * A debit with the same user and referenceId is returned unchanged.
+   */
+  createDebitIfSufficient(
+    input: Omit<WalletTransaction, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<WalletTransaction>
 }

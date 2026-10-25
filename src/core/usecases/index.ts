@@ -68,6 +68,7 @@ import * as SendBulkBroadcast from './commands/SendBulkBroadcast.js'
 import * as SendCommsBroadcast from './commands/SendCommsBroadcast.js'
 import * as UpdateCommsAutomation from './commands/UpdateCommsAutomation.js'
 import * as SyncPendingPayments from './commands/SyncPendingPayments.js'
+import * as HandleMoyasarWebhook from './commands/HandleMoyasarWebhook.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -547,6 +548,12 @@ export function initUseCases(deps: Deps) {
     deps,
     SyncPendingPayments.makeUC(deps),
     SyncPendingPayments.name,
+    ...defaultWrappers
+  )
+  const handleMoyasarWebhook = wrapUC(
+    deps,
+    HandleMoyasarWebhook.makeUC(deps),
+    HandleMoyasarWebhook.name,
     ...defaultWrappers
   )
   const getPendingRatings = wrapUC(
@@ -1045,6 +1052,7 @@ export function initUseCases(deps: Deps) {
       sendCommsBroadcast,
       updateCommsAutomation,
       syncPendingPayments,
+      handleMoyasarWebhook,
     },
   }
 }

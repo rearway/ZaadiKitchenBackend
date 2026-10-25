@@ -52,13 +52,30 @@ export class PaymentTransactionModel extends Model {
     allowNull: false,
     defaultValue: 'INITIATED',
   })
-  declare status: 'INITIATED' | 'SUCCESS' | 'FAILED'
+  declare status:
+    | 'INITIATED'
+    | 'PAID_UNFULFILLED'
+    | 'FULFILLING'
+    | 'SUCCESS'
+    | 'FAILED'
 
   @Column({
     type: DataType.STRING(255),
     allowNull: true,
   })
   declare gatewayPaymentId: string | null
+
+  @Column({
+    type: DataType.STRING(10),
+    allowNull: true,
+  })
+  declare startDate: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  declare paymentMethodId: string | null
 
   @CreatedAt
   declare createdAt: Date

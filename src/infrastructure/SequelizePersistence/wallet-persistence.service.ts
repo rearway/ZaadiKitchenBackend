@@ -6,6 +6,8 @@ import {
 } from '../../core/entitygateway/Wallet.js'
 import { WalletTransaction } from '../../core/entities/WalletTransaction.js'
 import { WalletTransactionModel } from './models/index.js'
+import { walletCoversDebit } from '../../core/constants/payment-status.js'
+import { InsufficientWalletBalanceError } from '../../shared/errors/index.js'
 
 @Injectable()
 export class WalletPersistenceService implements WalletLoader, WalletPersistor {
@@ -43,6 +45,59 @@ export class WalletPersistenceService implements WalletLoader, WalletPersistor {
   ): Promise<WalletTransaction> {
     const model = await WalletTransactionModel.create({ ...input })
     return this.toEntity(model)
+  }
+
+  async createDebitIfSufficient(
+    input: Omit<WalletTransaction, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<WalletTransaction> {
+    if (input.type !== 'debit') {
+      throw new Error('createDebitIfSufficient requires a debit')
+    }
+    const sequelize = WalletTransactionModel.sequelize
+    if (!sequelize) throw new Error('Database not initialized')
+    const debitSar = Math.abs(input.amountSar)
+
+    return sequelize.transaction(async transaction => {
+      await sequelize.query('SELECT pg_advisory_xact_lock(hashtext(:userId))', {
+        replacements: { userId: input.userId },
+        transaction,
+      })
+
+      if (input.referenceId) {
+        const existing = await WalletTransactionModel.findOne({
+          where: {
+            userId: input.userId,
+            referenceId: input.referenceId,
+            type: 'debit',
+          },
+          transaction,
+        })
+        if (existing) return this.toEntity(existing)
+      }
+
+      const result = await WalletTransactionModel.findOne({
+        where: { userId: input.userId },
+        attributes: [
+          [
+            fn('COALESCE', fn('SUM', col('amount_sar')), literal('0')),
+            'balance',
+          ],
+        ],
+        raw: true,
+        transaction,
+      })
+      const raw = result as unknown as { balance: string }
+      const balance = Number(raw?.balance ?? 0)
+      if (!walletCoversDebit(balance, debitSar)) {
+        throw new InsufficientWalletBalanceError()
+      }
+
+      const model = await WalletTransactionModel.create(
+        { ...input, type: 'debit', amountSar: -debitSar },
+        { transaction }
+      )
+      return this.toEntity(model)
+    })
   }
 
   private toEntity(model: WalletTransactionModel): WalletTransaction {

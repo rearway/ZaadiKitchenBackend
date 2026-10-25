@@ -87,9 +87,15 @@ import type { MealLoader, MealPersistor } from './Meal.js'
 import type { MenuWeekLoader, MenuWeekPersistor } from './MenuWeek.js'
 import type { StorageGateway } from './Storage.js'
 import type { AuditLogPersistor, AuditLogLoader } from './AuditLog.js'
-import type { DeliveryIssuePersistor, DeliveryIssueLoader } from './DeliveryIssue.js'
+import type {
+  DeliveryIssuePersistor,
+  DeliveryIssueLoader,
+} from './DeliveryIssue.js'
 import type { MealRatingPersistor, MealRatingLoader } from './MealRating.js'
-import type { AdminCustomerLoader, AdminCustomerPersistor } from './AdminCustomer.js'
+import type {
+  AdminCustomerLoader,
+  AdminCustomerPersistor,
+} from './AdminCustomer.js'
 import type { RevenueLoader } from './Revenue.js'
 import type { CommsLoader, CommsPersistor } from './Comms.js'
 import type { RiderIssuePersistor } from './RiderIssue.js'
@@ -97,7 +103,10 @@ import type { DriverAdminLoader, DriverAdminPersistor } from './DriverAdmin.js'
 import type { DailyOpsDayLoader, DailyOpsDayPersistor } from './DailyOpsDay.js'
 import type { NotificationGateway } from './Notification.js'
 import type { UserDeviceLoader, UserDevicePersistor } from './UserDevice.js'
-import type { PaymentTransactionLoader, PaymentTransactionPersistor } from './PaymentTransaction.js'
+import type {
+  PaymentTransactionLoader,
+  PaymentTransactionPersistor,
+} from './PaymentTransaction.js'
 import type { ErpIntegrationLoader } from './ErpIntegration.js'
 
 export type Deps = {
@@ -110,6 +119,10 @@ export type Deps = {
   refreshTokenPersistor: RefreshTokenPersistor
   otpService: OtpService
   skipOtp: boolean
+  /** True when USE_MOCK_PAYMENT is on. Hardcoded method ids must not charge live Moyasar. */
+  useMockPayment: boolean
+  /** Moyasar dashboard webhook secret. Compared to payload secret_token. Empty rejects webhooks. */
+  moyasarWebhookSecret: string
   jwtSecret: string
   jwtAccessExpiration: string
   jwtRefreshExpirationMobile: string

@@ -33,4 +33,16 @@ export class InternalJobsController {
       asOfDate: body?.as_of_date,
     })
   }
+
+  @Post('sync-pending-payments')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Finish paid Moyasar payments that do not yet have a subscription (EventBridge trigger)',
+  })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('sync-pending-payments')
+  async syncPendingPayments() {
+    return this.useCases.commands.syncPendingPayments({})
+  }
 }

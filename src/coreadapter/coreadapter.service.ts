@@ -114,6 +114,12 @@ export const coreAdapterService: FactoryProvider = {
       refreshTokenPersistor: refreshTokenPersistence,
       otpService: otpService,
       skipOtp: configService.get<string>('SKIP_OTP', 'true') === 'true',
+      useMockPayment:
+        configService.get<string>('USE_MOCK_PAYMENT', 'true') === 'true',
+      moyasarWebhookSecret: configService.get<string>(
+        'MOYASAR_WEBHOOK_SECRET',
+        ''
+      ),
       jwtSecret: configService.get<string>('JWT_SECRET', 'default-secret'),
       jwtAccessExpiration: configService.get<string>(
         'JWT_ACCESS_EXPIRATION',

@@ -491,7 +491,7 @@ Errors:
 
 | Endpoint | Notes |
 |---|---|
-| `GET /payment/methods` | Returns a **hardcoded** list: `00000000-0000-0000-0000-000000000001` (mada), `...0002` (visa), `...0003` (apple_pay), each with `label`, `is_default`, `is_last_used`. Use one of these as `payment_method_id`. |
+| `GET /payment/methods` | Returns this user's **saved** cards (`id`, `type`, `label`, `is_default`, `is_last_used`). Empty array when none are saved. With `USE_MOCK_PAYMENT=true`, `POST /orders` still accepts `00000000-0000-0000-0000-000000000001` (mada), `...0002` (visa), `...0003` (apple_pay). Those ids are rejected when mock payments are off. |
 | `POST /payment/methods` | Body `{ "type": "mada\|visa\|mastercard\|stc_pay\|apple_pay", "token": "tok_x" }`. 201 `{ id, type, label, ... }`. Saved cards **do not appear** in the GET list. |
 | `DELETE /payment/methods/:method_id` | 204. Another user's method or an unknown id returns 404. |
 
