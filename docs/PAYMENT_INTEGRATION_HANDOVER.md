@@ -4,7 +4,7 @@
 **Backend base URL:** `{API_HOST}/api/v1`  
 **Auth:** All endpoints below require `Authorization: Bearer <access_token>` unless noted.  
 **Swagger:** `{API_HOST}/api` (interactive API docs)  
-**Last updated:** March 2026
+**Last updated:** October 2026
 
 ---
 
@@ -68,8 +68,9 @@ sequenceDiagram
 **Backend env (for reference — not needed in the app):**
 
 ```bash
-USE_MOCK_PAYMENT=false          # true = mock gateway, no real Moyasar call
+USE_MOCK_PAYMENT=false          # true (default) = mock gateway, no real Moyasar call
 MOYASAR_API_KEY=sk_test_...     # server secret; never embed in the app
+MOYASAR_WEBHOOK_SECRET=...      # dashboard webhook secret; echoed as secret_token
 ```
 
 ---
@@ -196,8 +197,8 @@ Content-Type: application/json
   "valid": true,
   "code": "AHMED15",
   "discount_type": "referral",
-  "discount_sar": 100,
-  "discount_pct": 20,
+  "discount_sar": 75,
+  "discount_pct": 15,
   "description": "Referral discount"
 }
 ```
@@ -235,8 +236,8 @@ Content-Type: application/json
   "session_id": "...",
   "promo_code": "AHMED15",
   "discount_type": "referral",
-  "promo_discount_sar": 100,
-  "total_due_sar": 350,
+  "promo_discount_sar": 75,
+  "total_due_sar": 375,
   "promo_attempt_count": 1,
   "promo_locked": false
 }
@@ -308,31 +309,17 @@ Optional query: `from=YYYY-MM-DD` (must be ≥ tomorrow).
 GET /api/v1/payment/methods
 ```
 
-**Response (200):**
+**Response (200):** saved cards for this user. First-time users get `"payment_methods": []`.
 
 ```json
 {
   "payment_methods": [
     {
-      "id": "00000000-0000-0000-0000-000000000001",
+      "id": "pm-uuid-from-db",
       "type": "mada",
-      "label": "Mada",
-      "is_default": true,
-      "is_last_used": false
-    },
-    {
-      "id": "00000000-0000-0000-0000-000000000002",
-      "type": "visa",
-      "label": "Visa",
+      "label": "Mada ····4242",
       "is_default": false,
-      "is_last_used": false
-    },
-    {
-      "id": "00000000-0000-0000-0000-000000000003",
-      "type": "apple_pay",
-      "label": "Apple Pay",
-      "is_default": false,
-      "is_last_used": false
+      "is_last_used": true
     }
   ]
 }
@@ -340,7 +327,7 @@ GET /api/v1/payment/methods
 
 **Supported types:** `mada` · `visa` · `mastercard` · `stc_pay` · `apple_pay`
 
-> **Current limitation:** This endpoint returns **hardcoded placeholder methods** for UI development. User-saved cards from `POST /payment/methods` are stored in the DB but **not yet merged** into this list. For production Moyasar flow, save the card first (below) and use the returned `id` in `POST /orders`.
+Labels use the last four digits from the stored token or source when that value is present. Apple Pay and STC Pay stay as method names. The three `00000000-…` placeholder ids are **not** returned here. They are accepted on `POST /orders` only when the API is running with `USE_MOCK_PAYMENT=true`.
 
 #### Save a tokenized method (after Moyasar SDK tokenization)
 
@@ -350,9 +337,11 @@ Content-Type: application/json
 
 {
   "type": "mada",
-  "token": "tok_xxxxxxxx"
+  "token": "tok_xxxxxxxx|4242"
 }
 ```
+
+`token` may be the Moyasar token id, a `token|last4` suffix, or a JSON source that includes `last_four` / a masked PAN. A token with no last four is labeled `Mada` (not `····0000`).
 
 **Response (201):**
 
@@ -360,7 +349,7 @@ Content-Type: application/json
 {
   "id": "pm-uuid-from-db",
   "type": "mada",
-  "label": "Mada ····0000",
+  "label": "Mada ····4242",
   "is_default": false,
   "is_last_used": false
 }
@@ -396,7 +385,7 @@ Content-Type: application/json
 | Field | Required | Format |
 |-------|----------|--------|
 | `session_id` | Yes | From checkout session |
-| `payment_method_id` | Yes | From `POST /payment/methods` or hardcoded dev IDs |
+| `payment_method_id` | Yes | Saved method id. Hardcoded dev ids only when `USE_MOCK_PAYMENT=true` |
 | `start_date` | Yes | `YYYY-MM-DD`, must be an available working day |
 
 **Do not send:** `paymentToken`, `checkoutSessionId`, or camelCase variants — the API uses **snake_case** only.
@@ -417,10 +406,10 @@ Content-Type: application/json
   "summary": {
     "plan_price_sar": 500,
     "wallet_credit_sar": 50,
-    "promo_discount_sar": 100,
+    "promo_discount_sar": 75,
     "promo_code": "AHMED15",
     "discount_label": "Referral discount",
-    "total_paid_sar": 350
+    "total_paid_sar": 375
   }
 }
 ```
@@ -482,7 +471,7 @@ Use these to confirm active subscription and wallet ledger after pay.
 
 ```json
 {
-  "amount": 35000,
+  "amount": 37500,
   "currency": "SAR",
   "description": "Month Plan · 2026-09-22",
   "source": { "type": "token", "token": "<stored_token>" },
@@ -490,7 +479,9 @@ Use these to confirm active subscription and wallet ledger after pay.
 }
 ```
 
-- Treats `paid`, `captured`, and `authorized` as success.
+- Sends `Idempotency-Key` and Moyasar `given_id` (the payment transaction UUID) so a retry of the same checkout cannot double-charge.
+- Treats **`paid` and `captured` only** as success. `authorized` is not a completed payment.
+- Webhook: `POST /api/v1/payment/webhooks/moyasar` (no JWT). Moyasar must send the dashboard secret as `secret_token`. The server compares it to `MOYASAR_WEBHOOK_SECRET`. Subscribe to `payment_paid` and `payment_captured`. `payment_authorized` does not activate a subscription.
 
 ### 4.3 Payment method matrix
 
@@ -555,7 +546,7 @@ Aligned with master product docs (`docs/master/`):
 | Rule | Implementation |
 |------|----------------|
 | Full plan price upfront | `base_price_sar` from plan |
-| Promo / referral 20% off | Referral: 20% of plan price; applied via session promo |
+| Promo / referral 15% off | Referral: 15% of plan price; applied via session promo |
 | Referral: new users only | Returning users get `NOT_NEW_USER` |
 | Wallet auto-applied | At session create; returning users only |
 | Charge order | Discount → wallet → charge remainder (`total_due_sar`) |
@@ -586,9 +577,10 @@ Track these with backend before production sign-off:
 
 | Item | Impact on frontend |
 |------|-------------------|
-| **No payment webhook** | If app crashes after Moyasar succeeds but before 201, user may be charged without subscription — rare; backend reconciliation TBD |
-| **`GET /payment/methods` hardcoded** | Saved cards not listed yet — may need to cache `POST /payment/methods` response locally until fixed |
-| **`total_due_sar = 0`** (wallet covers all) | Backend still calls Moyasar with amount 0 — test edge case with backend |
+| **Webhook + reconciler** | `POST /api/v1/payment/webhooks/moyasar` settles `payment_paid` / `payment_captured`. Stuck rows are finished by `POST /internal/jobs/sync-pending-payments` with header `x-internal-secret`. |
+| **`GET /payment/methods`** | Returns this user's saved cards only. Empty array until they save one. |
+| **`total_due_sar = 0`** | Backend skips Moyasar and still creates the order, subscription, and wallet debit. The debit re-checks the live balance. |
+| **`authorized`** | Not a successful pay. The app should keep the user on the payment screen until the charge is paid or captured. |
 | **Postman collection outdated** | `POST /orders` body in mobile Postman uses wrong field names — use this doc |
 | **No client-side Moyasar publishable key in backend** | Frontend owns Moyasar dashboard keys per environment |
 
@@ -598,7 +590,7 @@ Track these with backend before production sign-off:
 
 - [ ] New user: Month plan, no code → pay → `is_new_user: true`, active subscription
 - [ ] Returning user: wallet line in session totals
-- [ ] Referral code (new user): 20% off + lower `total_due_sar`
+- [ ] Referral code (new user): 15% off + lower `total_due_sar`
 - [ ] Referral code (returning user): rejected
 - [ ] Session expiry after 10 min → 410 on pay
 - [ ] Declined card → 402, no subscription

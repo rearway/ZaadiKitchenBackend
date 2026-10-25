@@ -89,6 +89,14 @@ export class PaymentFailedError extends BaseError {
   }
 }
 
+export class InsufficientWalletBalanceError extends BaseError {
+  constructor(
+    message = 'Your wallet balance is no longer enough to cover this checkout. Please review your wallet and try again.'
+  ) {
+    super('INSUFFICIENT_WALLET_BALANCE', 422, message)
+  }
+}
+
 export class InvalidCodeError extends BaseError {
   constructor(
     message = "This code doesn't exist or has already been used.",

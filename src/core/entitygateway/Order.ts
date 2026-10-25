@@ -11,6 +11,7 @@ export interface ConfirmedOrderBillingRow {
 
 export interface OrderLoader {
   getOrderById(id: string): Promise<Order | null>
+  getOrderByGatewayPaymentId(gatewayPaymentId: string): Promise<Order | null>
   getLastOrderByUserId(userId: string): Promise<Order | null>
   hasUserUsedPromoCode(userId: string, code: string): Promise<boolean>
   getConfirmedOrdersForBilling(
