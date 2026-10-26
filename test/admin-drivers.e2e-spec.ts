@@ -5,16 +5,20 @@ import * as jwt from 'jsonwebtoken'
 
 import { AppModule } from '../src/app.module'
 import { CoreS } from '../src/tokens'
+import { AreaAlreadyAssignedError } from '../src/shared/errors'
 
 const mockUseCases = {
   commands: {
     createDriver: jest.fn(),
     updateDriver: jest.fn(),
     deleteDriver: jest.fn(),
+    assignDriverArea: jest.fn(),
   },
   queries: {
     getAdminDrivers: jest.fn(),
     getAdminDriver: jest.fn(),
+    getAdminDriverDeliveries: jest.fn(),
+    listUnassignedAreas: jest.fn(),
   },
 }
 
@@ -147,6 +151,106 @@ describe('Admin drivers', () => {
       phone: undefined,
       isActive: false,
       areaIds: [],
+    })
+  })
+
+  it('lists unassigned areas for an ADMIN token', async () => {
+    mockUseCases.queries.listUnassignedAreas.mockResolvedValue({
+      message: 'Unassigned areas retrieved successfully',
+      data: { areas: [] },
+    })
+
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/admin/drivers/unassigned-areas')
+      .set('Authorization', `Bearer ${makeJwt(ADMIN)}`)
+
+    expect(res.status).toBe(200)
+    expect(mockUseCases.queries.listUnassignedAreas).toHaveBeenCalledWith({})
+    expect(mockUseCases.queries.getAdminDriver).not.toHaveBeenCalled()
+  })
+
+  it('returns 401 for unassigned areas without a token', async () => {
+    const res = await request(app.getHttpServer()).get(
+      '/api/v1/admin/drivers/unassigned-areas'
+    )
+    expect(res.status).toBe(401)
+    expect(mockUseCases.queries.listUnassignedAreas).not.toHaveBeenCalled()
+  })
+
+  it('loads a driver day and passes the ops date', async () => {
+    mockUseCases.queries.getAdminDriverDeliveries.mockResolvedValue({
+      message: 'Driver deliveries retrieved successfully',
+      data: { deliveries: [] },
+    })
+
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/admin/drivers/driver-1/deliveries')
+      .query({ date: '2026-10-26' })
+      .set('Authorization', `Bearer ${makeJwt(ADMIN)}`)
+
+    expect(res.status).toBe(200)
+    expect(mockUseCases.queries.getAdminDriverDeliveries).toHaveBeenCalledWith({
+      driverId: 'driver-1',
+      date: '2026-10-26',
+    })
+  })
+
+  it('returns 400 for a delivery date that is not YYYY-MM-DD', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/admin/drivers/driver-1/deliveries')
+      .query({ date: '26-10-2026' })
+      .set('Authorization', `Bearer ${makeJwt(ADMIN)}`)
+
+    expect(res.status).toBe(400)
+    expect(mockUseCases.queries.getAdminDriverDeliveries).not.toHaveBeenCalled()
+  })
+
+  it('assigns an area from area_id', async () => {
+    mockUseCases.commands.assignDriverArea.mockResolvedValue({
+      message: 'Area assigned successfully',
+      data: { id: 'driver-1' },
+    })
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/drivers/driver-1/areas')
+      .set('Authorization', `Bearer ${makeJwt(ADMIN)}`)
+      .send({ area_id: AREA_A })
+
+    expect(res.status).toBe(200)
+    expect(mockUseCases.commands.assignDriverArea).toHaveBeenCalledWith({
+      driverId: 'driver-1',
+      areaId: AREA_A,
+    })
+  })
+
+  it('returns 409 when the area already belongs to another driver', async () => {
+    mockUseCases.commands.assignDriverArea.mockRejectedValue(
+      new AreaAlreadyAssignedError(
+        'Olaya',
+        'Fahad Al-Otaibi',
+        AREA_A,
+        'driver-2'
+      )
+    )
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/drivers/driver-1/areas')
+      .set('Authorization', `Bearer ${makeJwt(ADMIN)}`)
+      .send({ area_id: AREA_A })
+
+    expect(res.status).toBe(409)
+    expect(res.body).toMatchObject({
+      statusCode: 409,
+      errorCode: 'AREA_ALREADY_ASSIGNED',
+      message:
+        'Area "Olaya" is already assigned to Fahad Al-Otaibi. One area = one driver.',
+      details: {
+        area_id: AREA_A,
+        area_name: 'Olaya',
+        driver_id: 'driver-2',
+        driver_name: 'Fahad Al-Otaibi',
+      },
+      operation: 'assign-driver-area',
     })
   })
 

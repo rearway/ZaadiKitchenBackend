@@ -373,3 +373,24 @@ export class ActiveSubscriptionCheckoutBlockedError extends BaseError {
     super('ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED', 422, message)
   }
 }
+
+export class AreaAlreadyAssignedError extends BaseError {
+  constructor(
+    areaName: string,
+    driverName: string,
+    areaId: string,
+    driverId: string
+  ) {
+    super(
+      'AREA_ALREADY_ASSIGNED',
+      409,
+      `Area "${areaName}" is already assigned to ${driverName}. One area = one driver.`,
+      {
+        area_id: areaId,
+        area_name: areaName,
+        driver_id: driverId,
+        driver_name: driverName,
+      }
+    )
+  }
+}
