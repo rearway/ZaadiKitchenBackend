@@ -1,5 +1,9 @@
 import type { Deps } from '../../entitygateway/index.js'
-import { computeEffectiveStage, MANUAL_STAGE_ORDER } from '../services/dailyOpsStage.js'
+import {
+  computeEffectiveStage,
+  MANUAL_STAGE_ORDER,
+  nextStage,
+} from '../services/dailyOpsStage.js'
 import { getSkipCutoffTimestamp, getDayLabel } from '../services/weekUtils.js'
 
 export interface GetDailyOpsInput {
@@ -71,8 +75,14 @@ export function makeUC(deps: Deps) {
         pct: total > 0 ? Math.round((r.count / total) * 100) : 0,
       }))
 
-      const canAdvance = stage === 'locked' || stage === 'dispatch'
-      const advanceLabel = stage === 'locked' ? 'Mark as Dispatched →' : stage === 'dispatch' ? 'Mark as Delivered →' : null
+      const advanceTo = nextStage(stage)
+      const canAdvance = advanceTo !== null
+      const advanceLabel =
+        advanceTo === 'dispatch'
+          ? 'Mark as Dispatched →'
+          : advanceTo === 'delivered'
+            ? 'Mark as Delivered →'
+            : null
 
       const lockedAt = stage !== 'pending' ? getSkipCutoffTimestamp(date) : null
       const lockedNote =

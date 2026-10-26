@@ -108,6 +108,29 @@ describe('GetDailyOps', () => {
     const result = await getDailyOps({ date: PAST_DATE, role: 'admin' })
 
     expect(result.pipeline.stage).toBe('dispatch')
+    expect(result.pipeline.can_advance).toBe(true)
+    expect(result.pipeline.advance_label).toBe('Mark as Delivered →')
+  })
+
+  it('does not allow advance once the day is delivered', async () => {
+    const deps = buildDeps({
+      dailyOpsDayLoader: {
+        getByDate: jest.fn().mockResolvedValue({
+          date: PAST_DATE,
+          dispatchedAt: new Date(),
+          dispatchedById: 'admin-1',
+          deliveredAt: new Date(),
+          deliveredById: 'admin-1',
+        }),
+      } as unknown as ReturnType<typeof buildDeps>['dailyOpsDayLoader'],
+    })
+    const getDailyOps = makeUC(deps)
+
+    const result = await getDailyOps({ date: PAST_DATE, role: 'admin' })
+
+    expect(result.pipeline.stage).toBe('delivered')
+    expect(result.pipeline.can_advance).toBe(false)
+    expect(result.pipeline.advance_label).toBeNull()
   })
 
   it('populates the issues queue for admin and nulls it for ops', async () => {
