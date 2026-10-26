@@ -13,6 +13,7 @@ import {
   MealBreakdownRow,
 } from '../../core/entitygateway/DeliveryDay.js'
 import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
+import { dailyOpsDeliverableDayWhereSql } from './sql/dailyOpsDeliverableDayWhere.js'
 import { Subscription } from '../../core/entities/Subscription.js'
 import {
   DeliveryDay,
@@ -274,7 +275,7 @@ export class SubscriptionPersistenceService
          ) dl ON true
          LEFT JOIN delivery_areas da ON da.id = dl.area_id AND da.deleted_at IS NULL
          WHERE dd.date = :date
-           AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+           ${dailyOpsDeliverableDayWhereSql()}
            AND s.status IN ('active', 'paused', 'cancelled')
            ${areaClause}
          ORDER BY dd.user_id,
@@ -389,7 +390,7 @@ export class SubscriptionPersistenceService
        JOIN subscriptions s ON s.id = dd.subscription_id
        ${effectiveMealLateralJoin()}
        WHERE dd.date = :date
-         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+         ${dailyOpsDeliverableDayWhereSql()}
          AND s.status IN ('active', 'paused', 'cancelled')
        ORDER BY dd.user_id,
                 CASE dd.status WHEN 'delivered' THEN 0 WHEN 'past_cutoff' THEN 1 ELSE 2 END,
