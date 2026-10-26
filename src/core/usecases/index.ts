@@ -53,6 +53,7 @@ import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
+import * as AssignDriverArea from './commands/AssignDriverArea.js'
 import * as CreateDriver from './commands/CreateDriver.js'
 import * as UpdateDriver from './commands/UpdateDriver.js'
 import * as DeleteDriver from './commands/DeleteDriver.js'
@@ -117,6 +118,8 @@ import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
 import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
 import * as GetAdminDrivers from './queries/GetAdminDrivers.js'
 import * as GetAdminDriver from './queries/GetAdminDriver.js'
+import * as GetAdminDriverDeliveries from './queries/GetAdminDriverDeliveries.js'
+import * as ListUnassignedAreas from './queries/ListUnassignedAreas.js'
 import * as GetMyDeliveries from './queries/GetMyDeliveries.js'
 import * as GetDailyOps from './queries/GetDailyOps.js'
 import * as GetDeliveryLabels from './queries/GetDeliveryLabels.js'
@@ -479,6 +482,12 @@ export function initUseCases(deps: Deps) {
     DeleteDriver.name,
     ...defaultWrappers
   )
+  const assignDriverArea = wrapUC(
+    deps,
+    AssignDriverArea.makeUC(deps),
+    AssignDriverArea.name,
+    ...defaultWrappers
+  )
   const deleteAccount = wrapUC(
     deps,
     DeleteAccount.makeUC(deps),
@@ -837,6 +846,18 @@ export function initUseCases(deps: Deps) {
     GetAdminDriver.name,
     ...defaultWrappers
   )
+  const getAdminDriverDeliveries = wrapUC(
+    deps,
+    GetAdminDriverDeliveries.makeUC(deps),
+    GetAdminDriverDeliveries.name,
+    ...defaultWrappers
+  )
+  const listUnassignedAreas = wrapUC(
+    deps,
+    ListUnassignedAreas.makeUC(deps),
+    ListUnassignedAreas.name,
+    ...defaultWrappers
+  )
   const getMyDeliveries = wrapUC(
     deps,
     GetMyDeliveries.makeUC(deps),
@@ -975,6 +996,8 @@ export function initUseCases(deps: Deps) {
       getAdminCustomerHistory,
       getAdminDrivers,
       getAdminDriver,
+      getAdminDriverDeliveries,
+      listUnassignedAreas,
       getMyDeliveries,
       getDailyOps,
       getDeliveryLabels,
@@ -1047,6 +1070,7 @@ export function initUseCases(deps: Deps) {
       createDriver,
       updateDriver,
       deleteDriver,
+      assignDriverArea,
       deleteAccount,
       adminCreditWallet,
       markDeliveryDelivered,

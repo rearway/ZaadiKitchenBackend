@@ -262,6 +262,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       listDrivers: jest.fn().mockResolvedValue([]),
       getDriverById: jest.fn().mockResolvedValue(null),
       getAssignedAreaIds: jest.fn().mockResolvedValue([]),
+      listUnassignedAreas: jest.fn().mockResolvedValue([]),
     },
 
     driverAdminPersistor: {
@@ -270,6 +271,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       softDeleteDriver: jest
         .fn()
         .mockResolvedValue(new Date('2026-10-24T00:00:00Z')),
+      assignArea: jest.fn().mockResolvedValue(null),
     },
 
     otpSessionLoader: {
@@ -421,6 +423,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
       getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
+      getAdminDriverDeliveriesByDate: jest.fn().mockResolvedValue([]),
       getMealBreakdownByDate: jest.fn().mockResolvedValue([]),
     },
 

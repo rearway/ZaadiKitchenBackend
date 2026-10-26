@@ -21,9 +21,11 @@ export interface DeliveryDayLoader {
     areaId?: string,
     areaIds?: string[]
   ): Promise<RiderDeliveryRow[]>
-  getMealBreakdownByDate(
-    date: string
-  ): Promise<MealBreakdownRow[]>
+  getAdminDriverDeliveriesByDate(
+    date: string,
+    areaIds: string[]
+  ): Promise<AdminDriverDeliveryRow[]>
+  getMealBreakdownByDate(date: string): Promise<MealBreakdownRow[]>
 }
 
 export interface MealBreakdownRow {
@@ -31,6 +33,17 @@ export interface MealBreakdownRow {
   mealId: string | null
   mealName: string | null
   count: number
+}
+
+export interface AdminDriverDeliveryRow {
+  deliveryDayId: string
+  customerName: string
+  customerPhone: string | null
+  mealName: string | null
+  mealType: 'executive' | 'salad'
+  status: DeliveryDayStatus
+  reviewStars: number | null
+  reviewTags: string[] | null
 }
 
 export interface RiderDeliveryRow {
