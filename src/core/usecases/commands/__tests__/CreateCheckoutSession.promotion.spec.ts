@@ -126,4 +126,100 @@ describe('CreateCheckoutSession promotion', () => {
       makeUC(deps)({ userId, planId: 'month', mealType: 'executive' })
     ).rejects.toBeInstanceOf(SamePlanNotAllowedError)
   })
+
+  it('reactivates the same plan for free while a cancelled subscription is still in service', async () => {
+    const month = makePlan({ id: 'plan-month', slug: 'month', priceSar: 500 })
+    const sub = makeSubscription({
+      status: 'cancelled',
+      planId: 'plan-month',
+      endDate: '2099-12-31',
+    })
+    const session = makeCheckoutSession({
+      totalDueSar: 0,
+      priorPlanCreditSar: 500,
+      promotionSubscriptionId: sub.id,
+    })
+    const deps = buildDeps({
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanBySlug: jest.fn().mockResolvedValue(month),
+        getPlanById: jest.fn().mockResolvedValue(month),
+      },
+      subscriptionLoader: {
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+        getSubscriptionById: jest.fn(),
+      },
+      checkoutSessionPersistor: {
+        ...buildDeps().checkoutSessionPersistor,
+        createSession: jest.fn().mockResolvedValue(session),
+      },
+    })
+
+    const result = await makeUC(deps)({
+      userId,
+      planId: 'month',
+      mealType: 'executive',
+    })
+
+    expect(result.promotion).toBe(true)
+    expect(result.total_due_sar).toBe(0)
+    expect(deps.checkoutSessionPersistor.createSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promotionSubscriptionId: sub.id,
+        priorPlanCreditSar: 500,
+        walletCreditSar: 0,
+        totalDueSar: 0,
+      })
+    )
+  })
+
+  it('prices a new checkout with wallet credit when the cancelled plan has ended', async () => {
+    const week = makePlan({ id: 'plan-week', slug: 'week', priceSar: 125 })
+    const sub = makeSubscription({
+      status: 'cancelled',
+      planId: 'plan-week',
+      endDate: '2020-01-01',
+    })
+    const session = makeCheckoutSession({
+      basePriceSar: 125,
+      walletCreditSar: 29,
+      totalDueSar: 96,
+    })
+    const deps = buildDeps({
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanBySlug: jest.fn().mockResolvedValue(week),
+      },
+      subscriptionLoader: {
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+        getSubscriptionById: jest.fn(),
+      },
+      walletLoader: {
+        ...buildDeps().walletLoader,
+        getBalanceByUserId: jest.fn().mockResolvedValue(29),
+      },
+      checkoutSessionPersistor: {
+        ...buildDeps().checkoutSessionPersistor,
+        createSession: jest.fn().mockResolvedValue(session),
+      },
+    })
+
+    const result = await makeUC(deps)({
+      userId,
+      planId: 'week',
+      mealType: 'executive',
+    })
+
+    expect(result.promotion).toBe(false)
+    expect(result.prior_plan_credit_sar).toBeNull()
+    expect(deps.checkoutSessionPersistor.createSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promotionSubscriptionId: null,
+        priorPlanCreditSar: null,
+        basePriceSar: 125,
+        walletCreditSar: 29,
+        totalDueSar: 96,
+      })
+    )
+  })
 })

@@ -10,6 +10,8 @@ import {
   buildPauseResumePickerState,
 } from '../services/pauseResumeDatePicker.js'
 import { getFlexDaysRemaining } from '../services/flexDays.js'
+import { isSubscriptionInServicePeriod } from '../services/subscriptionServicePeriod.js'
+import { loadCurrentSubscription } from '../services/loadCurrentSubscription.js'
 
 export interface GetSubscriptionInput {
   userId: string
@@ -71,8 +73,10 @@ export function makeUC(deps: Deps) {
     } = deps
     try {
       const { userId } = input
-      let subscription =
-        await subscriptionLoader.getActiveSubscriptionByUserId(userId)
+      let subscription = await loadCurrentSubscription(
+        subscriptionLoader,
+        userId
+      )
 
       if (!subscription) {
         const { ResourceNotFoundError } =
@@ -80,7 +84,12 @@ export function makeUC(deps: Deps) {
         throw new ResourceNotFoundError('Subscription')
       }
 
-      subscription = await ensurePauseStatus(deps, subscription)
+      if (isSubscriptionInServicePeriod(subscription)) {
+        subscription = await ensurePauseStatus(deps, subscription)
+      }
+      const presentedStatus = isSubscriptionInServicePeriod(subscription)
+        ? subscription.status
+        : 'expired'
 
       const plan = await planLoader.getPlanById(subscription.planId)
       const remainingCount = Math.max(
@@ -126,7 +135,7 @@ export function makeUC(deps: Deps) {
         plan_id: plan?.slug ?? subscription.planId,
         plan_name: plan?.name ?? '',
         meal_type: subscription.mealType,
-        status: subscription.status,
+        status: presentedStatus,
         total_meal_days: subscription.totalMealDays,
         delivered_count: subscription.deliveredCount,
         skipped_count: subscription.skippedCount,

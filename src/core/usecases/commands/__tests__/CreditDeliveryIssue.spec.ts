@@ -88,6 +88,61 @@ describe('CreditDeliveryIssue', () => {
     ).rejects.toMatchObject({ errorCode: 'RESOURCE_NOT_FOUND', statusCode: 404 })
   })
 
+  it('sends one push when duplicate device rows share a token or endpoint', async () => {
+    const issue = makeIssue()
+    const devices = [
+      {
+        id: 'dev-1',
+        endpointArn: 'arn:endpoint-1',
+        deviceToken: 'token-a',
+        updatedAt: new Date('2026-10-02T00:00:00Z'),
+      },
+      {
+        id: 'dev-2',
+        endpointArn: 'arn:endpoint-1',
+        deviceToken: 'token-b',
+        updatedAt: new Date('2026-10-01T00:00:00Z'),
+      },
+      {
+        id: 'dev-3',
+        endpointArn: 'arn:endpoint-2',
+        deviceToken: 'token-a',
+        updatedAt: new Date('2026-09-01T00:00:00Z'),
+      },
+    ]
+    const deps = buildDeps({
+      deliveryIssueLoader: {
+        ...buildDeps().deliveryIssueLoader,
+        getIssueById: jest.fn().mockResolvedValue(issue),
+      },
+      deliveryIssuePersistor: {
+        ...buildDeps().deliveryIssuePersistor,
+        resolveIssue: jest.fn().mockResolvedValue(makeIssue({ status: 'credited' })),
+      },
+      userDeviceLoader: {
+        ...buildDeps().userDeviceLoader,
+        getDevicesByUserId: jest.fn().mockResolvedValue(devices),
+      },
+    })
+
+    await makeUC(deps)({
+      issueId: 'iss-1',
+      creditSar: 25,
+      resolvedByUserId: 'admin-1',
+    })
+
+    const notificationGateway = deps.notificationGateway as {
+      sendSingleNotification: jest.Mock
+    }
+    expect(notificationGateway.sendSingleNotification).toHaveBeenCalledTimes(1)
+    expect(notificationGateway.sendSingleNotification).toHaveBeenCalledWith(
+      'arn:endpoint-1',
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({ type: 'issue_credited' })
+    )
+  })
+
   it.each([0, -5, 501])('throws VALIDATION_ERROR for an out-of-range amount: %d', async amount => {
     const deps = buildDeps({
       deliveryIssueLoader: {

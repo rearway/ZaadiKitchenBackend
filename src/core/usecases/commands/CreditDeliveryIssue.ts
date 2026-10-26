@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError, IssueAlreadyResolvedError, ValidationError } from '../../../shared/errors/domain.errors.js'
+import { dedupeDevicesForPush } from '../services/pushRecipients.js'
 
 export interface CreditDeliveryIssueInput {
   issueId: string
@@ -36,8 +37,10 @@ export function makeUC(deps: Deps) {
 
       try {
         const balance = await walletLoader.getBalanceByUserId(issue.userId)
-        const devices = await userDeviceLoader.getDevicesByUserId(issue.userId)
-        
+        const devices = dedupeDevicesForPush(
+          await userDeviceLoader.getDevicesByUserId(issue.userId)
+        )
+
         await Promise.allSettled(
           devices.map(device =>
             notificationGateway.sendSingleNotification(

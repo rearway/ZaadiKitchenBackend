@@ -2,6 +2,8 @@ import type { Subscription } from '../entities/Subscription.js'
 
 export interface SubscriptionLoader {
   getActiveSubscriptionByUserId(userId: string): Promise<Subscription | null>
+  /** Newest row of any status. Used only when no active, paused, or cancelled row exists. */
+  getLatestSubscriptionByUserId?(userId: string): Promise<Subscription | null>
   getSubscriptionById(id: string): Promise<Subscription | null>
 }
 

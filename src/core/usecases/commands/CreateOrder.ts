@@ -15,11 +15,14 @@ import {
 import {
   fulfillPaidCheckout,
   fulfillmentIsStale,
-  resolveCheckoutPaymentMethod,
-  resolveWalletOnlyCheckoutPayment,
+  resolveOrderPayment,
+  settledCheckoutPaymentMethodId,
   type CreateOrderOutput,
 } from './fulfillPaidCheckout.js'
-import { canUpgradeSubscriptionPlan } from '../services/subscriptionServicePeriod.js'
+import {
+  canUpgradeSubscriptionPlan,
+  subscriptionBlocksNewPurchase,
+} from '../services/subscriptionServicePeriod.js'
 import {
   computeCheckoutWalletAndDue,
   needsGatewayCharge,
@@ -128,9 +131,13 @@ export function makeUC(deps: Deps) {
       }
 
       const methodId = openTx?.paymentMethodId || paymentMethodId
-      const resolved = needsGatewayCharge(session.totalDueSar)
-        ? await resolveCheckoutPaymentMethod(deps, userId, methodId)
-        : resolveWalletOnlyCheckoutPayment(methodId)
+      const resolved = await resolveOrderPayment(
+        deps,
+        userId,
+        methodId,
+        session.totalDueSar
+      )
+      const settledMethodId = settledCheckoutPaymentMethodId(methodId, resolved)
 
       const plan = await deps.planLoader.getPlanById(session.planId)
       if (!plan) throw new ResourceNotFoundError('Plan', session.planId)
@@ -149,7 +156,7 @@ export function makeUC(deps: Deps) {
               'Your subscription changed after checkout started. Please start checkout again.'
             )
           }
-        } else if (liveSub) {
+        } else if (liveSub && subscriptionBlocksNewPurchase(liveSub)) {
           throw new ActiveSubscriptionCheckoutBlockedError()
         }
       }
@@ -175,17 +182,20 @@ export function makeUC(deps: Deps) {
           amountSar: session.totalDueSar,
           status: 'INITIATED',
           startDate,
-          paymentMethodId,
+          paymentMethodId: settledMethodId,
         })
-      } else if (!paymentTx.startDate || !paymentTx.paymentMethodId) {
+      } else if (
+        !paymentTx.startDate ||
+        paymentTx.paymentMethodId !== settledMethodId
+      ) {
         await deps.paymentTransactionPersistor.updateTransaction(paymentTx.id, {
           startDate: paymentTx.startDate ?? startDate,
-          paymentMethodId: paymentTx.paymentMethodId ?? paymentMethodId,
+          paymentMethodId: settledMethodId,
         })
         paymentTx = {
           ...paymentTx,
           startDate: paymentTx.startDate ?? startDate,
-          paymentMethodId: paymentTx.paymentMethodId ?? paymentMethodId,
+          paymentMethodId: settledMethodId,
         }
       }
 
@@ -194,7 +204,7 @@ export function makeUC(deps: Deps) {
           userId,
           session,
           plan,
-          paymentMethodId: methodId,
+          paymentMethodId: settledMethodId,
           hardcoded: resolved.hardcoded,
           resolvedMethod: resolved.method,
           gatewayPaymentId,
@@ -282,7 +292,7 @@ export function makeUC(deps: Deps) {
         metadata: {
           checkoutSessionId: sessionId,
           startDate: intentStartDate,
-          paymentMethodId: methodId,
+          paymentMethodId: settledMethodId,
         },
       })
 

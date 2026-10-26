@@ -406,6 +406,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     subscriptionLoader: {
       getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(null),
+      getLatestSubscriptionByUserId: jest.fn().mockResolvedValue(null),
       getSubscriptionById: jest.fn().mockResolvedValue(null),
     },
 

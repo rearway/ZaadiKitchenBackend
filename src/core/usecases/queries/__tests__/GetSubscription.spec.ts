@@ -83,6 +83,7 @@ describe('GetSubscription', () => {
 
     expect(result.days_remaining).toBe(0)
     expect(result.remaining_count).toBe(0)
+    expect(result.status).toBe('expired')
   })
 
   it('returns paused_until from the subscription when paused', async () => {
@@ -121,6 +122,26 @@ describe('GetSubscription', () => {
 
     expect(result.plan_id).toBe('plan-uuid-month')
     expect(result.plan_name).toBe('')
+  })
+
+  it('loads the latest subscription when every in-service status row is gone', async () => {
+    const sub = makeSubscription({ status: 'expired', endDate: '2020-01-01' })
+    const deps = buildDeps({
+      subscriptionLoader: {
+        ...buildDeps().subscriptionLoader,
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(null),
+        getLatestSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+      },
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanById: jest.fn().mockResolvedValue(makePlan()),
+      },
+    })
+
+    const result = await makeUC(deps)(validInput)
+
+    expect(result.status).toBe('expired')
+    expect(result.subscription_id).toBe(sub.id)
   })
 
   it('throws ResourceNotFoundError when there is no active subscription', async () => {

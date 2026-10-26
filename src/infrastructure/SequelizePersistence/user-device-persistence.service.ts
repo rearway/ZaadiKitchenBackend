@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { Op } from 'sequelize'
 import {
   UserDeviceLoader,
   UserDevicePersistor,
 } from '../../core/entitygateway/UserDevice.js'
 import { UserDevice } from '../../core/entities/UserDevice.js'
+import { dedupeDevicesForPush } from '../../core/usecases/services/pushRecipients.js'
 import { UserDeviceModel } from './models/UserDeviceModel.js'
 
 @Injectable()
@@ -13,8 +15,9 @@ export class UserDevicePersistenceService
   async getDevicesByUserId(userId: string): Promise<UserDevice[]> {
     const models = await UserDeviceModel.findAll({
       where: { userId, isActive: true },
+      order: [['updatedAt', 'DESC']],
     })
-    return models.map(m => this.toEntity(m))
+    return dedupeDevicesForPush(models.map(m => this.toEntity(m)))
   }
 
   async upsertDevice(
@@ -24,14 +27,37 @@ export class UserDevicePersistenceService
     endpointArn: string,
     subscriptionArn: string
   ): Promise<UserDevice> {
-    const [model] = await UserDeviceModel.upsert({
-      userId,
-      platform,
-      deviceToken,
-      endpointArn,
-      subscriptionArn,
-      isActive: true,
+    const existing = await UserDeviceModel.findOne({
+      where: { userId, deviceToken },
+      order: [['updatedAt', 'DESC']],
     })
+    const model = existing
+      ? await existing.update({
+          platform,
+          endpointArn,
+          subscriptionArn,
+          isActive: true,
+        })
+      : await UserDeviceModel.create({
+          userId,
+          platform,
+          deviceToken,
+          endpointArn,
+          subscriptionArn,
+          isActive: true,
+        })
+
+    await UserDeviceModel.update(
+      { isActive: false },
+      {
+        where: {
+          userId,
+          id: { [Op.ne]: model.id },
+          [Op.or]: [{ deviceToken }, ...(endpointArn ? [{ endpointArn }] : [])],
+        },
+      }
+    )
+
     return this.toEntity(model)
   }
 

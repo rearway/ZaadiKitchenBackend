@@ -1,6 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError, ValidationError } from '../../../shared/errors/index.js'
 import { UserRole } from '../../../codecs/enums.js'
+import { dedupeDevicesForPush } from '../services/pushRecipients.js'
 
 export interface AdminCreditWalletInput {
   customerId: string
@@ -34,7 +35,9 @@ export function makeUC(deps: Deps) {
 
       try {
         const balance = await walletLoader.getBalanceByUserId(input.customerId)
-        const devices = await userDeviceLoader.getDevicesByUserId(input.customerId)
+        const devices = dedupeDevicesForPush(
+          await userDeviceLoader.getDevicesByUserId(input.customerId)
+        )
         await Promise.allSettled(
           devices.map(device =>
             notificationGateway.sendSingleNotification(

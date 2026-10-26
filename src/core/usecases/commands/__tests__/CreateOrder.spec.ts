@@ -572,6 +572,129 @@ describe('CreateOrder', () => {
     })
   })
 
+  it('charges a saved card for the remainder when the client sends a placeholder method id', async () => {
+    const session = makeCheckoutSession({
+      planId: 'plan-week',
+      basePriceSar: 125,
+      walletCreditSar: 29,
+      totalDueSar: 96,
+    })
+    const saved = makePaymentMethod({
+      id: 'pm-saved',
+      token: 'tok_saved',
+      label: 'Visa ····1111',
+      isLastUsed: true,
+      isDefault: false,
+    })
+    const deps = makeOrderDeps({
+      useMockPayment: false,
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(29) },
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanById: jest.fn().mockResolvedValue(
+          makePlan({ id: 'plan-week', slug: 'week', priceSar: 125, mealCount: 5 })
+        ),
+      },
+      paymentMethodLoader: {
+        getMethodById: jest.fn().mockResolvedValue(null),
+        getMethodsByUserId: jest.fn().mockResolvedValue([saved]),
+      },
+    })
+
+    await makeUC(deps)({
+      ...validInput,
+      paymentMethodId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(deps.paymentGateway.charge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amountSar: 96,
+        paymentToken: 'tok_saved',
+        metadata: expect.objectContaining({ paymentMethodId: 'pm-saved' }),
+      })
+    )
+    expect(
+      deps.paymentTransactionPersistor.createTransaction
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMethodId: 'pm-saved', amountSar: 96 })
+    )
+    expect(deps.walletPersistor.createDebitIfSufficient).toHaveBeenCalledWith(
+      expect.objectContaining({ amountSar: -29 })
+    )
+    expect(deps.paymentMethodPersistor.markAsLastUsed).toHaveBeenCalledWith(
+      'pm-saved',
+      validInput.userId
+    )
+  })
+
+  it.each(['cancelled', 'active'] as const)(
+    'lets a %s plan that has ended be replaced by a new purchase',
+    async status => {
+      const ended = makeSubscription({
+        status,
+        endDate: '2020-01-01',
+        orderId: 'old-order',
+      })
+      const deps = makeOrderDeps({
+        subscriptionLoader: {
+          ...buildDeps().subscriptionLoader,
+          getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(ended),
+        },
+      })
+
+      await makeUC(deps)(validInput)
+
+      expect(deps.paymentGateway.charge).toHaveBeenCalled()
+      expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
+        ended.id,
+        { status: 'expired' }
+      )
+      expect(deps.subscriptionPersistor.createSubscription).toHaveBeenCalled()
+    }
+  )
+
+  it('reactivates a cancelled in-service plan on a zero-due promotion without a new subscription', async () => {
+    const sub = makeSubscription({
+      status: 'cancelled',
+      endDate: '2099-12-31',
+    })
+    const session = makeCheckoutSession({
+      promotionSubscriptionId: sub.id,
+      priorPlanCreditSar: 500,
+      walletCreditSar: 0,
+      totalDueSar: 0,
+      basePriceSar: 500,
+    })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      subscriptionLoader: {
+        ...buildDeps().subscriptionLoader,
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+        getSubscriptionById: jest.fn().mockResolvedValue(sub),
+      },
+      subscriptionPersistor: {
+        createSubscription: jest.fn().mockResolvedValue(sub),
+        updateSubscription: jest
+          .fn()
+          .mockResolvedValue({ ...sub, status: 'active' }),
+      },
+    })
+
+    await makeUC(deps)(validInput)
+
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.updateSubscription).toHaveBeenCalledWith(
+      sub.id,
+      expect.objectContaining({ status: 'active' })
+    )
+  })
+
   it('rejects hardcoded method ids when mock payments are off', async () => {
     const deps = makeOrderDeps({ useMockPayment: false })
     const createOrder = makeUC(deps)

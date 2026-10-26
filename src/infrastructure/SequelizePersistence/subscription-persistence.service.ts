@@ -38,6 +38,16 @@ export class SubscriptionPersistenceService
     return model ? this.toSubscriptionEntity(model) : null
   }
 
+  async getLatestSubscriptionByUserId(
+    userId: string
+  ): Promise<Subscription | null> {
+    const model = await SubscriptionModel.findOne({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+    })
+    return model ? this.toSubscriptionEntity(model) : null
+  }
+
   async getSubscriptionById(id: string): Promise<Subscription | null> {
     const model = await SubscriptionModel.findByPk(id)
     return model ? this.toSubscriptionEntity(model) : null

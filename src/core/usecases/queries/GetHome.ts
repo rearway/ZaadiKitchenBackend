@@ -10,6 +10,7 @@ import {
   canUseSkipAndPause,
   isSubscriptionInServicePeriod,
 } from '../services/subscriptionServicePeriod.js'
+import { loadCurrentSubscription } from '../services/loadCurrentSubscription.js'
 import { buildPauseHomeLabels } from '../services/pauseFrozenDays.js'
 import { todayKSA } from '../services/revenueUtils.js'
 import { toPlanDiscountFields } from '../services/planPricing.js'
@@ -50,7 +51,8 @@ export interface GetHomeOutput {
 
 function getSubscriptionStatus(sub: Subscription | null): 'none' | 'active' | 'expired' | 'paused' | 'cancelled' {
   if (!sub) return 'none'
-  return sub.status as 'active' | 'expired' | 'paused' | 'cancelled'
+  if (!isSubscriptionInServicePeriod(sub)) return 'expired'
+  return sub.status as 'active' | 'paused' | 'cancelled'
 }
 
 function formatEndDateLabel(endDate: string): string {
@@ -234,13 +236,19 @@ export function makeUC(deps: Deps) {
     } = deps
 
     try {
-      const [user, rawSub, plans] = await Promise.all([
+      const [user, plans] = await Promise.all([
         userLoader.getUserById(input.userId),
-        subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
         planLoader.getActivePlans(),
       ])
+      const rawSub = await loadCurrentSubscription(
+        subscriptionLoader,
+        input.userId
+      )
 
-      const sub = rawSub ? await ensurePauseStatus(deps, rawSub) : null
+      const sub =
+        rawSub && isSubscriptionInServicePeriod(rawSub)
+          ? await ensurePauseStatus(deps, rawSub)
+          : rawSub
       const status = getSubscriptionStatus(sub)
 
       let pauseHomeLabels: { days_frozen: number; pause_label: string } | null =

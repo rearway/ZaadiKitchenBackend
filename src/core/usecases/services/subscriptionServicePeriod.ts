@@ -26,6 +26,17 @@ export function canEnterScheduledPause(sub: Subscription): boolean {
   return sub.status === 'active' || sub.status === 'cancelled'
 }
 
+/**
+ * A row still inside its paid window blocks buying a second plan.
+ * Past-end active, paused, or cancelled rows do not — the customer can renew.
+ */
+export function subscriptionBlocksNewPurchase(
+  sub: Subscription,
+  asOfDate: string = todayKSA()
+): boolean {
+  return isSubscriptionInServicePeriod(sub, asOfDate)
+}
+
 /** Plan upgrade (promotion checkout) while still in the paid delivery window. */
 export function canUpgradeSubscriptionPlan(
   sub: Subscription,

@@ -6,8 +6,11 @@ import type {
 import type { Plan } from '../../entities/Plan.js'
 import type { Order } from '../../entities/Order.js'
 import type { PaymentTransaction } from '../../entities/PaymentTransaction.js'
+import type { PaymentMethod } from '../../entities/PaymentMethod.js'
 import { findHardcodedMethod } from '../../constants/hardcoded-payment-methods.js'
 import { walletCoversDebit } from '../../constants/payment-status.js'
+import { needsGatewayCharge } from '../services/checkoutWalletUtils.js'
+import { subscriptionBlocksNewPurchase } from '../services/subscriptionServicePeriod.js'
 import {
   REFERRAL_REWARD_RATE_PCT,
   referralRewardSar,
@@ -132,6 +135,20 @@ export function resolveWalletOnlyCheckoutPayment(
   }
 }
 
+function pickSavedPaymentMethod(
+  methods: PaymentMethod[],
+  userId: string
+): PaymentMethod | null {
+  const owned = methods.filter(method => method.userId === userId && method.token)
+  if (owned.length === 0) return null
+  const ranked = [...owned].sort((a, b) => {
+    if (a.isLastUsed !== b.isLastUsed) return a.isLastUsed ? -1 : 1
+    if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  })
+  return ranked[0] ?? null
+}
+
 export async function resolveCheckoutPaymentMethod(
   deps: Deps,
   userId: string,
@@ -140,6 +157,21 @@ export async function resolveCheckoutPaymentMethod(
   const hardcoded = findHardcodedMethod(paymentMethodId)
   if (hardcoded) {
     if (!deps.useMockPayment) {
+      const saved = pickSavedPaymentMethod(
+        await deps.paymentMethodLoader.getMethodsByUserId(userId),
+        userId
+      )
+      if (saved) {
+        return {
+          hardcoded: false,
+          method: {
+            id: saved.id,
+            type: saved.type,
+            label: saved.label,
+            token: saved.token,
+          },
+        }
+      }
       throw new ResourceNotFoundError('Payment method', paymentMethodId)
     }
     return {
@@ -166,6 +198,26 @@ export async function resolveCheckoutPaymentMethod(
       token: dbMethod.token,
     },
   }
+}
+
+/** Wallet-only checkouts ignore the method id. Card checkouts may fall back to a saved card. */
+export async function resolveOrderPayment(
+  deps: Deps,
+  userId: string,
+  paymentMethodId: string,
+  totalDueSar: number
+): Promise<{ hardcoded: boolean; method: ResolvedPaymentMethod }> {
+  if (!needsGatewayCharge(totalDueSar)) {
+    return resolveWalletOnlyCheckoutPayment(paymentMethodId)
+  }
+  return resolveCheckoutPaymentMethod(deps, userId, paymentMethodId)
+}
+
+export function settledCheckoutPaymentMethodId(
+  requestedPaymentMethodId: string,
+  resolved: { hardcoded: boolean; method: ResolvedPaymentMethod }
+): string {
+  return resolved.hardcoded ? requestedPaymentMethodId : resolved.method.id
 }
 
 function buildConfirmedOrderInput(ctx: {
@@ -464,8 +516,13 @@ async function ensureNewSubscription(
     })
     return { order: linkedOrder, subscriptionId: live.id }
   }
-  if (live) {
+  if (live && subscriptionBlocksNewPurchase(live)) {
     throw new Error('Refusing to create a second subscription for this payment')
+  }
+  if (live) {
+    await deps.subscriptionPersistor.updateSubscription(live.id, {
+      status: 'expired',
+    })
   }
 
   const subscription = await deps.subscriptionPersistor.createSubscription({
@@ -752,16 +809,17 @@ export async function resumePaidCheckout(
     )
   }
 
-  const resolved = await resolveCheckoutPaymentMethod(
+  const resolved = await resolveOrderPayment(
     deps,
     tx.userId,
-    paymentMethodId
+    paymentMethodId,
+    session.totalDueSar
   )
   return fulfillPaidCheckout(deps, {
     userId: tx.userId,
     session,
     plan,
-    paymentMethodId,
+    paymentMethodId: settledCheckoutPaymentMethodId(paymentMethodId, resolved),
     hardcoded: resolved.hardcoded,
     resolvedMethod: resolved.method,
     gatewayPaymentId,

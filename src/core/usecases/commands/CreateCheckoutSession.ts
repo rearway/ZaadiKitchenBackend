@@ -5,7 +5,10 @@ import {
   computePromotionAmounts,
   normalizePlanSlug,
 } from '../services/planPromotionUtils.js'
-import { canUpgradeSubscriptionPlan } from '../services/subscriptionServicePeriod.js'
+import {
+  canUpgradeSubscriptionPlan,
+  isSubscriptionInServicePeriod,
+} from '../services/subscriptionServicePeriod.js'
 
 export interface CreateCheckoutSessionInput {
   userId: string
@@ -61,7 +64,7 @@ export function makeUC(deps: Deps) {
       let isPromotion = false
       let basePriceSar = plan.priceSar
 
-      if (existingSub) {
+      if (existingSub && isSubscriptionInServicePeriod(existingSub)) {
         if (!canUpgradeSubscriptionPlan(existingSub)) {
           const { ActiveSubscriptionCheckoutBlockedError } =
             await import('../../../shared/errors/index.js')
@@ -78,19 +81,29 @@ export function makeUC(deps: Deps) {
         }
 
         currentPlanId = currentPlan.slug
-        assertCanPromote(currentPlan.slug, planId)
+        const samePlan =
+          normalizePlanSlug(currentPlan.slug) === normalizePlanSlug(planId)
 
-        const priorOrder = await orderLoader.getOrderById(existingSub.orderId)
-        if (!priorOrder) {
-          const { ResourceNotFoundError } =
-            await import('../../../shared/errors/index.js')
-          throw new ResourceNotFoundError('Order', existingSub.orderId)
+        if (samePlan && existingSub.status === 'cancelled') {
+          isPromotion = true
+          promotionSubscriptionId = existingSub.id
+          priorPlanCreditSar = plan.priceSar
+          basePriceSar = plan.priceSar
+        } else {
+          assertCanPromote(currentPlan.slug, planId)
+
+          const priorOrder = await orderLoader.getOrderById(existingSub.orderId)
+          if (!priorOrder) {
+            const { ResourceNotFoundError } =
+              await import('../../../shared/errors/index.js')
+            throw new ResourceNotFoundError('Order', existingSub.orderId)
+          }
+
+          isPromotion = true
+          promotionSubscriptionId = existingSub.id
+          priorPlanCreditSar = Number(priorOrder.totalPaidSar)
+          basePriceSar = plan.priceSar
         }
-
-        isPromotion = true
-        promotionSubscriptionId = existingSub.id
-        priorPlanCreditSar = Number(priorOrder.totalPaidSar)
-        basePriceSar = plan.priceSar
       }
 
       const walletBalance = await walletLoader.getBalanceByUserId(userId)
