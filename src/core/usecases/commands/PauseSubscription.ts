@@ -179,7 +179,7 @@ export function makeUC(deps: Deps) {
         { from: startDate, to: endDate }
       )
       for (const day of days) {
-        if (day.status === 'scheduled') {
+        if (day.status === 'scheduled' || day.status === 'past_cutoff') {
           await deliveryDayPersistor.updateDeliveryDayStatus(day.id, 'paused')
         }
       }
