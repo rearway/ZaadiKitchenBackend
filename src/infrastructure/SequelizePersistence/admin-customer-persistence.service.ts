@@ -12,6 +12,11 @@ import type {
   CustomerHistoryIssue,
 } from '../../core/entitygateway/AdminCustomer.js'
 import { normalizePlanSlug, todayKSA } from '../../core/usecases/services/revenueUtils.js'
+import {
+  currentSubscriptionOrderSql,
+  mealsLeftFromCounts,
+  pickCurrentSubscription,
+} from '../../core/usecases/services/pickCurrentSubscription.js'
 import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 import {
   UserModel,
@@ -32,8 +37,68 @@ interface CustomerListRow {
   isActive: boolean
   createdAt: string
   subscriptionStatus: string | null
-  endDate: string | null
+  endDate: string | Date | null
   planName: string | null
+  walletBalanceSar: string | number | null
+  totalMealDays: string | number | null
+  deliveredCount: string | number | null
+  skippedCount: string | number | null
+}
+
+function asNumber(value: unknown): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function asDateKey(value: string | Date | null | undefined): string | null {
+  if (value == null || value === '') return null
+  if (value instanceof Date) return value.toISOString().slice(0, 10)
+  return String(value).slice(0, 10)
+}
+
+export function mapCustomerListRow(row: CustomerListRow): CustomerListItem {
+  const subscriptionStatus =
+    (row.subscriptionStatus as CustomerListItem['subscriptionStatus']) ?? null
+  const endDate = asDateKey(row.endDate)
+  const hasSubscription = subscriptionStatus != null
+  const totalMealDays = asNumber(row.totalMealDays)
+  const deliveredCount = asNumber(row.deliveredCount)
+  const skippedCount = asNumber(row.skippedCount)
+  const mealsLeft = mealsLeftFromCounts(
+    totalMealDays,
+    deliveredCount,
+    skippedCount
+  )
+
+  return {
+    id: row.id,
+    fullName: row.fullName,
+    phone: row.phone,
+    email: row.email,
+    isActive: row.isActive,
+    createdAt: new Date(row.createdAt),
+    subscriptionStatus,
+    endDate,
+    planName: row.planName ?? null,
+    walletBalanceSar: asNumber(row.walletBalanceSar),
+    totalMealDays: hasSubscription ? totalMealDays : null,
+    deliveredCount: hasSubscription ? deliveredCount : null,
+    skippedCount: hasSubscription ? skippedCount : null,
+    days_remaining: hasSubscription ? mealsLeft : null,
+    mealsLeft: hasSubscription ? mealsLeft : null,
+    subscription: hasSubscription
+      ? {
+          status: subscriptionStatus,
+          planName: row.planName ?? null,
+          endDate,
+          totalMealDays,
+          deliveredCount,
+          skippedCount,
+          days_remaining: mealsLeft,
+          mealsLeft,
+        }
+      : null,
+  }
 }
 
 interface CountRow {
@@ -90,7 +155,7 @@ export class AdminCustomerPersistenceService
         SELECT 1 FROM (
           SELECT DISTINCT ON (sub.user_id) sub.user_id, sub.status, sub.end_date, sub.created_at
           FROM subscriptions sub
-          ORDER BY sub.user_id, sub.created_at DESC
+          ORDER BY sub.user_id, ${currentSubscriptionOrderSql('sub')}
         ) latest
         WHERE latest.user_id = u.id
           AND latest.status = 'expired'
@@ -115,9 +180,6 @@ export class AdminCustomerPersistenceService
       )`)
     } else if (params.status) {
       conditions.push('s.status = :status')
-      if (params.status === 'active' || params.status === 'paused' || params.status === 'cancelled') {
-        conditions.push('s.end_date >= :todayKsa::date')
-      }
       replacements.status = params.status
     }
 
@@ -134,7 +196,8 @@ export class AdminCustomerPersistenceService
         AND s.id = (
           SELECT id FROM subscriptions sub
           WHERE sub.user_id = u.id
-          ORDER BY sub.created_at DESC LIMIT 1
+          ORDER BY ${currentSubscriptionOrderSql('sub')}
+          LIMIT 1
         )
       LEFT JOIN plans p ON p.id = s.plan_id
       WHERE ${whereClause}
@@ -150,7 +213,15 @@ export class AdminCustomerPersistenceService
         u.created_at   AS "createdAt",
         s.status       AS "subscriptionStatus",
         s.end_date     AS "endDate",
-        p.name         AS "planName"
+        p.name         AS "planName",
+        s.total_meal_days AS "totalMealDays",
+        s.delivered_count AS "deliveredCount",
+        s.skipped_count   AS "skippedCount",
+        (
+          SELECT COALESCE(SUM(wt.amount_sar), 0)
+          FROM wallet_transactions wt
+          WHERE wt.user_id = u.id
+        ) AS "walletBalanceSar"
       ${baseFrom}
       ORDER BY u.created_at DESC
       LIMIT :limit OFFSET :offset`,
@@ -162,17 +233,9 @@ export class AdminCustomerPersistenceService
       { replacements, type: QueryTypes.SELECT }
     )
 
-    const customers: CustomerListItem[] = rows.map(row => ({
-      id: row.id,
-      fullName: row.fullName,
-      phone: row.phone,
-      email: row.email,
-      isActive: row.isActive,
-      createdAt: new Date(row.createdAt),
-      subscriptionStatus: (row.subscriptionStatus as CustomerListItem['subscriptionStatus']) ?? null,
-      endDate: row.endDate ?? null,
-      planName: row.planName ?? null,
-    }))
+    const customers: CustomerListItem[] = rows.map(row =>
+      mapCustomerListRow(row)
+    )
 
     return { customers, total: parseInt(countResult?.count ?? '0', 10) }
   }
@@ -183,10 +246,10 @@ export class AdminCustomerPersistenceService
     })
     if (!user) return null
 
-    const subscription = await SubscriptionModel.findOne({
+    const subscriptionRows = await SubscriptionModel.findAll({
       where: { userId },
-      order: [['createdAt', 'DESC']],
     })
+    const subscription = pickCurrentSubscription(subscriptionRows)
 
     let subscriptionData: CustomerActiveSubscription | null = null
     if (subscription) {
@@ -199,6 +262,14 @@ export class AdminCustomerPersistenceService
             (1000 * 60 * 60 * 24)
         )
       )
+      const totalMealDays = subscription.totalMealDays
+      const deliveredCount = subscription.deliveredCount
+      const skippedCount = subscription.skippedCount
+      const mealsLeft = mealsLeftFromCounts(
+        totalMealDays,
+        deliveredCount,
+        skippedCount
+      )
       subscriptionData = {
         id: subscription.id,
         planName: plan?.name ?? '',
@@ -207,8 +278,11 @@ export class AdminCustomerPersistenceService
         startDate: subscription.startDate,
         endDate: subscription.endDate,
         daysRemaining,
-        deliveredCount: subscription.deliveredCount,
-        skippedCount: subscription.skippedCount,
+        totalMealDays,
+        deliveredCount,
+        skippedCount,
+        days_remaining: mealsLeft,
+        mealsLeft,
         skipDaysUsed: subscription.skipDaysUsed,
         skipDaysAllowed: subscription.skipDaysAllowed,
         pauseDaysUsed: subscription.pauseDaysUsed,
@@ -253,6 +327,11 @@ export class AdminCustomerPersistenceService
       createdAt: user.createdAt,
       subscription: subscriptionData,
       walletBalanceSar,
+      totalMealDays: subscriptionData?.totalMealDays ?? null,
+      deliveredCount: subscriptionData?.deliveredCount ?? null,
+      skippedCount: subscriptionData?.skippedCount ?? null,
+      days_remaining: subscriptionData?.days_remaining ?? null,
+      mealsLeft: subscriptionData?.mealsLeft ?? null,
       primaryAddress,
       openIssueCount,
     }

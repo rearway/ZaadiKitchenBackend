@@ -1,3 +1,15 @@
+export interface CustomerSubscriptionCounts {
+  status: string
+  planName: string | null
+  endDate: string | null
+  totalMealDays: number
+  deliveredCount: number
+  skippedCount: number
+  /** Meal days left: max(0, totalMealDays − deliveredCount − skippedCount). */
+  days_remaining: number
+  mealsLeft: number
+}
+
 export interface CustomerListItem {
   id: string
   fullName: string
@@ -8,6 +20,13 @@ export interface CustomerListItem {
   subscriptionStatus: 'active' | 'paused' | 'cancelled' | 'expired' | null
   planName: string | null
   endDate: string | null
+  walletBalanceSar: number
+  totalMealDays: number | null
+  deliveredCount: number | null
+  skippedCount: number | null
+  days_remaining: number | null
+  mealsLeft: number | null
+  subscription: CustomerSubscriptionCounts | null
 }
 
 export interface CustomerAddress {
@@ -23,9 +42,13 @@ export interface CustomerActiveSubscription {
   status: string
   startDate: string
   endDate: string
+  /** Calendar days until endDate. Days left on Admin uses the meal counts. */
   daysRemaining: number
+  totalMealDays: number
   deliveredCount: number
   skippedCount: number
+  days_remaining: number
+  mealsLeft: number
   skipDaysUsed: number
   skipDaysAllowed: number
   pauseDaysUsed: number
@@ -41,6 +64,11 @@ export interface AdminCustomerDetail {
   createdAt: Date
   subscription: CustomerActiveSubscription | null
   walletBalanceSar: number
+  totalMealDays: number | null
+  deliveredCount: number | null
+  skippedCount: number | null
+  days_remaining: number | null
+  mealsLeft: number | null
   primaryAddress: CustomerAddress | null
   openIssueCount: number
 }
