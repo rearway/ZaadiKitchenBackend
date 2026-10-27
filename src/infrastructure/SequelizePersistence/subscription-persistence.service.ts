@@ -5,6 +5,7 @@ import {
   SubscriptionPersistor,
 } from '../../core/entitygateway/Subscription.js'
 import {
+  AdminDriverDeliveryRow,
   DeliveryDayLoader,
   DeliveryDayPersistor,
   DeliveryHistoryEntry,
@@ -12,6 +13,7 @@ import {
   MealBreakdownRow,
 } from '../../core/entitygateway/DeliveryDay.js'
 import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
+import { dailyOpsDeliverableDayWhereSql } from './sql/dailyOpsDeliverableDayWhere.js'
 import { Subscription } from '../../core/entities/Subscription.js'
 import {
   DeliveryDay,
@@ -271,9 +273,9 @@ export class SubscriptionPersistenceService
            ORDER BY l.updated_at DESC
            LIMIT 1
          ) dl ON true
-         LEFT JOIN delivery_areas da ON da.id = dl.area_id
+         LEFT JOIN delivery_areas da ON da.id = dl.area_id AND da.deleted_at IS NULL
          WHERE dd.date = :date
-           AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+           ${dailyOpsDeliverableDayWhereSql()}
            AND s.status IN ('active', 'paused', 'cancelled')
            ${areaClause}
          ORDER BY dd.user_id,
@@ -306,6 +308,74 @@ export class SubscriptionPersistenceService
     }))
   }
 
+  async getAdminDriverDeliveriesByDate(
+    date: string,
+    areaIds: string[]
+  ): Promise<AdminDriverDeliveryRow[]> {
+    if (areaIds.length === 0) return []
+
+    const rows = await DeliveryDayModel.sequelize!.query<{
+      delivery_day_id: string
+      customer_name: string
+      customer_phone: string | null
+      meal_name: string | null
+      meal_type: 'executive' | 'salad'
+      status: DeliveryDayStatus
+      review_stars: string | number | null
+      review_tags: string[] | string | null
+    }>(
+      `SELECT dd.id AS delivery_day_id,
+              u.full_name AS customer_name,
+              u.phone AS customer_phone,
+              COALESCE(em.name_en, dd.meal_name) AS meal_name,
+              dd.meal_type,
+              dd.status,
+              mr.stars AS review_stars,
+              mr.tags AS review_tags
+       FROM delivery_days dd
+       JOIN users u ON u.id = dd.user_id
+       JOIN subscriptions s ON s.id = dd.subscription_id
+       ${effectiveMealLateralJoin()}
+       LEFT JOIN LATERAL (
+         SELECT * FROM delivery_locations l
+         WHERE l.user_id = dd.user_id AND l.is_primary = true
+         ORDER BY l.updated_at DESC
+         LIMIT 1
+       ) dl ON true
+       LEFT JOIN delivery_areas da ON da.id = dl.area_id AND da.deleted_at IS NULL
+       LEFT JOIN LATERAL (
+         SELECT stars, tags
+         FROM meal_ratings
+         WHERE delivery_day_id = dd.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) mr ON true
+       WHERE dd.date = :date
+         AND da.id IN (:areaIds)
+         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered', 'skipped', 'paused')
+         AND s.status IN ('active', 'paused', 'cancelled')
+       ORDER BY u.full_name ASC, dd.meal_type ASC, dd.id ASC`,
+      {
+        replacements: { date, areaIds },
+        type: QueryTypes.SELECT,
+      }
+    )
+
+    return rows.map(row => ({
+      deliveryDayId: row.delivery_day_id,
+      customerName: row.customer_name,
+      customerPhone: row.customer_phone,
+      mealName: row.meal_name,
+      mealType: row.meal_type,
+      status: row.status,
+      reviewStars:
+        row.review_stars == null || Number.isNaN(Number(row.review_stars))
+          ? null
+          : Number(row.review_stars),
+      reviewTags: parseReviewTags(row.review_tags),
+    }))
+  }
+
   async getMealBreakdownByDate(date: string): Promise<MealBreakdownRow[]> {
     const rows = await DeliveryDayModel.sequelize!.query<{
       meal_type: 'executive' | 'salad'
@@ -320,7 +390,7 @@ export class SubscriptionPersistenceService
        JOIN subscriptions s ON s.id = dd.subscription_id
        ${effectiveMealLateralJoin()}
        WHERE dd.date = :date
-         AND dd.status IN ('scheduled', 'past_cutoff', 'delivered')
+         ${dailyOpsDeliverableDayWhereSql()}
          AND s.status IN ('active', 'paused', 'cancelled')
        ORDER BY dd.user_id,
                 CASE dd.status WHEN 'delivered' THEN 0 WHEN 'past_cutoff' THEN 1 ELSE 2 END,
@@ -453,5 +523,17 @@ export class SubscriptionPersistenceService
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }
+  }
+}
+
+function parseReviewTags(value: string[] | string | null): string[] | null {
+  if (value == null) return null
+  if (Array.isArray(value)) return value.map(tag => String(tag))
+  if (typeof value !== 'string' || value.length === 0) return []
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.map(tag => String(tag)) : []
+  } catch {
+    return []
   }
 }

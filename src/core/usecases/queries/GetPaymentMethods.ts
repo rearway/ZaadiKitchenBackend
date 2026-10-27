@@ -1,4 +1,5 @@
-import { HARDCODED_PAYMENT_METHODS } from '../../constants/hardcoded-payment-methods.js'
+import type { PaymentMethod } from '../../entities/PaymentMethod.js'
+import { buildPaymentMethodLabel } from '../../constants/payment-method-label.js'
 import { Deps } from '../../entitygateway/index.js'
 
 export interface GetPaymentMethodsInput {
@@ -15,17 +16,25 @@ export interface GetPaymentMethodsOutput {
   }>
 }
 
-export function makeUC(_deps: Deps) {
+function displayLabel(method: PaymentMethod): string {
+  if (!method.label.includes('0000')) return method.label
+  return buildPaymentMethodLabel(method.type, method.token)
+}
+
+export function makeUC(deps: Deps) {
   return async function getPaymentMethods(
-    _input: GetPaymentMethodsInput
+    input: GetPaymentMethodsInput
   ): Promise<GetPaymentMethodsOutput> {
+    const methods = await deps.paymentMethodLoader.getMethodsByUserId(
+      input.userId
+    )
     return {
-      payment_methods: HARDCODED_PAYMENT_METHODS.map(m => ({
-        id: m.id,
-        type: m.type,
-        label: m.label,
-        is_default: m.isDefault,
-        is_last_used: false,
+      payment_methods: methods.map(method => ({
+        id: method.id,
+        type: method.type,
+        label: displayLabel(method),
+        is_default: method.isDefault,
+        is_last_used: method.isLastUsed,
       })),
     }
   }

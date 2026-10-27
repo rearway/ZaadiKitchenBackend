@@ -106,6 +106,21 @@ export class AdminDeliveryController {
     })
   }
 
+  @Delete(':area_id')
+  @Roles(UserRole.ADMIN, UserRole.OPS)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Soft-delete a delivery area',
+    description:
+      'Sets deleted_at and clears driver area assignments. Status (active, coming_soon, paused) is left unchanged. The row is kept. Live area lists hide it.',
+  })
+  @ApiResponse({ status: 200, description: 'Delivery area deleted' })
+  @ApiResponse({ status: 404, description: 'Delivery area not found' })
+  @HandleErrors('delete-delivery-area')
+  async deleteDeliveryArea(@Param('area_id') areaId: string) {
+    return this.useCases.commands.deleteDeliveryArea({ areaId })
+  }
+
   // ── Building collection routes ──
 
   @Get(':area_id/buildings')

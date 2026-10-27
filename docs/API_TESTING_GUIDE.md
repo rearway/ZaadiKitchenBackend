@@ -491,7 +491,7 @@ Errors:
 
 | Endpoint | Notes |
 |---|---|
-| `GET /payment/methods` | Returns a **hardcoded** list: `00000000-0000-0000-0000-000000000001` (mada), `...0002` (visa), `...0003` (apple_pay), each with `label`, `is_default`, `is_last_used`. Use one of these as `payment_method_id`. |
+| `GET /payment/methods` | Returns this user's **saved** cards (`id`, `type`, `label`, `is_default`, `is_last_used`). Empty array when none are saved. With `USE_MOCK_PAYMENT=true`, `POST /orders` still accepts `00000000-0000-0000-0000-000000000001` (mada), `...0002` (visa), `...0003` (apple_pay). Those ids are rejected when mock payments are off. |
 | `POST /payment/methods` | Body `{ "type": "mada\|visa\|mastercard\|stc_pay\|apple_pay", "token": "tok_x" }`. 201 `{ id, type, label, ... }`. Saved cards **do not appear** in the GET list. |
 | `DELETE /payment/methods/:method_id` | 204. Another user's method or an unknown id returns 404. |
 
@@ -788,6 +788,20 @@ Response 200:
 - The customer can still skip, pause and choose meals until `end_date`.
 - The customer cannot upgrade, and **cannot buy a new plan until it expires** (422 `ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED`).
 - Cancelling again, or cancelling an expired subscription, returns 400.
+
+### 11.1b `POST /subscriptions/me/resubscribe`
+
+No body. **200** when undoing a cancel while still in the paid period:
+
+```json
+{ "subscription_id": "...", "status": "active", "end_date": "2026-11-20", "message": "Your subscription is active again." }
+```
+
+- Allowed only when `status === 'cancelled'` and `end_date >= today` (KSA), same service window as skip/pause.
+- Sets `status` back to `active`. No payment, no change to `end_date` or delivery days.
+- Audit: `resubscribe_subscription`.
+- **400** `VALIDATION_ERROR` if already `active`, if `paused` (use resume), or if cancelled but past `end_date` (use checkout renew).
+- **404** if no subscription.
 
 ### 11.2 `POST /internal/jobs/expire-subscriptions` (no `/api/v1`)
 
@@ -1519,7 +1533,7 @@ Tick each one as tested. Endpoints marked ⚠ are **missing from the Admin Postm
   - `GET /subscriptions/me`, `GET /subscriptions/me/plan-change-options`, `GET /subscriptions/me/deliveries`
   - `POST/DELETE /subscriptions/me/deliveries/:date/skip`
   - `GET/PUT /subscriptions/me/deliveries/:date/meal-choice`, `PATCH /subscriptions/me/deliveries/:date/salad`
-  - `POST /subscriptions/me/pause`, `POST /subscriptions/me/pause/cancel`, `POST /subscriptions/me/resume`, `POST /subscriptions/me/cancel`
+  - `POST /subscriptions/me/pause`, `POST /subscriptions/me/pause/cancel`, `POST /subscriptions/me/resume`, `POST /subscriptions/me/cancel`, `POST /subscriptions/me/resubscribe`
   - `PATCH /subscriptions/me/meal-type`
   - `GET /subscriptions/me/history`, `GET /subscriptions/me/pending-ratings`, `GET /subscriptions/me/ratings`
   - `POST /subscriptions/me/issues`

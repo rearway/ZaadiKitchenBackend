@@ -34,6 +34,33 @@ describe('GetPlanChangeOptions', () => {
     expect(result.promotion_available).toBe(true)
   })
 
+  it('returns upgrade targets for cancelled subscription still in service period', async () => {
+    const sub = makeSubscription({
+      status: 'cancelled',
+      planId: 'plan-week',
+      endDate: '2099-12-31',
+    })
+    const plan = makePlan({ id: 'plan-week', slug: 'week' })
+    const deps = buildDeps({
+      subscriptionLoader: {
+        getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(sub),
+        getSubscriptionById: jest.fn(),
+      },
+      planLoader: {
+        ...buildDeps().planLoader,
+        getPlanById: jest.fn().mockResolvedValue(plan),
+      },
+    })
+    const getPlanChangeOptions = makeUC(deps)
+
+    const result = await getPlanChangeOptions({ userId: 'user-1' })
+
+    expect(result.subscription_status).toBe('cancelled')
+    expect(result.allowed_plan_ids).toEqual(['month', 'quarterly'])
+    expect(result.promotion_available).toBe(true)
+    expect(result.blocked_reason).toBeNull()
+  })
+
   it('blocks promotion when subscription is paused', async () => {
     const sub = makeSubscription({ status: 'paused', planId: 'plan-week' })
     const plan = makePlan({ id: 'plan-week', slug: 'week' })
@@ -53,6 +80,6 @@ describe('GetPlanChangeOptions', () => {
 
     expect(result.allowed_plan_ids).toEqual([])
     expect(result.promotion_available).toBe(false)
-    expect(result.blocked_reason).toContain('active')
+    expect(result.blocked_reason).toContain('paused')
   })
 })

@@ -25,3 +25,14 @@ export function canUseSkipAndPause(sub: Subscription, asOfDate?: string): boolea
 export function canEnterScheduledPause(sub: Subscription): boolean {
   return sub.status === 'active' || sub.status === 'cancelled'
 }
+
+/** Plan upgrade (promotion checkout) while still in the paid delivery window. */
+export function canUpgradeSubscriptionPlan(
+  sub: Subscription,
+  asOfDate: string = todayKSA()
+): boolean {
+  if (!isSubscriptionInServicePeriod(sub, asOfDate)) {
+    return false
+  }
+  return sub.status === 'active' || sub.status === 'cancelled'
+}

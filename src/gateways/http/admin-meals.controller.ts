@@ -181,8 +181,12 @@ export class AdminMealsController {
 
   @Delete(':meal_id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a draft meal' })
-  @ApiResponse({ status: 200 })
+  @ApiOperation({
+    summary: 'Soft-delete a meal',
+    description:
+      'Sets deleted_at for a meal in any status. The row is kept. Admin and customer lists hide it.',
+  })
+  @ApiResponse({ status: 200, description: 'Meal deleted' })
   @HandleErrors('delete-meal')
   async deleteMeal(@Param('meal_id') mealId: string) {
     return this.useCases.commands.deleteMeal({ mealId })

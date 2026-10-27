@@ -34,6 +34,7 @@ export class AuditLogModel extends Model {
       'cancel_pause',
       'resume_subscription',
       'cancel_subscription',
+      'resubscribe_subscription',
       'expire_subscription',
       'delete_account'
     )

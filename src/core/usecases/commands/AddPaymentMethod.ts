@@ -1,5 +1,6 @@
 import { Deps } from '../../entitygateway/index.js'
 import { PaymentMethodType } from '../../entities/index.js'
+import { buildPaymentMethodLabel } from '../../constants/payment-method-label.js'
 
 export interface AddPaymentMethodInput {
   userId: string
@@ -15,24 +16,6 @@ export interface AddPaymentMethodOutput {
   is_last_used: boolean
 }
 
-function buildLabel(type: PaymentMethodType, _token: string): string {
-  const last4 = '0000'
-  switch (type) {
-    case 'mada':
-      return `Mada ····${last4}`
-    case 'visa':
-      return `Visa ····${last4}`
-    case 'mastercard':
-      return `Mastercard ····${last4}`
-    case 'stc_pay':
-      return 'STC Pay'
-    case 'apple_pay':
-      return 'Apple Pay'
-    default:
-      return type
-  }
-}
-
 export function makeUC(deps: Deps) {
   return async function addPaymentMethod(
     input: AddPaymentMethodInput
@@ -40,7 +23,7 @@ export function makeUC(deps: Deps) {
     const { logger, paymentMethodPersistor } = deps
     try {
       const { userId, type, token } = input
-      const label = buildLabel(type, token)
+      const label = buildPaymentMethodLabel(type, token)
 
       const method = await paymentMethodPersistor.createMethod({
         userId,

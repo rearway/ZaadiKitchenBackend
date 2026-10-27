@@ -16,6 +16,7 @@ import * as DeleteDeliveryLocation from './commands/DeleteDeliveryLocation.js'
 import * as SetPrimaryDeliveryLocation from './commands/SetPrimaryDeliveryLocation.js'
 import * as CreateDeliveryArea from './commands/CreateDeliveryArea.js'
 import * as UpdateDeliveryArea from './commands/UpdateDeliveryArea.js'
+import * as DeleteDeliveryArea from './commands/DeleteDeliveryArea.js'
 import * as AddBuilding from './commands/AddBuilding.js'
 import * as UpdateBuilding from './commands/UpdateBuilding.js'
 import * as DeleteBuilding from './commands/DeleteBuilding.js'
@@ -32,6 +33,7 @@ import * as PauseSubscription from './commands/PauseSubscription.js'
 import * as CancelPause from './commands/CancelPause.js'
 import * as ResumeSubscription from './commands/ResumeSubscription.js'
 import * as CancelSubscription from './commands/CancelSubscription.js'
+import * as ResubscribeSubscription from './commands/ResubscribeSubscription.js'
 import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
 import * as ToggleSaladForDay from './commands/ToggleSaladForDay.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
@@ -51,6 +53,7 @@ import * as UnpublishMenuWeek from './commands/UnpublishMenuWeek.js'
 import * as SubmitDeliveryIssue from './commands/SubmitDeliveryIssue.js'
 import * as SubmitMealRating from './commands/SubmitMealRating.js'
 import * as DeactivateCustomer from './commands/DeactivateCustomer.js'
+import * as AssignDriverArea from './commands/AssignDriverArea.js'
 import * as CreateDriver from './commands/CreateDriver.js'
 import * as UpdateDriver from './commands/UpdateDriver.js'
 import * as DeleteDriver from './commands/DeleteDriver.js'
@@ -67,6 +70,7 @@ import * as SendBulkBroadcast from './commands/SendBulkBroadcast.js'
 import * as SendCommsBroadcast from './commands/SendCommsBroadcast.js'
 import * as UpdateCommsAutomation from './commands/UpdateCommsAutomation.js'
 import * as SyncPendingPayments from './commands/SyncPendingPayments.js'
+import * as HandleMoyasarWebhook from './commands/HandleMoyasarWebhook.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -114,6 +118,8 @@ import * as GetAdminCustomer from './queries/GetAdminCustomer.js'
 import * as GetAdminCustomerHistory from './queries/GetAdminCustomerHistory.js'
 import * as GetAdminDrivers from './queries/GetAdminDrivers.js'
 import * as GetAdminDriver from './queries/GetAdminDriver.js'
+import * as GetAdminDriverDeliveries from './queries/GetAdminDriverDeliveries.js'
+import * as ListUnassignedAreas from './queries/ListUnassignedAreas.js'
 import * as GetMyDeliveries from './queries/GetMyDeliveries.js'
 import * as GetDailyOps from './queries/GetDailyOps.js'
 import * as GetDeliveryLabels from './queries/GetDeliveryLabels.js'
@@ -248,6 +254,12 @@ export function initUseCases(deps: Deps) {
     UpdateDeliveryArea.name,
     ...defaultWrappers
   )
+  const deleteDeliveryArea = wrapUC(
+    deps,
+    DeleteDeliveryArea.makeUC(deps),
+    DeleteDeliveryArea.name,
+    ...defaultWrappers
+  )
 
   // Checkout commands
   const createCheckoutSession = wrapUC(
@@ -326,6 +338,12 @@ export function initUseCases(deps: Deps) {
     deps,
     CancelSubscription.makeUC(deps),
     CancelSubscription.name,
+    ...defaultWrappers
+  )
+  const resubscribeSubscription = wrapUC(
+    deps,
+    ResubscribeSubscription.makeUC(deps),
+    ResubscribeSubscription.name,
     ...defaultWrappers
   )
   const expireSubscriptions = wrapUC(
@@ -464,6 +482,12 @@ export function initUseCases(deps: Deps) {
     DeleteDriver.name,
     ...defaultWrappers
   )
+  const assignDriverArea = wrapUC(
+    deps,
+    AssignDriverArea.makeUC(deps),
+    AssignDriverArea.name,
+    ...defaultWrappers
+  )
   const deleteAccount = wrapUC(
     deps,
     DeleteAccount.makeUC(deps),
@@ -540,6 +564,12 @@ export function initUseCases(deps: Deps) {
     deps,
     SyncPendingPayments.makeUC(deps),
     SyncPendingPayments.name,
+    ...defaultWrappers
+  )
+  const handleMoyasarWebhook = wrapUC(
+    deps,
+    HandleMoyasarWebhook.makeUC(deps),
+    HandleMoyasarWebhook.name,
     ...defaultWrappers
   )
   const getPendingRatings = wrapUC(
@@ -816,6 +846,18 @@ export function initUseCases(deps: Deps) {
     GetAdminDriver.name,
     ...defaultWrappers
   )
+  const getAdminDriverDeliveries = wrapUC(
+    deps,
+    GetAdminDriverDeliveries.makeUC(deps),
+    GetAdminDriverDeliveries.name,
+    ...defaultWrappers
+  )
+  const listUnassignedAreas = wrapUC(
+    deps,
+    ListUnassignedAreas.makeUC(deps),
+    ListUnassignedAreas.name,
+    ...defaultWrappers
+  )
   const getMyDeliveries = wrapUC(
     deps,
     GetMyDeliveries.makeUC(deps),
@@ -954,6 +996,8 @@ export function initUseCases(deps: Deps) {
       getAdminCustomerHistory,
       getAdminDrivers,
       getAdminDriver,
+      getAdminDriverDeliveries,
+      listUnassignedAreas,
       getMyDeliveries,
       getDailyOps,
       getDeliveryLabels,
@@ -986,6 +1030,7 @@ export function initUseCases(deps: Deps) {
       setPrimaryDeliveryLocation,
       createDeliveryArea,
       updateDeliveryArea,
+      deleteDeliveryArea,
       addBuilding,
       updateBuilding,
       deleteBuilding,
@@ -1002,6 +1047,7 @@ export function initUseCases(deps: Deps) {
       cancelPause,
       resumeSubscription,
       cancelSubscription,
+      resubscribeSubscription,
       expireSubscriptions,
       toggleSaladForDay,
       switchMealType,
@@ -1024,6 +1070,7 @@ export function initUseCases(deps: Deps) {
       createDriver,
       updateDriver,
       deleteDriver,
+      assignDriverArea,
       deleteAccount,
       adminCreditWallet,
       markDeliveryDelivered,
@@ -1037,6 +1084,7 @@ export function initUseCases(deps: Deps) {
       sendCommsBroadcast,
       updateCommsAutomation,
       syncPendingPayments,
+      handleMoyasarWebhook,
     },
   }
 }

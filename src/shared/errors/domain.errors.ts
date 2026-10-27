@@ -89,6 +89,14 @@ export class PaymentFailedError extends BaseError {
   }
 }
 
+export class InsufficientWalletBalanceError extends BaseError {
+  constructor(
+    message = 'Your wallet balance is no longer enough to cover this checkout. Please review your wallet and try again.'
+  ) {
+    super('INSUFFICIENT_WALLET_BALANCE', 422, message)
+  }
+}
+
 export class InvalidCodeError extends BaseError {
   constructor(
     message = "This code doesn't exist or has already been used.",
@@ -363,5 +371,26 @@ export class PlanPromotionNotAllowedError extends BaseError {
 export class ActiveSubscriptionCheckoutBlockedError extends BaseError {
   constructor(message = 'You already have a subscription. Upgrade to a higher plan or wait until it expires to purchase again.') {
     super('ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED', 422, message)
+  }
+}
+
+export class AreaAlreadyAssignedError extends BaseError {
+  constructor(
+    areaName: string,
+    driverName: string,
+    areaId: string,
+    driverId: string
+  ) {
+    super(
+      'AREA_ALREADY_ASSIGNED',
+      409,
+      `Area "${areaName}" is already assigned to ${driverName}. One area = one driver.`,
+      {
+        area_id: areaId,
+        area_name: areaName,
+        driver_id: driverId,
+        driver_name: driverName,
+      }
+    )
   }
 }

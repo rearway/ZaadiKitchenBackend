@@ -74,6 +74,7 @@ export async function promoteSubscriptionInPlace(
     pauseDaysAllowed: newPlan.pauseDaysAllowed,
     startDate,
     endDate,
+    ...(subscription.status === 'cancelled' ? { status: 'active' as const } : {}),
   })
 
   return { subscription: updated, endDate }

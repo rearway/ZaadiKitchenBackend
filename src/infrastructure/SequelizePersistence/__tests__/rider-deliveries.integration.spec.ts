@@ -57,6 +57,7 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
   let custSouthPastCutoff: UserModel
   let custSouthSkipped: UserModel
   let custNorthPaused: UserModel
+  let custPlanPausedPastCutoff: UserModel
   let custNoPrimaryLocation: UserModel
 
   let rowNorthScheduledId: string
@@ -179,6 +180,7 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
     custSouthPastCutoff = await makeCustomer('QA South Customer', '03')
     custSouthSkipped = await makeCustomer('QA Skipped Customer', '04')
     custNorthPaused = await makeCustomer('QA Paused Customer', '05')
+    custPlanPausedPastCutoff = await makeCustomer('QA Plan Paused PastCutoff', '07')
     custNoPrimaryLocation = await makeCustomer('QA NoPrimary Customer', '06')
 
     const locations: Array<[UserModel, DeliveryAreaModel, string, boolean]> = [
@@ -187,6 +189,7 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
       [custSouthPastCutoff, areaSouth, 'QA Bldg South', true],
       [custSouthSkipped, areaSouth, 'QA Bldg South Skip', true],
       [custNorthPaused, areaNorth, 'QA Bldg Paused', true],
+      [custPlanPausedPastCutoff, areaNorth, 'QA Bldg PlanPaused PC', true],
       [custNoPrimaryLocation, areaNorth, 'QA Bldg NoPrimary', false], // is_primary: false
     ]
     for (const [user, area, buildingName, isPrimary] of locations) {
@@ -210,6 +213,33 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
     const subSouthPastCutoff = await makeSubscriptionFor(custSouthPastCutoff, plan)
     const subSouthSkipped = await makeSubscriptionFor(custSouthSkipped, plan)
     const subNorthPaused = await makeSubscriptionFor(custNorthPaused, plan)
+    const subPlanPausedPastCutoff = await SubscriptionModel.create({
+      userId: custPlanPausedPastCutoff.id,
+      orderId: (
+        await OrderModel.create({
+          userId: custPlanPausedPastCutoff.id,
+          planId: plan.id,
+          mealType: 'executive',
+          mealCount: 5,
+          startDate: TEST_DATE,
+          planPriceSar: 100,
+          totalPaidSar: 100,
+          status: 'confirmed',
+        })
+      ).id,
+      planId: plan.id,
+      mealType: 'executive',
+      status: 'paused',
+      totalMealDays: 5,
+      startDate: TEST_DATE,
+      endDate: TEST_DATE,
+      skipDaysAllowed: 2,
+      pauseDaysAllowed: 2,
+      pausedFrom: TEST_DATE,
+      pausedUntil: TEST_DATE,
+    })
+    createdIds.orders.push(subPlanPausedPastCutoff.orderId)
+    createdIds.subscriptions.push(subPlanPausedPastCutoff.id)
     const subNoPrimary = await makeSubscriptionFor(custNoPrimaryLocation, plan)
 
     const rowScheduled = await makeDeliveryDay(custNorthScheduled, subNorthScheduled.id, 'scheduled', 'QA Lamb Kabsa')
@@ -229,6 +259,12 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
 
     await makeDeliveryDay(custSouthSkipped, subSouthSkipped.id, 'skipped', 'QA Skipped Meal')
     await makeDeliveryDay(custNorthPaused, subNorthPaused.id, 'paused', 'QA Paused Meal')
+    await makeDeliveryDay(
+      custPlanPausedPastCutoff,
+      subPlanPausedPastCutoff.id,
+      'past_cutoff',
+      'QA Plan Paused Still PastCutoff'
+    )
     await makeDeliveryDay(custNoPrimaryLocation, subNoPrimary.id, 'scheduled', 'QA NoPrimary Meal')
   })
 
@@ -256,6 +292,7 @@ describe('Rider deliveries — area + status filtering (real DB)', () => {
     const returnedMealNames = rows.map(r => r.mealName)
     expect(returnedMealNames).not.toContain('QA Skipped Meal')
     expect(returnedMealNames).not.toContain('QA Paused Meal')
+    expect(returnedMealNames).not.toContain('QA Plan Paused Still PastCutoff')
   })
 
   it('2. areaId = North returns only North rows (South excluded)', async () => {

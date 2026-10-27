@@ -14,6 +14,7 @@ import { effectiveMealLateralJoin } from './sql/effectiveMealJoin.js'
 export class ErpIntegrationPersistenceService implements ErpIntegrationLoader {
   async getMenus(offset: number, limit: number): Promise<{ rows: ErpMenuRow[]; total: number }> {
     const { count, rows } = await MealModel.findAndCountAll({
+      where: { deletedAt: null },
       order: [['name_en', 'ASC']],
       offset,
       limit,

@@ -220,6 +220,19 @@ export class SubscriptionsController {
     return this.useCases.commands.cancelSubscription({ userId: user.id })
   }
 
+  @Post('me/resubscribe')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Undo cancellation — set subscription back to active',
+    description:
+      'Only for status cancelled while still within the paid delivery period (before end_date). No payment. Expired or ended plans must use checkout again.',
+  })
+  @ApiResponse({ status: 200, description: 'Subscription reactivated' })
+  @HandleErrors('resubscribe-subscription')
+  async resubscribe(@CurrentUser() user: UserWithoutPassword) {
+    return this.useCases.commands.resubscribeSubscription({ userId: user.id })
+  }
+
   @Get('me/history')
   @ApiOperation({ summary: 'Paginated delivery history with kcal and rating per entry' })
   @ApiQuery({ name: 'page', required: false, type: Number })

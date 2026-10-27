@@ -10,6 +10,7 @@ import { PlansController } from './plans.controller.js'
 import { AdminPlansController } from './admin-plans.controller.js'
 import { CheckoutController } from './checkout.controller.js'
 import { PaymentController } from './payment.controller.js'
+import { MoyasarWebhookController } from './moyasar-webhook.controller.js'
 import { OrdersController } from './orders.controller.js'
 import { SubscriptionsController } from './subscriptions.controller.js'
 import { ReferralsController } from './referrals.controller.js'
@@ -43,6 +44,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     AdminPlansController,
     CheckoutController,
     PaymentController,
+    MoyasarWebhookController,
     OrdersController,
     SubscriptionsController,
     ReferralsController,

@@ -93,6 +93,20 @@ describe('PauseSubscription', () => {
     expect(deps.deliveryDayPersistor.updateDeliveryDayStatus).toHaveBeenCalledWith('dd-2', 'paused')
   })
 
+  it('marks past_cutoff days in the pause range as paused', async () => {
+    const deps = makeActiveDeps({}, [
+      makeDeliveryDay({ id: 'dd-past-cutoff', date: '2099-08-12', status: 'past_cutoff' }),
+    ])
+    const pauseSubscription = makeUC(deps)
+
+    await pauseSubscription({ userId: 'user-uuid-1', startDate: START, endDate: END })
+
+    expect(deps.deliveryDayPersistor.updateDeliveryDayStatus).toHaveBeenCalledWith(
+      'dd-past-cutoff',
+      'paused'
+    )
+  })
+
   it('does not change already-delivered or already-skipped days', async () => {
     const mixedDays = [
       makeDeliveryDay({ id: 'dd-scheduled', date: '2099-08-12', status: 'scheduled' }),

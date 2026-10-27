@@ -19,6 +19,7 @@ export interface DeliveryAreaPersistor {
     id: string,
     data: Partial<DeliveryArea>
   ): Promise<DeliveryArea>
+  softDeleteDeliveryArea(areaId: string): Promise<Date>
 }
 
 export interface BuildingLoader {

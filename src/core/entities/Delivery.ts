@@ -3,6 +3,7 @@ export interface DeliveryArea {
   name: string
   description?: string
   status: 'active' | 'coming_soon' | 'paused'
+  deletedAt?: Date
   createdAt: Date
   updatedAt: Date
 }

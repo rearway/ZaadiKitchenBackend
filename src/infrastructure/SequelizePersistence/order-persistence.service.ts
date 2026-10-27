@@ -14,6 +14,16 @@ export class OrderPersistenceService implements OrderLoader, OrderPersistor {
     return model ? this.toEntity(model) : null
   }
 
+  async getOrderByGatewayPaymentId(
+    gatewayPaymentId: string
+  ): Promise<Order | null> {
+    const model = await OrderModel.findOne({
+      where: { gatewayPaymentId },
+      order: [['createdAt', 'ASC']],
+    })
+    return model ? this.toEntity(model) : null
+  }
+
   async getLastOrderByUserId(userId: string): Promise<Order | null> {
     const model = await OrderModel.findOne({
       where: { userId, status: 'confirmed' },

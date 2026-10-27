@@ -3,6 +3,12 @@ export interface AssignedArea {
   name: string
 }
 
+export interface UnassignedArea {
+  id: string
+  name: string
+  status: 'active' | 'coming_soon' | 'paused'
+}
+
 export interface DriverSummary {
   id: string
   fullName: string
@@ -30,6 +36,7 @@ export interface DriverAdminLoader {
   listDrivers(): Promise<DriverSummary[]>
   getDriverById(driverId: string): Promise<DriverSummary | null>
   getAssignedAreaIds(driverId: string): Promise<string[]>
+  listUnassignedAreas(): Promise<UnassignedArea[]>
 }
 
 export interface DriverAdminPersistor {
@@ -38,5 +45,6 @@ export interface DriverAdminPersistor {
     driverId: string,
     updates: UpdateDriverRecord
   ): Promise<DriverSummary>
+  assignArea(driverId: string, areaId: string): Promise<DriverSummary>
   softDeleteDriver(driverId: string): Promise<Date>
 }

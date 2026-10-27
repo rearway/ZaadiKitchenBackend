@@ -13,7 +13,7 @@ import { generateMealErpCode } from '../../core/usecases/services/erpCodeUtils.j
 @Injectable()
 export class MealPersistenceService implements MealLoader, MealPersistor {
   async getMealById(id: string): Promise<Meal | null> {
-    const model = await MealModel.findByPk(id)
+    const model = await MealModel.findOne({ where: { id, deletedAt: null } })
     return model ? this.toEntity(model) : null
   }
 
@@ -24,7 +24,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     page?: number
     perPage?: number
   }): Promise<{ meals: Meal[]; total: number }> {
-    const where: Record<string, unknown> = {}
+    const where: Record<string, unknown> = { deletedAt: null }
 
     if (filters.status === 'assignable') {
       where['status'] = { [Op.in]: ['active', 'updated'] }
@@ -62,7 +62,10 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     nameEn: string,
     excludeId?: string
   ): Promise<Meal | null> {
-    const where: Record<string, unknown> = { nameEn: { [Op.iLike]: nameEn } }
+    const where: Record<string, unknown> = {
+      nameEn: { [Op.iLike]: nameEn },
+      deletedAt: null,
+    }
     if (excludeId) where['id'] = { [Op.ne]: excludeId }
     const model = await MealModel.findOne({ where })
     return model ? this.toEntity(model) : null
@@ -70,7 +73,9 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
 
   async getMealsByIds(ids: string[]): Promise<Meal[]> {
     if (ids.length === 0) return []
-    const models = await MealModel.findAll({ where: { id: ids } })
+    const models = await MealModel.findAll({
+      where: { id: ids, deletedAt: null },
+    })
     return models.map(m => this.toEntity(m))
   }
 
@@ -107,7 +112,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     id: string,
     updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<Meal> {
-    const model = await MealModel.findByPk(id)
+    const model = await MealModel.findOne({ where: { id, deletedAt: null } })
     if (!model) throw new Error(`Meal ${id} not found`)
 
     const fieldsToUpdate: Record<string, unknown> = {}
@@ -144,7 +149,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     id: string,
     status: 'active' | 'draft'
   ): Promise<Meal> {
-    const model = await MealModel.findByPk(id)
+    const model = await MealModel.findOne({ where: { id, deletedAt: null } })
     if (!model) throw new Error(`Meal ${id} not found`)
     const activatedAt =
       status === 'active' && !model.activatedAt ? new Date() : model.activatedAt
@@ -176,8 +181,12 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
     return { created, skipped, errors }
   }
 
-  async deleteMeal(id: string): Promise<void> {
-    await MealModel.destroy({ where: { id } })
+  async softDeleteMeal(id: string): Promise<Date> {
+    const model = await MealModel.findOne({ where: { id, deletedAt: null } })
+    if (!model) throw new Error(`Meal ${id} not found`)
+    const deletedAt = new Date()
+    await model.update({ deletedAt })
+    return deletedAt
   }
 
   async incrementTimesServed(mealIds: string[]): Promise<void> {
@@ -210,6 +219,7 @@ export class MealPersistenceService implements MealLoader, MealPersistor {
       activatedAt: model.activatedAt ?? undefined,
       lastServed: model.lastServed ?? undefined,
       timesServed: model.timesServed,
+      ...(model.deletedAt ? { deletedAt: model.deletedAt } : {}),
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     }

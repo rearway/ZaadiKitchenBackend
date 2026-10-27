@@ -73,7 +73,9 @@ export const makePlan = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-export const makeCheckoutSession = (overrides: Record<string, unknown> = {}) => ({
+export const makeCheckoutSession = (
+  overrides: Record<string, unknown> = {}
+) => ({
   id: 'sess-uuid-1',
   userId: 'user-uuid-1',
   planId: 'plan-uuid-month',
@@ -191,7 +193,9 @@ export const makeBuilding = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-export const makeDeliveryLocation = (overrides: Record<string, unknown> = {}) => ({
+export const makeDeliveryLocation = (
+  overrides: Record<string, unknown> = {}
+) => ({
   id: 'loc-uuid-1',
   userId: 'user-uuid-1',
   areaId: 'area-uuid-1',
@@ -231,9 +235,11 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn(),
-    } as unknown as Deps['logger'],
+    },
 
     skipOtp: true,
+    useMockPayment: true,
+    moyasarWebhookSecret: 'whsec_test',
     jwtSecret: 'test-jwt-secret-key-at-least-32-chars-long',
     jwtAccessExpiration: '15m',
     jwtRefreshExpirationMobile: '30d',
@@ -243,39 +249,43 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getUserById: jest.fn().mockResolvedValue(null),
       getUserByPhone: jest.fn().mockResolvedValue(null),
       getUserByEmail: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['userLoader'],
+    },
 
     userPersistor: {
       createUser: jest.fn().mockResolvedValue(makeUser()),
       updateUser: jest.fn().mockResolvedValue(makeUser()),
       deleteUser: jest.fn().mockResolvedValue(undefined),
       anonymizeAccountForDeletion: jest.fn().mockResolvedValue(makeUser()),
-    } as unknown as Deps['userPersistor'],
+    },
 
     driverAdminLoader: {
       listDrivers: jest.fn().mockResolvedValue([]),
       getDriverById: jest.fn().mockResolvedValue(null),
       getAssignedAreaIds: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['driverAdminLoader'],
+      listUnassignedAreas: jest.fn().mockResolvedValue([]),
+    },
 
     driverAdminPersistor: {
       createDriver: jest.fn().mockResolvedValue(null),
       updateDriver: jest.fn().mockResolvedValue(null),
-      softDeleteDriver: jest.fn().mockResolvedValue(new Date('2026-10-24T00:00:00Z')),
-    } as unknown as Deps['driverAdminPersistor'],
+      softDeleteDriver: jest
+        .fn()
+        .mockResolvedValue(new Date('2026-10-24T00:00:00Z')),
+      assignArea: jest.fn().mockResolvedValue(null),
+    },
 
     otpSessionLoader: {
       getActiveSession: jest.fn().mockResolvedValue(null),
       getLockedSession: jest.fn().mockResolvedValue(null),
       getRecentAttemptCount: jest.fn().mockResolvedValue(0),
-    } as unknown as Deps['otpSessionLoader'],
+    },
 
     otpSessionPersistor: {
       createSession: jest.fn().mockResolvedValue(makeOtpSession()),
       markVerified: jest.fn().mockResolvedValue(undefined),
       incrementAttempt: jest.fn().mockResolvedValue(undefined),
       lockPhone: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['otpSessionPersistor'],
+    },
 
     refreshTokenLoader: {
       getTokenByValue: jest.fn().mockResolvedValue(null),
@@ -285,11 +295,11 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       createToken: jest.fn().mockResolvedValue(makeRefreshToken()),
       revokeToken: jest.fn().mockResolvedValue(undefined),
       revokeAllUserTokens: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['refreshTokenPersistor'],
+    },
 
     otpService: {
       sendOtp: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['otpService'],
+    },
 
     deliveryAreaLoader: {
       getAreaById: jest.fn().mockResolvedValue(null),
@@ -301,13 +311,16 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
 
     deliveryAreaPersistor: {
       createArea: jest.fn().mockResolvedValue(null),
+      softDeleteDeliveryArea: jest
+        .fn()
+        .mockResolvedValue(new Date('2026-10-25T00:00:00Z')),
     } as unknown as Deps['deliveryAreaPersistor'],
 
     buildingLoader: {
       getBuildingsByArea: jest.fn().mockResolvedValue([]),
       searchBuildingsByArea: jest.fn().mockResolvedValue([]),
       getBuildingById: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['buildingLoader'],
+    },
 
     buildingPersistor: {
       createBuilding: jest.fn().mockResolvedValue(null),
@@ -318,33 +331,35 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     } as unknown as Deps['outOfZoneInterestPersistor'],
 
     outOfZoneInterestLoader: {
-      getAggregatedRequests: jest.fn().mockResolvedValue({ areas: [], total: 0, totalRequests: 0 }),
-    } as unknown as Deps['outOfZoneInterestLoader'],
+      getAggregatedRequests: jest
+        .fn()
+        .mockResolvedValue({ areas: [], total: 0, totalRequests: 0 }),
+    },
 
     deliveryLocationLoader: {
       getPrimaryLocationByUserId: jest.fn().mockResolvedValue(null),
       getLocationsByUserId: jest.fn().mockResolvedValue([]),
       getLocationById: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['deliveryLocationLoader'],
+    },
 
     deliveryLocationPersistor: {
       createLocation: jest.fn().mockResolvedValue(makeDeliveryLocation()),
       updateLocation: jest.fn().mockResolvedValue(makeDeliveryLocation()),
       deleteLocation: jest.fn().mockResolvedValue(undefined),
       setPrimaryLocation: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['deliveryLocationPersistor'],
+    },
 
     planLoader: {
       getPlanBySlug: jest.fn().mockResolvedValue(null),
       getPlanById: jest.fn().mockResolvedValue(null),
       getAllPlans: jest.fn().mockResolvedValue([]),
       getActivePlans: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['planLoader'],
+    },
 
     planPersistor: {
       createPlan: jest.fn().mockResolvedValue(null),
       updatePlanPricing: jest.fn().mockResolvedValue(makePlan()),
-    } as unknown as Deps['planPersistor'],
+    },
 
     checkoutSessionLoader: {
       getSessionById: jest.fn().mockResolvedValue(null),
@@ -355,11 +370,11 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       updateSession: jest.fn().mockResolvedValue(makeCheckoutSession()),
       claimSession: jest.fn().mockResolvedValue(true),
       expireAllUserSessions: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['checkoutSessionPersistor'],
+    },
 
     promoCodeLoader: {
       getPromoByCode: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['promoCodeLoader'],
+    },
 
     promoCodePersistor: {
       incrementTimesUsed: jest.fn().mockResolvedValue(undefined),
@@ -368,38 +383,39 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     paymentMethodLoader: {
       getMethodById: jest.fn().mockResolvedValue(null),
       getMethodsByUserId: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['paymentMethodLoader'],
+    },
 
     paymentMethodPersistor: {
       createMethod: jest.fn().mockResolvedValue(makePaymentMethod()),
       deleteMethod: jest.fn().mockResolvedValue(undefined),
       markAsLastUsed: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['paymentMethodPersistor'],
+    },
 
     orderLoader: {
       getOrderById: jest.fn().mockResolvedValue(null),
+      getOrderByGatewayPaymentId: jest.fn().mockResolvedValue(null),
       getLastOrderByUserId: jest.fn().mockResolvedValue(null),
       hasUserUsedPromoCode: jest.fn().mockResolvedValue(false),
       getConfirmedOrdersForBilling: jest
         .fn()
         .mockResolvedValue({ orders: [], total: 0 }),
-    } as unknown as Deps['orderLoader'],
+    },
 
     orderPersistor: {
       createOrder: jest.fn().mockResolvedValue(makeOrder()),
       updateOrder: jest.fn().mockResolvedValue(makeOrder()),
-    } as unknown as Deps['orderPersistor'],
+    },
 
     subscriptionLoader: {
       getActiveSubscriptionByUserId: jest.fn().mockResolvedValue(null),
       getSubscriptionById: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['subscriptionLoader'],
+    },
 
     subscriptionPersistor: {
       createSubscription: jest.fn().mockResolvedValue(makeSubscription()),
       updateSubscription: jest.fn().mockResolvedValue(undefined),
       expireActiveSubscriptions: jest.fn().mockResolvedValue(0),
-    } as unknown as Deps['subscriptionPersistor'],
+    },
 
     deliveryDayLoader: {
       getDeliveryDayByDate: jest.fn().mockResolvedValue(null),
@@ -407,36 +423,44 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getDeliveryDayById: jest.fn().mockResolvedValue(null),
       getDeliveryHistory: jest.fn().mockResolvedValue({ days: [], total: 0 }),
       getRiderDeliveriesByDate: jest.fn().mockResolvedValue([]),
+      getAdminDriverDeliveriesByDate: jest.fn().mockResolvedValue([]),
       getMealBreakdownByDate: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['deliveryDayLoader'],
+    },
 
     deliveryDayPersistor: {
       bulkCreateDeliveryDays: jest.fn().mockResolvedValue([makeDeliveryDay()]),
       updateDeliveryDayStatus: jest.fn().mockResolvedValue(undefined),
-      markDeliveryDelivered: jest.fn().mockResolvedValue(makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })),
+      markDeliveryDelivered: jest
+        .fn()
+        .mockResolvedValue(
+          makeDeliveryDay({ status: 'delivered', deliveredAt: new Date() })
+        ),
       bulkUpdateDeliveryDayStatus: jest.fn().mockResolvedValue(0),
       updateMealTypeForSubscription: jest.fn().mockResolvedValue(undefined),
       updateSelectedMeal: jest.fn().mockResolvedValue(makeDeliveryDay()),
-      deleteScheduledDeliveryDaysOutsideDates: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['deliveryDayPersistor'],
+      deleteScheduledDeliveryDaysOutsideDates: jest
+        .fn()
+        .mockResolvedValue(undefined),
+    },
 
     publicHolidayLoader: {
       getHolidayDates: jest.fn().mockResolvedValue([]),
       getHolidaysByYear: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['publicHolidayLoader'],
+    },
 
     publicHolidayPersistor: {
       createHoliday: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['publicHolidayPersistor'],
+    },
 
     walletLoader: {
       getBalanceByUserId: jest.fn().mockResolvedValue(0),
       getTransactionsByUserId: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['walletLoader'],
+    },
 
     walletPersistor: {
       createTransaction: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['walletPersistor'],
+      createDebitIfSufficient: jest.fn().mockResolvedValue(undefined),
+    },
 
     referralLoader: {
       getReferralStatsByUserId: jest.fn().mockResolvedValue({
@@ -450,37 +474,46 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         .mockResolvedValue({ rewards: [], total: 0 }),
       getReferralByCode: jest.fn().mockResolvedValue(null),
       hasUserBeenReferred: jest.fn().mockResolvedValue(false),
-    } as unknown as Deps['referralLoader'],
+    },
 
     referralPersistor: {
       createReferral: jest.fn().mockResolvedValue(undefined),
       markRewarded: jest.fn().mockResolvedValue(undefined),
       ensureReferralCode: jest.fn().mockResolvedValue('MOCK1234'),
-    } as unknown as Deps['referralPersistor'],
+    },
 
     paymentGateway: {
       charge: jest.fn().mockResolvedValue({
         success: true,
         gatewayPaymentId: 'mock_pay_uuid',
       }),
-    } as unknown as Deps['paymentGateway'],
+      fetchPayment: jest.fn().mockResolvedValue({
+        success: false,
+        status: 'not_found',
+        gatewayPaymentId: '',
+      }),
+    },
 
     mealLoader: {
       getMealById: jest.fn().mockResolvedValue(null),
       getMealByName: jest.fn().mockResolvedValue(null),
       getMeals: jest.fn().mockResolvedValue({ meals: [], total: 0 }),
       getMealsByIds: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['mealLoader'],
+    },
 
     mealPersistor: {
       createMeal: jest.fn().mockResolvedValue(null),
-      deleteMeal: jest.fn().mockResolvedValue(undefined),
+      softDeleteMeal: jest
+        .fn()
+        .mockResolvedValue(new Date('2026-10-25T00:00:00Z')),
       updateMeal: jest.fn().mockResolvedValue(null),
       updateMealStatus: jest.fn().mockResolvedValue(null),
-      bulkCreateMeals: jest.fn().mockResolvedValue({ created: [], skipped: 0, errors: [] }),
+      bulkCreateMeals: jest
+        .fn()
+        .mockResolvedValue({ created: [], skipped: 0, errors: [] }),
       incrementTimesServed: jest.fn().mockResolvedValue(undefined),
       updateLastServed: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['mealPersistor'],
+    },
 
     menuWeekLoader: {
       getWeekById: jest.fn().mockResolvedValue(null),
@@ -488,7 +521,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getSlotsByWeekId: jest.fn().mockResolvedValue([]),
       getSlotById: jest.fn().mockResolvedValue(null),
       getMenuForDateRange: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['menuWeekLoader'],
+    },
 
     menuWeekPersistor: {
       ensureWeekExists: jest.fn().mockResolvedValue({ week: null, slots: [] }),
@@ -500,53 +533,61 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       publishWeek: jest.fn().mockResolvedValue(null),
       unpublishWeek: jest.fn().mockResolvedValue(null),
       transitionPastWeeks: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['menuWeekPersistor'],
+    },
 
     storageGateway: {
-      getPresignedUploadUrl: jest.fn().mockResolvedValue('https://s3.example.com/upload'),
-      getPublicUrl: jest.fn().mockReturnValue('https://s3.example.com/meals/test/photo.jpeg'),
+      getPresignedUploadUrl: jest
+        .fn()
+        .mockResolvedValue('https://s3.example.com/upload'),
+      getPublicUrl: jest
+        .fn()
+        .mockReturnValue('https://s3.example.com/meals/test/photo.jpeg'),
     } as unknown as Deps['storageGateway'],
 
     auditLogPersistor: {
       createAuditLog: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['auditLogPersistor'],
+    },
 
     auditLogLoader: {
       getAuditLogsBySubscription: jest.fn().mockResolvedValue([]),
       getAuditLogsByUser: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['auditLogLoader'],
+    },
 
     deliveryIssuePersistor: {
       createIssue: jest.fn().mockResolvedValue(null),
       resolveIssue: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['deliveryIssuePersistor'],
+    },
 
     deliveryIssueLoader: {
       getIssuesBySubscription: jest.fn().mockResolvedValue([]),
       getIssueById: jest.fn().mockResolvedValue(null),
       getOpenIssuesByDate: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['deliveryIssueLoader'],
+    },
 
     mealRatingPersistor: {
       createRating: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['mealRatingPersistor'],
+    },
 
     mealRatingLoader: {
       getRatingByDeliveryDay: jest.fn().mockResolvedValue(null),
       getPendingRatingDays: jest.fn().mockResolvedValue([]),
       getRatingsByUser: jest.fn().mockResolvedValue({ ratings: [], total: 0 }),
-      getRatingsByMeal: jest.fn().mockResolvedValue({ ratings: [], total: 0, averageRating: null }),
+      getRatingsByMeal: jest
+        .fn()
+        .mockResolvedValue({ ratings: [], total: 0, averageRating: null }),
     } as unknown as Deps['mealRatingLoader'],
 
     adminCustomerLoader: {
       listCustomers: jest.fn().mockResolvedValue({ customers: [], total: 0 }),
       getCustomerDetail: jest.fn().mockResolvedValue(null),
-      getCustomerHistory: jest.fn().mockResolvedValue({ subscriptions: [], deliveries: [], issues: [] }),
-    } as unknown as Deps['adminCustomerLoader'],
+      getCustomerHistory: jest
+        .fn()
+        .mockResolvedValue({ subscriptions: [], deliveries: [], issues: [] }),
+    },
 
     adminCustomerPersistor: {
       deactivateCustomer: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['adminCustomerPersistor'],
+    },
 
     revenueLoader: {
       getSummary: jest.fn().mockResolvedValue({
@@ -562,7 +603,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       }),
       getDailyRevenue: jest.fn().mockResolvedValue([]),
       getAvailableRevenueMonths: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['revenueLoader'],
+    },
 
     commsLoader: {
       getAutomationStates: jest.fn().mockResolvedValue([]),
@@ -575,7 +616,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       }),
       getSegmentRecipientUserIds: jest.fn().mockResolvedValue([]),
       getActiveDeviceEndpointsForUsers: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['commsLoader'],
+    },
 
     commsPersistor: {
       setAutomationEnabled: jest.fn().mockResolvedValue({
@@ -593,7 +634,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         status: 'sent',
         sentAt: new Date(),
       }),
-    } as unknown as Deps['commsPersistor'],
+    },
 
     riderIssuePersistor: {
       createRiderIssue: jest.fn().mockResolvedValue({
@@ -605,15 +646,15 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
-    } as unknown as Deps['riderIssuePersistor'],
+    },
 
     dailyOpsDayLoader: {
       getByDate: jest.fn().mockResolvedValue(null),
-    } as unknown as Deps['dailyOpsDayLoader'],
+    },
 
     dailyOpsDayPersistor: {
       advanceStage: jest.fn(),
-    } as unknown as Deps['dailyOpsDayPersistor'],
+    },
 
     notificationGateway: {
       notify: jest.fn().mockResolvedValue(undefined),
@@ -629,24 +670,57 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       upsertDevice: jest.fn().mockResolvedValue(null),
       deactivateDevice: jest.fn().mockResolvedValue(undefined),
       deactivateAllDevicesForUser: jest.fn().mockResolvedValue(undefined),
-    } as unknown as Deps['userDevicePersistor'],
+    },
 
     paymentTransactionLoader: {
       getTransactionById: jest.fn().mockResolvedValue(null),
       getTransactionsByStatus: jest.fn().mockResolvedValue([]),
-    } as unknown as Deps['paymentTransactionLoader'],
+      getTransactionsByCheckoutSessionId: jest.fn().mockResolvedValue([]),
+      getTransactionByGatewayPaymentId: jest.fn().mockResolvedValue(null),
+    },
 
     paymentTransactionPersistor: {
-      createTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'INITIATED' }),
-      updateTransaction: jest.fn().mockResolvedValue({ id: 'mock_tx_123', status: 'SUCCESS' }),
-    } as unknown as Deps['paymentTransactionPersistor'],
+      createTransaction: jest
+        .fn()
+        .mockImplementation(
+          async (input: {
+            userId: string
+            checkoutSessionId: string
+            amountSar: number
+            status: string
+            startDate?: string | null
+            paymentMethodId?: string | null
+          }) => ({
+            id: 'mock_tx_123',
+            userId: input.userId,
+            checkoutSessionId: input.checkoutSessionId,
+            amountSar: input.amountSar,
+            status: input.status,
+            gatewayPaymentId: null,
+            startDate: input.startDate ?? null,
+            paymentMethodId: input.paymentMethodId ?? null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+        ),
+      updateTransaction: jest
+        .fn()
+        .mockImplementation(
+          async (id: string, updates: Record<string, unknown>) => ({
+            id,
+            status: 'SUCCESS',
+            ...updates,
+          })
+        ),
+      compareAndSetStatus: jest.fn().mockResolvedValue(true),
+    },
 
     erpIntegrationLoader: {
       getMenus: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
       getCustomers: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
       getPayments: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
       getDailyOrders: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
-    } as unknown as Deps['erpIntegrationLoader'],
+    },
   }
 
   return { ...base, ...overrides }

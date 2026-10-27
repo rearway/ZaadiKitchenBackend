@@ -31,7 +31,12 @@ describe('CreateOrder', () => {
     const plan = makePlan()
     const order = makeOrder()
     const subscription = makeSubscription()
-    const deliveryDays = Array.from({ length: 22 }, (_, i) => makeDeliveryDay({ id: `dd-${i}`, date: `2025-06-${String(i + 1).padStart(2, '0')}` }))
+    const deliveryDays = Array.from({ length: 22 }, (_, i) =>
+      makeDeliveryDay({
+        id: `dd-${i}`,
+        date: `2025-06-${String(i + 1).padStart(2, '0')}`,
+      })
+    )
 
     return buildDeps({
       checkoutSessionLoader: {
@@ -51,7 +56,9 @@ describe('CreateOrder', () => {
       },
       orderPersistor: {
         createOrder: jest.fn().mockResolvedValue(order),
-        updateOrder: jest.fn().mockResolvedValue({ ...order, subscriptionId: subscription.id }),
+        updateOrder: jest
+          .fn()
+          .mockResolvedValue({ ...order, subscriptionId: subscription.id }),
       },
       subscriptionPersistor: {
         createSubscription: jest.fn().mockResolvedValue(subscription),
@@ -63,7 +70,9 @@ describe('CreateOrder', () => {
       },
       checkoutSessionPersistor: {
         ...buildDeps().checkoutSessionPersistor,
-        updateSession: jest.fn().mockResolvedValue({ ...makeCheckoutSession(), status: 'confirmed' }),
+        updateSession: jest
+          .fn()
+          .mockResolvedValue({ ...makeCheckoutSession(), status: 'confirmed' }),
         expireAllUserSessions: jest.fn().mockResolvedValue(undefined),
       },
       paymentMethodPersistor: {
@@ -75,13 +84,22 @@ describe('CreateOrder', () => {
         getHolidayDates: jest.fn().mockResolvedValue([]),
       },
       paymentGateway: {
-        charge: jest.fn().mockResolvedValue({ success: true, gatewayPaymentId: 'mock_pay_123' }),
+        charge: jest.fn().mockResolvedValue({
+          success: true,
+          gatewayPaymentId: 'mock_pay_123',
+        }),
+        fetchPayment: jest.fn().mockResolvedValue({
+          success: false,
+          status: 'not_found',
+          gatewayPaymentId: '',
+        }),
       },
       promoCodeLoader: {
         getPromoByCode: jest.fn().mockResolvedValue(null),
       },
       walletPersistor: {
         createTransaction: jest.fn().mockResolvedValue(undefined),
+        createDebitIfSufficient: jest.fn().mockResolvedValue(undefined),
       },
       walletLoader: {
         getBalanceByUserId: jest.fn().mockResolvedValue(0),
@@ -125,10 +143,14 @@ describe('CreateOrder', () => {
       expect.objectContaining({
         amountSar: 500,
         paymentToken: 'tok_test_xxxx',
+        idempotencyKey: 'mock_tx_123',
+        orderId: 'mock_tx_123',
       })
     )
-    const chargeOrder = (deps.paymentGateway.charge as jest.Mock).mock.invocationCallOrder[0]
-    const createOrderCall = (deps.orderPersistor.createOrder as jest.Mock).mock.invocationCallOrder[0]
+    const chargeOrder = (deps.paymentGateway.charge as jest.Mock).mock
+      .invocationCallOrder[0]
+    const createOrderCall = (deps.orderPersistor.createOrder as jest.Mock).mock
+      .invocationCallOrder[0]
     expect(chargeOrder).toBeLessThan(createOrderCall)
   })
 
@@ -157,17 +179,23 @@ describe('CreateOrder', () => {
   })
 
   it('debits the wallet when walletCreditSar > 0', async () => {
-    const session = makeCheckoutSession({ walletCreditSar: 50, totalDueSar: 450 })
+    const session = makeCheckoutSession({
+      walletCreditSar: 50,
+      totalDueSar: 450,
+    })
     const deps = makeOrderDeps({
       checkoutSessionLoader: {
         getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: {
+        getBalanceByUserId: jest.fn().mockResolvedValue(50),
       },
     })
     const createOrder = makeUC(deps)
 
     await createOrder(validInput)
 
-    expect(deps.walletPersistor.createTransaction).toHaveBeenCalledWith(
+    expect(deps.walletPersistor.createDebitIfSufficient).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: validInput.userId,
         type: 'debit',
@@ -186,11 +214,19 @@ describe('CreateOrder', () => {
   })
 
   it('credits the referrer wallet 10% of plan price when a referral code was applied', async () => {
-    const referralPromo = makePromoCode({ type: 'referral', ownerUserId: 'referrer-uuid-1', discountSar: 100 })
+    const referralPromo = makePromoCode({
+      type: 'referral',
+      ownerUserId: 'referrer-uuid-1',
+      discountSar: 100,
+    })
     const session = makeCheckoutSession({ promoCode: 'TESTREF10' })
     const deps = makeOrderDeps({
-      checkoutSessionLoader: { getSessionById: jest.fn().mockResolvedValue(session) },
-      promoCodeLoader: { getPromoByCode: jest.fn().mockResolvedValue(referralPromo) },
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      promoCodeLoader: {
+        getPromoByCode: jest.fn().mockResolvedValue(referralPromo),
+      },
     })
     const createOrder = makeUC(deps)
 
@@ -281,7 +317,9 @@ describe('CreateOrder', () => {
       expiresAt: new Date(Date.now() - 1000),
     })
     const deps = makeOrderDeps({
-      checkoutSessionLoader: { getSessionById: jest.fn().mockResolvedValue(expiredSession) },
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(expiredSession),
+      },
     })
     const createOrder = makeUC(deps)
 
@@ -295,7 +333,9 @@ describe('CreateOrder', () => {
   it('throws SessionExpiredError when the session status is expired', async () => {
     const expiredSession = makeCheckoutSession({ status: 'expired' })
     const deps = makeOrderDeps({
-      checkoutSessionLoader: { getSessionById: jest.fn().mockResolvedValue(expiredSession) },
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(expiredSession),
+      },
     })
     const createOrder = makeUC(deps)
 
@@ -306,7 +346,9 @@ describe('CreateOrder', () => {
   })
 
   it('throws ResourceNotFoundError when the payment method does not belong to the user', async () => {
-    const otherUsersMethod = makePaymentMethod({ userId: 'different-user-uuid' })
+    const otherUsersMethod = makePaymentMethod({
+      userId: 'different-user-uuid',
+    })
     const deps = makeOrderDeps({
       paymentMethodLoader: {
         ...buildDeps().paymentMethodLoader,
@@ -362,8 +404,12 @@ describe('CreateOrder', () => {
 
     await createOrder({ ...validInput, startDate: '2025-06-01' })
 
-    const bulkCreateCall = (deps.deliveryDayPersistor.bulkCreateDeliveryDays as jest.Mock).mock.calls[0][0]
-    const dayOfWeeks = bulkCreateCall.map((d: { date: string }) => new Date(d.date + 'T00:00:00Z').getDay())
+    const bulkCreateCall = (
+      deps.deliveryDayPersistor.bulkCreateDeliveryDays as jest.Mock
+    ).mock.calls[0][0]
+    const dayOfWeeks = bulkCreateCall.map((d: { date: string }) =>
+      new Date(d.date + 'T00:00:00Z').getDay()
+    )
     // Day 5 = Friday, Day 6 = Saturday
     expect(dayOfWeeks).not.toContain(5)
     expect(dayOfWeeks).not.toContain(6)
@@ -381,7 +427,9 @@ describe('CreateOrder', () => {
 
     await createOrder({ ...validInput, startDate: '2025-06-01' })
 
-    const bulkCreateCall = (deps.deliveryDayPersistor.bulkCreateDeliveryDays as jest.Mock).mock.calls[0][0]
+    const bulkCreateCall = (
+      deps.deliveryDayPersistor.bulkCreateDeliveryDays as jest.Mock
+    ).mock.calls[0][0]
     const dates = bulkCreateCall.map((d: { date: string }) => d.date)
     expect(dates).not.toContain(holiday)
   })
@@ -401,7 +449,9 @@ describe('CreateOrder', () => {
         statusCode: 409,
       })
       expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
-      expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+      expect(
+        deps.subscriptionPersistor.createSubscription
+      ).not.toHaveBeenCalled()
     })
 
     it('rejects a concurrent second submit when the session claim fails', async () => {
@@ -416,7 +466,9 @@ describe('CreateOrder', () => {
         errorCode: 'CHECKOUT_ALREADY_COMPLETED',
       })
       expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
-      expect(deps.deliveryDayPersistor.bulkCreateDeliveryDays).not.toHaveBeenCalled()
+      expect(
+        deps.deliveryDayPersistor.bulkCreateDeliveryDays
+      ).not.toHaveBeenCalled()
     })
 
     it('claims the session before charging', async () => {
@@ -424,9 +476,10 @@ describe('CreateOrder', () => {
 
       await makeUC(deps)(validInput)
 
-      const claim = (deps.checkoutSessionPersistor.claimSession as jest.Mock).mock
+      const claim = (deps.checkoutSessionPersistor.claimSession as jest.Mock)
+        .mock.invocationCallOrder[0]
+      const charge = (deps.paymentGateway.charge as jest.Mock).mock
         .invocationCallOrder[0]
-      const charge = (deps.paymentGateway.charge as jest.Mock).mock.invocationCallOrder[0]
       expect(deps.checkoutSessionPersistor.claimSession).toHaveBeenCalledWith(
         validInput.sessionId
       )
@@ -448,24 +501,32 @@ describe('CreateOrder', () => {
         await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
           errorCode: 'ACTIVE_SUBSCRIPTION_CHECKOUT_BLOCKED',
         })
-        expect(deps.checkoutSessionPersistor.claimSession).not.toHaveBeenCalled()
+        expect(
+          deps.checkoutSessionPersistor.claimSession
+        ).not.toHaveBeenCalled()
         expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
-        expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+        expect(
+          deps.subscriptionPersistor.createSubscription
+        ).not.toHaveBeenCalled()
       }
     )
 
     it('rejects an upgrade when the live subscription is no longer the one being upgraded', async () => {
       const deps = makeOrderDeps({
         checkoutSessionLoader: {
-          getSessionById: jest.fn().mockResolvedValue(
-            makeCheckoutSession({ promotionSubscriptionId: 'sub-old' })
-          ),
+          getSessionById: jest
+            .fn()
+            .mockResolvedValue(
+              makeCheckoutSession({ promotionSubscriptionId: 'sub-old' })
+            ),
         },
         subscriptionLoader: {
           ...buildDeps().subscriptionLoader,
           getActiveSubscriptionByUserId: jest
             .fn()
-            .mockResolvedValue(makeSubscription({ id: 'sub-other', status: 'active' })),
+            .mockResolvedValue(
+              makeSubscription({ id: 'sub-other', status: 'active' })
+            ),
         },
       })
 
@@ -509,6 +570,226 @@ describe('CreateOrder', () => {
         { status: 'active' }
       )
     })
+  })
+
+  it('rejects hardcoded method ids when mock payments are off', async () => {
+    const deps = makeOrderDeps({ useMockPayment: false })
+    const createOrder = makeUC(deps)
+
+    await expect(
+      createOrder({
+        ...validInput,
+        paymentMethodId: '00000000-0000-0000-0000-000000000001',
+      })
+    ).rejects.toMatchObject({
+      errorCode: 'RESOURCE_NOT_FOUND',
+      statusCode: 404,
+    })
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+  })
+
+  it('charges a hardcoded method with the mock token only while mock payments are on', async () => {
+    const deps = makeOrderDeps({ useMockPayment: true })
+    const createOrder = makeUC(deps)
+
+    await createOrder({
+      ...validInput,
+      paymentMethodId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(deps.paymentGateway.charge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentToken: 'mock_token',
+        idempotencyKey: 'mock_tx_123',
+      })
+    )
+  })
+
+  it('skips the gateway when nothing is due and still creates the subscription', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 500,
+      totalDueSar: 0,
+      basePriceSar: 500,
+    })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(500) },
+    })
+
+    const result = await makeUC(deps)(validInput)
+
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.walletPersistor.createDebitIfSufficient).toHaveBeenCalledWith(
+      expect.objectContaining({ amountSar: -500 })
+    )
+    expect(deps.subscriptionPersistor.createSubscription).toHaveBeenCalled()
+    expect(result.summary.total_paid_sar).toBe(0)
+  })
+
+  it('wallet-only checkout works without a real card when mock payments are off', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 28,
+      totalDueSar: 0,
+      basePriceSar: 28,
+    })
+    const deps = makeOrderDeps({
+      useMockPayment: false,
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(50) },
+    })
+
+    const result = await makeUC(deps)({
+      ...validInput,
+      paymentMethodId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.createSubscription).toHaveBeenCalled()
+    expect(result.summary.wallet_credit_sar).toBe(28)
+    expect(result.summary.total_paid_sar).toBe(0)
+  })
+
+  it('refreshes wallet credit at order time when the session was created before wallet balance existed', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 0,
+      totalDueSar: 28,
+      basePriceSar: 28,
+    })
+    const deps = makeOrderDeps({
+      useMockPayment: false,
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(50) },
+    })
+
+    await makeUC(deps)(validInput)
+
+    expect(deps.checkoutSessionPersistor.updateSession).toHaveBeenCalledWith(
+      validInput.sessionId,
+      { walletCreditSar: 28, totalDueSar: 0 }
+    )
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.walletPersistor.createDebitIfSufficient).toHaveBeenCalledWith(
+      expect.objectContaining({ amountSar: -28 })
+    )
+  })
+
+  it('does not charge or debit when the wallet no longer covers the session credit', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 50,
+      totalDueSar: 450,
+    })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: { getBalanceByUserId: jest.fn().mockResolvedValue(10) },
+    })
+
+    await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+      errorCode: 'INSUFFICIENT_WALLET_BALANCE',
+      statusCode: 422,
+    })
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.orderPersistor.createOrder).not.toHaveBeenCalled()
+    expect(deps.walletPersistor.createDebitIfSufficient).not.toHaveBeenCalled()
+  })
+
+  it('does not debit an overdrawn wallet after the card charge', async () => {
+    const session = makeCheckoutSession({
+      walletCreditSar: 50,
+      totalDueSar: 450,
+    })
+    const deps = makeOrderDeps({
+      checkoutSessionLoader: {
+        getSessionById: jest.fn().mockResolvedValue(session),
+      },
+      walletLoader: {
+        getBalanceByUserId: jest
+          .fn()
+          .mockResolvedValueOnce(50)
+          .mockResolvedValueOnce(0),
+      },
+    })
+
+    await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+      errorCode: 'INSUFFICIENT_WALLET_BALANCE',
+    })
+    expect(deps.paymentGateway.charge).toHaveBeenCalledTimes(1)
+    expect(deps.orderPersistor.createOrder).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.createSubscription).not.toHaveBeenCalled()
+    expect(
+      deps.paymentTransactionPersistor.updateTransaction
+    ).toHaveBeenCalledWith(
+      'mock_tx_123',
+      expect.objectContaining({ status: 'PAID_UNFULFILLED' })
+    )
+  })
+
+  it('keeps the same idempotency key when the charge result is ambiguous', async () => {
+    const deps = makeOrderDeps({
+      paymentGateway: {
+        charge: jest.fn().mockResolvedValue({
+          success: false,
+          ambiguous: true,
+          gatewayPaymentId: 'mock_tx_123',
+          status: 'error',
+          errorMessage: 'timeout',
+        }),
+        fetchPayment: jest.fn(),
+      },
+    })
+
+    await expect(makeUC(deps)(validInput)).rejects.toMatchObject({
+      errorCode: 'PAYMENT_FAILED',
+    })
+    expect(deps.orderPersistor.createOrder).not.toHaveBeenCalled()
+    expect(
+      deps.paymentTransactionPersistor.updateTransaction
+    ).toHaveBeenCalledWith(
+      'mock_tx_123',
+      expect.objectContaining({
+        status: 'INITIATED',
+        gatewayPaymentId: 'mock_tx_123',
+      })
+    )
+    expect(deps.checkoutSessionPersistor.updateSession).toHaveBeenCalledWith(
+      validInput.sessionId,
+      { status: 'active' }
+    )
+  })
+
+  it('fulfills a settled payment without charging again when the first write failed', async () => {
+    const tx = {
+      id: 'mock_tx_123',
+      userId: validInput.userId,
+      checkoutSessionId: validInput.sessionId,
+      amountSar: 500,
+      status: 'PAID_UNFULFILLED' as const,
+      gatewayPaymentId: 'pay_123',
+      startDate: validInput.startDate,
+      paymentMethodId: validInput.paymentMethodId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    const deps = makeOrderDeps({
+      paymentTransactionLoader: {
+        ...buildDeps().paymentTransactionLoader,
+        getTransactionsByCheckoutSessionId: jest.fn().mockResolvedValue([tx]),
+      },
+    })
+
+    await makeUC(deps)(validInput)
+
+    expect(deps.paymentGateway.charge).not.toHaveBeenCalled()
+    expect(deps.subscriptionPersistor.createSubscription).toHaveBeenCalledTimes(
+      1
+    )
   })
 
   it('links the order and subscription to each other', async () => {

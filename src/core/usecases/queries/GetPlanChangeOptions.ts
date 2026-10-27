@@ -1,5 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { getPromotionTargets, normalizePlanSlug } from '../services/planPromotionUtils.js'
+import { canUpgradeSubscriptionPlan } from '../services/subscriptionServicePeriod.js'
 
 export interface GetPlanChangeOptionsInput {
   userId: string
@@ -39,15 +40,20 @@ export function makeUC(deps: Deps) {
       const plan = await planLoader.getPlanById(sub.planId)
       const currentSlug = plan ? normalizePlanSlug(plan.slug) : null
 
-      if (sub.status !== 'active') {
+      if (!canUpgradeSubscriptionPlan(sub)) {
+        const blockedReason =
+          sub.status === 'paused'
+            ? 'Plan upgrades are not available while your subscription is paused.'
+            : sub.status === 'cancelled'
+              ? 'Your plan has ended. Start a new subscription from the plans screen.'
+              : 'Plan upgrades are only available while your subscription is active.'
         return {
           current_plan_id: currentSlug,
           subscription_status: sub.status,
           start_date: sub.startDate,
           allowed_plan_ids: [],
           promotion_available: false,
-          blocked_reason:
-            'Plan upgrades are only available while your subscription is active.',
+          blocked_reason: blockedReason,
         }
       }
 
