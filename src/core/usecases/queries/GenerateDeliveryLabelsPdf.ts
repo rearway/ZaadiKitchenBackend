@@ -2,8 +2,14 @@ import path from 'node:path'
 import type { Deps } from '../../entitygateway/index.js'
 import type { RiderDeliveryRow } from '../../entitygateway/DeliveryDay.js'
 import { ResourceNotFoundError } from '../../../shared/errors/index.js'
+import {
+  mealTypeNameEn,
+  mealTypeShortEn,
+  type MealTypeDisplay,
+} from '../../../shared/meal-display.js'
 import type { LabelMealTypeFilter } from './GetDeliveryLabels.js'
 import { todayKSA } from '../services/revenueUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface GenerateDeliveryLabelsPdfInput {
   date?: string
@@ -23,6 +29,9 @@ const LABEL_WIDTH = 100 * MM_TO_PT
 const LABEL_HEIGHT = 60 * MM_TO_PT
 const MARGIN = 8
 const CONTENT_WIDTH = LABEL_WIDTH - MARGIN * 2
+const BADGE_PADDING_X = 6
+/** Text width that still fits inside the 100mm label after badge padding. */
+export const MEAL_BADGE_MAX_TEXT_PT = CONTENT_WIDTH - BADGE_PADDING_X * 2
 
 const ASSETS_DIR = path.join(__dirname, '../../../assets')
 const FONT_REGULAR = path.join(ASSETS_DIR, 'fonts/Montserrat-Regular.ttf')
@@ -54,24 +63,50 @@ function drawHeader(doc: PDFKit.PDFDocument): void {
     })
 }
 
+export function composeBadgeText(input: {
+  mealType: string
+  mealName?: string | null
+  displays?: MealTypeDisplay[]
+  fits: (text: string, fontSize: number) => boolean
+}): { text: string; fontSize: number } {
+  const typeLabel = mealTypeShortEn(input.mealType, input.displays)
+  const fallback = mealTypeNameEn(input.mealType, input.displays)
+  let dish = (input.mealName ?? '').trim()
+  if (dish.length > 22) dish = `${dish.slice(0, 21)}…`
+
+  let fontSize = 7
+  let text = dish ? `${typeLabel} · ${dish}` : fallback
+  while (fontSize > 5 && !input.fits(text, fontSize)) fontSize -= 0.5
+
+  while (dish.length > 0 && !input.fits(text, fontSize)) {
+    dish = dish.slice(0, -1)
+    text = dish ? `${typeLabel} · ${dish}…` : fallback
+  }
+  while (text.length > 1 && !input.fits(text, fontSize)) {
+    text = `${text.slice(0, -2)}…`
+  }
+  return { text, fontSize }
+}
+
 function drawMealBadge(
   doc: PDFKit.PDFDocument,
   row: LabelRow,
-  y: number
+  y: number,
+  displays: MealTypeDisplay[]
 ): number {
   const badgeColor = row.mealType === 'executive' ? '#E4281D' : '#16A34A'
-  const typeLabel = row.mealType === 'executive' ? 'Exec' : 'Salad'
-  const dish =
-    row.mealName && row.mealName.length > 22
-      ? `${row.mealName.slice(0, 21)}…`
-      : row.mealName
-  const badgeText = dish
-    ? `${typeLabel} · ${dish}`
-    : row.mealType === 'executive'
-      ? 'Executive Meal'
-      : 'Salad Meal'
-  const badgeFontSize = 7
-  const badgePaddingX = 6
+  const composed = composeBadgeText({
+    mealType: row.mealType,
+    mealName: row.mealName,
+    displays,
+    fits: (text, fontSize) => {
+      doc.font('Montserrat-Bold').fontSize(fontSize)
+      return doc.widthOfString(text) <= MEAL_BADGE_MAX_TEXT_PT
+    },
+  })
+  const badgeText = composed.text
+  const badgeFontSize = composed.fontSize
+  const badgePaddingX = BADGE_PADDING_X
   const badgeHeight = 13
 
   doc.font('Montserrat-Bold').fontSize(badgeFontSize)
@@ -92,7 +127,12 @@ function drawMealBadge(
   return badgeHeight
 }
 
-function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
+function drawLabel(
+  doc: PDFKit.PDFDocument,
+  row: LabelRow,
+  date: string,
+  displays: MealTypeDisplay[]
+): void {
   drawHeader(doc)
 
   let y = 26
@@ -144,7 +184,7 @@ function drawLabel(doc: PDFKit.PDFDocument, row: LabelRow, date: string): void {
     )
 
   const badgeY = LABEL_HEIGHT - 40
-  const badgeHeight = drawMealBadge(doc, row, badgeY)
+  const badgeHeight = drawMealBadge(doc, row, badgeY, displays)
 
   doc
     .fillColor('#666666')
@@ -165,6 +205,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const date = input.date ?? todayKSA()
       const mealType = input.mealType ?? 'all'
 
@@ -210,7 +251,7 @@ export function makeUC(deps: Deps) {
         toRender.forEach((row, index) => {
           if (index > 0)
             doc.addPage({ size: [LABEL_WIDTH, LABEL_HEIGHT], margin: 0 })
-          drawLabel(doc, row, date)
+          drawLabel(doc, row, date, displays)
         })
       }
       doc.end()

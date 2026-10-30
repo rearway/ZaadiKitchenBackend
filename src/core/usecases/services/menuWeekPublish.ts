@@ -1,5 +1,6 @@
 import type { Meal } from '../../entities/Meal.js'
 import type { MenuSlot } from '../../entities/MenuSlot.js'
+import { mealTypeNameEn } from '../../../shared/meal-display.js'
 import { getDayLabel } from './weekUtils.js'
 
 export const MAX_DISHES_PER_STREAM = 3
@@ -85,28 +86,30 @@ export function evaluateWeekPublishReadiness(
     const saladFilled = filledSlotsForStream(slots, date, 'salad')
     const label = getDayLabel(date)
 
+    const executiveName = mealTypeNameEn('executive')
+    const saladName = mealTypeNameEn('salad')
     if (execFilled.length === 0) {
-      blockedReason ??= `${label}: Executive missing`
+      blockedReason ??= `${label}: ${executiveName} missing`
       continue
     }
     if (saladFilled.length === 0) {
-      blockedReason ??= `${label}: Salad missing`
+      blockedReason ??= `${label}: ${saladName} missing`
       continue
     }
     if (execFilled.length > MAX_DISHES_PER_STREAM) {
-      blockedReason ??= `${label}: Executive has more than ${MAX_DISHES_PER_STREAM} dishes`
+      blockedReason ??= `${label}: ${executiveName} has more than ${MAX_DISHES_PER_STREAM} dishes`
       continue
     }
     if (saladFilled.length > MAX_DISHES_PER_STREAM) {
-      blockedReason ??= `${label}: Salad has more than ${MAX_DISHES_PER_STREAM} dishes`
+      blockedReason ??= `${label}: ${saladName} has more than ${MAX_DISHES_PER_STREAM} dishes`
       continue
     }
     if (!execFilled.some(s => s.isDefault)) {
-      blockedReason ??= `${label}: Executive default not set`
+      blockedReason ??= `${label}: ${executiveName} default not set`
       continue
     }
     if (!saladFilled.some(s => s.isDefault)) {
-      blockedReason ??= `${label}: Salad default not set`
+      blockedReason ??= `${label}: ${saladName} default not set`
       continue
     }
 

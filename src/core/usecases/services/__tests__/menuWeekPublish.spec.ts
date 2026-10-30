@@ -74,7 +74,7 @@ describe('evaluateWeekPublishReadiness', () => {
 
     expect(evaluateWeekPublishReadiness(slots)).toMatchObject({
       publishReady: false,
-      blockedReason: 'Sun: Salad missing',
+      blockedReason: 'Sun: Platio Light missing',
     })
   })
 
@@ -85,7 +85,7 @@ describe('evaluateWeekPublishReadiness', () => {
     ]
 
     expect(evaluateWeekPublishReadiness(slots).blockedReason).toBe(
-      'Sun: Executive default not set'
+      'Sun: Platio Balanced default not set'
     )
   })
 

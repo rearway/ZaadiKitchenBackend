@@ -37,6 +37,45 @@
   ],
   "item": [
     {
+      "name": "App",
+      "item": [
+        {
+          "name": "GET /app/settings (public)",
+          "auth": {
+            "type": "noauth"
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/settings?platform=ios&app_version=1.0.0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "platform",
+                  "value": "ios",
+                  "description": "ios or android. Omit both query params for update.status none."
+                },
+                {
+                  "key": "app_version",
+                  "value": "1.0.0",
+                  "description": "Semver. Compared with app_versions min/latest."
+                }
+              ]
+            },
+            "description": "No JWT. Cache-Control max-age=300 and ETag. Meal slugs stay executive/salad. Display names are Platio Balanced / Platio Light. update.status is none, optional, or force."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -1661,7 +1700,33 @@
                 }
               ]
             },
-            "description": "One card per date (not per slot). Face = effective_meal. Always includes executive_options + salad_options, selected_meal_id, can_change. Skip flags still on the day card. See MEAL_OPTIONS_API_UI.md."
+            "description": "One card per date (not per slot). Face = effective_meal. Always includes executive_options + salad_options, selected_meal_id, can_change. Skip flags still on the day card. Omit date to keep the legacy this_week/next_week body. See MEAL_OPTIONS_API_UI.md."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /menu/week?date= (selected day)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/menu/week?date=2026-09-16",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "menu",
+                "week"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-09-16",
+                  "description": "Riyadh civil date inside this week or next week. Adds selected_date and selected_day (menu_status, cutoff_at)."
+                }
+              ]
+            },
+            "description": "Same this_week and next_week as the call without date, plus selected_date and selected_day. menu_status: published | not_published | non_working_day | holiday. cutoff_at is 18:00 Asia/Riyadh the day before (ISO UTC). 400 INVALID_DATE or DATE_OUT_OF_RANGE. Fri/Sat are 200 non_working_day with empty options. Unpublished and holiday days return no meals."
           },
           "response": []
         },

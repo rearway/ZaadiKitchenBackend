@@ -1,4 +1,6 @@
 import type { Deps } from '../../entitygateway/index.js'
+import { mealTypeNameEn } from '../../../shared/meal-display.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 import {
   computeEffectiveStage,
   MANUAL_STAGE_ORDER,
@@ -47,6 +49,7 @@ export function makeUC(deps: Deps) {
     try {
       const date = input.date ?? todayIsoDate()
 
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const [day, mealCounts, openIssues] = await Promise.all([
         dailyOpsDayLoader.getByDate(date),
         deliveryDayLoader.getMealBreakdownByDate(date),
@@ -68,9 +71,7 @@ export function makeUC(deps: Deps) {
       const rows = mealCounts.map(r => ({
         type: r.mealType,
         meal_id: r.mealId,
-        label:
-          r.mealName ??
-          (r.mealType === 'executive' ? 'Executive' : 'Salad'),
+        label: r.mealName ?? mealTypeNameEn(r.mealType, displays),
         count: r.count,
         pct: total > 0 ? Math.round((r.count / total) * 100) : 0,
       }))

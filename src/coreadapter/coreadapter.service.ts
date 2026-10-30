@@ -34,6 +34,7 @@ import {
   UserDevicePersistenceS,
   PaymentTransactionPersistenceS,
   ErpIntegrationPersistenceS,
+  AppSettingsPersistenceS,
 } from '../tokens.js'
 import { initUseCases, UseCases } from '../core/usecases/index.js'
 import { LoggerService } from '../infrastructure/Logger/index.js'
@@ -67,6 +68,7 @@ import { NotificationGateway } from '../core/entitygateway/Notification.js'
 import { UserDevicePersistenceService } from '../infrastructure/SequelizePersistence/user-device-persistence.service.js'
 import { PaymentTransactionPersistenceService } from '../infrastructure/SequelizePersistence/payment-transaction-persistence.service.js'
 import { ErpIntegrationPersistenceService } from '../infrastructure/SequelizePersistence/erp-integration-persistence.service.js'
+import { AppSettingsPersistenceService } from '../infrastructure/SequelizePersistence/app-settings-persistence.service.js'
 
 export const coreAdapterService: FactoryProvider = {
   provide: CoreS,
@@ -102,7 +104,8 @@ export const coreAdapterService: FactoryProvider = {
     notificationService: NotificationGateway,
     userDevicePersistence: UserDevicePersistenceService,
     paymentTransactionPersistence: PaymentTransactionPersistenceService,
-    erpIntegrationPersistence: ErpIntegrationPersistenceService
+    erpIntegrationPersistence: ErpIntegrationPersistenceService,
+    appSettingsPersistence: AppSettingsPersistenceService
   ): UseCases =>
     initUseCases({
       logger,
@@ -189,6 +192,7 @@ export const coreAdapterService: FactoryProvider = {
       paymentTransactionLoader: paymentTransactionPersistence,
       paymentTransactionPersistor: paymentTransactionPersistence,
       erpIntegrationLoader: erpIntegrationPersistence,
+      appSettingsLoader: appSettingsPersistence,
     }),
   inject: [
     LoggerS,
@@ -223,5 +227,6 @@ export const coreAdapterService: FactoryProvider = {
     UserDevicePersistenceS,
     PaymentTransactionPersistenceS,
     ErpIntegrationPersistenceS,
+    AppSettingsPersistenceS,
   ],
 }

@@ -47,7 +47,8 @@ export class MenuController {
 
   @Get('menu/week')
   @ApiOperation({
-    summary: 'Full 10-day meal schedule (this week + next week)',
+    summary:
+      'Full 10-day meal schedule (this week + next week). Optional date adds selected_day.',
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('get-customer-menu-week')
@@ -58,6 +59,7 @@ export class MenuController {
     return this.useCases.queries.getCustomerMenuWeek({
       userId: user.id,
       mealType: query.meal_type,
+      date: query.date,
     })
   }
 

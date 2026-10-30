@@ -721,6 +721,10 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       getPayments: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
       getDailyOrders: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
     },
+
+    appSettingsLoader: {
+      getAll: jest.fn().mockResolvedValue([]),
+    },
   }
 
   return { ...base, ...overrides }

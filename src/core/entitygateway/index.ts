@@ -41,6 +41,7 @@ export * from './DailyOpsDay.js'
 export * from './Notification.js'
 export * from './UserDevice.js'
 export * from './ErpIntegration.js'
+export * from './AppSettings.js'
 
 import type { UserLoader, UserPersistor } from './User.js'
 import type { OtpSessionLoader, OtpSessionPersistor } from './OtpSession.js'
@@ -108,6 +109,7 @@ import type {
   PaymentTransactionPersistor,
 } from './PaymentTransaction.js'
 import type { ErpIntegrationLoader } from './ErpIntegration.js'
+import type { AppSettingsLoader } from './AppSettings.js'
 
 export type Deps = {
   logger: Logger
@@ -183,4 +185,5 @@ export type Deps = {
   paymentTransactionLoader: PaymentTransactionLoader
   paymentTransactionPersistor: PaymentTransactionPersistor
   erpIntegrationLoader: ErpIntegrationLoader
+  appSettingsLoader: AppSettingsLoader
 }
