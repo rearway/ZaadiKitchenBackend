@@ -35,6 +35,21 @@ function baseSlots(): MenuSlot[] {
   }))
 }
 
+function extraSlot(
+  index: number,
+  mealType: 'executive' | 'salad'
+): MenuSlot {
+  return {
+    id: makeSlotId(WEEK_ID, SUN, mealType, index),
+    weekId: WEEK_ID,
+    deliveryDate: SUN,
+    mealType,
+    isDefault: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
+
 function setup(
   slots: MenuSlot[],
   meals: Meal[] = [],
@@ -88,33 +103,38 @@ describe('AddMenuSlot', () => {
     expect(deps.menuWeekPersistor.createSlot).toHaveBeenCalled()
   })
 
-  it('rejects a fourth executive slot', async () => {
-    const slots = [
-      ...baseSlots(),
-      {
-        id: `slot_${WEEK_ID}_sun_exec_2`,
-        weekId: WEEK_ID,
-        deliveryDate: SUN,
-        mealType: 'executive' as const,
-        isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: `slot_${WEEK_ID}_sun_exec_3`,
-        weekId: WEEK_ID,
-        deliveryDate: SUN,
-        mealType: 'executive' as const,
-        isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]
-    const { add } = setup(slots)
+  it('adds a fourth slot on each stream', async () => {
+    for (const mealType of ['executive', 'salad'] as const) {
+      const slots = [
+        ...baseSlots(),
+        extraSlot(2, mealType),
+        extraSlot(3, mealType),
+      ]
+      const { add } = setup(slots)
 
-    await expect(
-      add({ weekId: WEEK_ID, date: SUN, mealType: 'executive' })
-    ).rejects.toMatchObject({ errorCode: 'DAY_MEAL_TYPE_LIMIT', statusCode: 409 })
+      const result = await add({ weekId: WEEK_ID, date: SUN, mealType })
+
+      expect(result.slot_id).toBe(makeSlotId(WEEK_ID, SUN, mealType, 4))
+    }
+  })
+
+  it('rejects a fifth slot on each stream', async () => {
+    for (const mealType of ['executive', 'salad'] as const) {
+      const slots = [
+        ...baseSlots(),
+        extraSlot(2, mealType),
+        extraSlot(3, mealType),
+        extraSlot(4, mealType),
+      ]
+      const { add } = setup(slots)
+
+      await expect(
+        add({ weekId: WEEK_ID, date: SUN, mealType })
+      ).rejects.toMatchObject({
+        errorCode: 'DAY_MEAL_TYPE_LIMIT',
+        statusCode: 409,
+      })
+    }
   })
 
   it('allows adding a slot on a published week', async () => {

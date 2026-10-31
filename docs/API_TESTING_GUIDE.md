@@ -1183,7 +1183,7 @@ Roles: **ADMIN, OPS**. Base: `/admin/menu`.
 
 Day rules:
 
-- Per day, per stream: **at least 1 and at most 3 dishes**.
+- Per day, per stream: **at least 1 and at most 4 dishes**.
 - Each stream needs one **default** dish.
 - **The same dish cannot appear twice on the same date**, in either stream.
 
@@ -1191,10 +1191,10 @@ Day rules:
 |---|---|
 | `GET /admin/menu/weeks?from_week=w2026-43&count=2` | `count` 1–8, default 2. Automatically creates the current and next week. Response `weeks[]` with `week_id`, `label`, `date_from`, `date_to`, `status`, `is_current_week`, `is_editable`, `fill_status`, plus `nav.prev_week` and `nav.next_week`. |
 | `GET /admin/menu/weeks/:week_id` | `week_id`, `status`, `is_editable`, `publish_ready`, `publish_blocked_reason`, `days[]`. Each day has `delivery_date`, `default_meal_id {executive, salad}`, `can_add_executive`, `can_add_salad`, `executive_slots[]`, `salad_slots[]`. Each slot has `slot_id`, `meal_type`, `is_default`, `meal`, `is_filled`, `is_editable`. Each day starts with one empty slot per stream. |
-| `POST /admin/menu/weeks/:week_id/days/:date/slots` | Body `{ "meal_type": "executive", "meal_id": "<optional>" }`. Adds a 2nd or 3rd slot. Response `slot_id`, `meal`, `week_fill_status`. |
+| `POST /admin/menu/weeks/:week_id/days/:date/slots` | Body `{ "meal_type": "executive", "meal_id": "<optional>" }`. Adds a 2nd, 3rd, or 4th slot. Response `slot_id`, `meal`, `week_fill_status`. |
 | `POST /admin/menu/weeks/:week_id/slots/:slot_id/assign` | Body `{ "meal_id": "..." }`. The first dish in a stream becomes the default automatically. |
 | `PATCH /admin/menu/weeks/:week_id/days/:date/default` | Body `{ "meal_type": "salad", "meal_id": "..." }`. The meal must already be on that stream that day. |
-| `DELETE /admin/menu/weeks/:week_id/slots/:slot_id` | Clears the dish. Extra slots (2nd and 3rd) are removed. |
+| `DELETE /admin/menu/weeks/:week_id/slots/:slot_id` | Clears the dish. Extra slots (2nd, 3rd, and 4th) are removed. |
 | `POST /admin/menu/weeks/:week_id/publish` | Response `{ week_id, status: "published", published_at, published_by, customer_visible_from }`. |
 | `POST /admin/menu/weeks/:week_id/unpublish` | Only from `published`. Response `{ message, data }` (camelCase week). Customers no longer see it. |
 
@@ -1205,7 +1205,7 @@ Errors:
 | `SLOT_NOT_EDITABLE` | 422 | Any change on a `past` week |
 | `MEAL_IS_DRAFT` | 422 | Assigning a draft meal |
 | `MEAL_ALREADY_ON_DAY` | 409 | The same dish already on that date, in any stream |
-| `DAY_MEAL_TYPE_LIMIT` | 409 | Adding a 4th slot to a stream |
+| `DAY_MEAL_TYPE_LIMIT` | 409 | Adding a 5th slot to a stream |
 | `CANNOT_CLEAR_DEFAULT` | 409 | Clearing the default while other dishes exist in the stream. Change the default first. |
 | `CANNOT_CLEAR_LAST_STREAM_MEAL` | 409 | On a **published** week, clearing the only dish of a stream that day |
 | `WEEK_NOT_COMPLETE` | 409 | Publishing when a day is missing a stream, a default, or has a draft meal. The message is like `"Mon: Salad missing"`. |

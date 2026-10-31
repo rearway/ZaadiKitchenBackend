@@ -1,4 +1,5 @@
 import { isDeliveryDateForceLocked } from './forcePipelineLock.js'
+import { MAX_DISHES_PER_STREAM } from './menuWeekPublish.js'
 
 const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
@@ -107,7 +108,7 @@ export function parseSlotIndex(slotId: string): number {
 
 export function nextAvailableSlotIndex(existingSlotIds: string[]): number | null {
   const used = new Set(existingSlotIds.map(parseSlotIndex))
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= MAX_DISHES_PER_STREAM; i++) {
     if (!used.has(i)) return i
   }
   return null

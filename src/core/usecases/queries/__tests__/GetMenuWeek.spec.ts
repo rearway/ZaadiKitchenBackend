@@ -162,6 +162,47 @@ describe('GetMenuWeek', () => {
     expect(result.days[0].executive_slots[0].is_editable).toBe(true)
   })
 
+  it('keeps can_add true at 3 slots and false at 4', async () => {
+    function slotsFor(count: number, mealType: 'executive' | 'salad'): MenuSlot[] {
+      return Array.from({ length: count }, (_, index) => ({
+        id: `slot-${mealType}-${index + 1}`,
+        weekId: 'w2026-42',
+        deliveryDate: '2026-10-11',
+        mealType,
+        isDefault: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+    }
+
+    const base = buildDeps()
+    const withCount = (count: number) =>
+      buildDeps({
+        menuWeekLoader: {
+          ...base.menuWeekLoader,
+          getWeekById: jest.fn().mockResolvedValue({
+            id: 'w2026-42',
+            weekNumber: 42,
+            status: 'draft',
+          }),
+          getSlotsByWeekId: jest
+            .fn()
+            .mockResolvedValue([
+              ...slotsFor(count, 'executive'),
+              ...slotsFor(count, 'salad'),
+            ]),
+        },
+      })
+
+    const three = await makeUC(withCount(3))({ weekId: 'w2026-42' })
+    expect(three.days[0].can_add_executive).toBe(true)
+    expect(three.days[0].can_add_salad).toBe(true)
+
+    const four = await makeUC(withCount(4))({ weekId: 'w2026-42' })
+    expect(four.days[0].can_add_executive).toBe(false)
+    expect(four.days[0].can_add_salad).toBe(false)
+  })
+
   it('locks past weeks', async () => {
     const base = buildDeps()
     const deps = buildDeps({
