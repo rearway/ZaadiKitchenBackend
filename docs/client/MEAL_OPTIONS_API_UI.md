@@ -1,6 +1,6 @@
 # Meal options — frontend integration (Oct 2026)
 
-Customer still receives **one meal per delivery day**. Admin can now put **up to 3 Executive and 3 Salad dishes** on a day, mark a **default**, and the customer can **pick a dish** on their stream before cutoff.
+Customer still receives **one meal per delivery day**. Admin can now put **up to 4 Executive and 4 Salad dishes** on a day, mark a **default**, and the customer can **pick a dish** on their stream before cutoff.
 
 Skip / pause / plans are unchanged. Same cutoff as skip: **18:00 KSA the day before delivery**.
 
@@ -156,7 +156,7 @@ No new screens. `meal_id` / `meal_name` / `photo_url` are already the **effectiv
 
 Meals: `draft` → `active` (then assignable). Editing an active meal saves **pending** (`status: updated`); live menu does not change until **Activate** with `confirm_published_edit: true`. Show a confirm popup: this applies to every day that dish is on, including past cutoff.
 
-Planner: min **1+1**, max **3+3** per day; each stream needs a default. **Draft and published weeks can add/remove/replace dishes** (`is_editable: true` — do not unpublish, or customers lose the week). `past` weeks stay locked. Published weeks must keep at least one Executive and one Salad on each day (`409 CANNOT_CLEAR_LAST_STREAM_MEAL`). The same dish cannot appear twice on the same date (`409 MEAL_ALREADY_ON_DAY`).
+Planner: min **1+1**, max **4+4** per day; each stream needs a default. **Draft and published weeks can add/remove/replace dishes** (`is_editable: true` — do not unpublish, or customers lose the week). `past` weeks stay locked. Published weeks must keep at least one Executive and one Salad on each day (`409 CANNOT_CLEAR_LAST_STREAM_MEAL`). The same dish cannot appear twice on the same date (`409 MEAL_ALREADY_ON_DAY`).
 
 - `POST /admin/menu/weeks/:week_id/days/:date/slots` `{ meal_type, meal_id? }`
 - `PATCH /admin/menu/weeks/:week_id/days/:date/default` `{ meal_type, meal_id }`

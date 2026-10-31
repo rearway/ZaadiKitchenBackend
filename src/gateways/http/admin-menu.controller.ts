@@ -37,6 +37,7 @@ import {
 } from './dto/index.js'
 import { UserRole } from '../../codecs/enums.js'
 import type { UserWithoutPassword } from '../../core/entities/index.js'
+import { MAX_DISHES_PER_STREAM } from '../../core/usecases/services/menuWeekPublish.js'
 
 @ApiTags('Admin Menu Manager')
 @Controller('api/v1/admin/menu')
@@ -71,7 +72,7 @@ export class AdminMenuController {
   @Post('weeks/:week_id/days/:date/slots')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Add an Executive or Salad slot for a day (max 3 per stream)',
+    summary: `Add an Executive or Salad slot for a day (max ${MAX_DISHES_PER_STREAM} per stream)`,
     description:
       'Allowed on draft and published weeks. Past weeks are locked. Same dish cannot appear twice on the same date.',
   })
@@ -113,7 +114,7 @@ export class AdminMenuController {
   @ApiOperation({
     summary: 'Assign a meal to a slot',
     description:
-      'Active or updated meals can be assigned on draft or published weeks (not past). Up to 3 Executive and 3 Salad per day. Same dish cannot appear twice on the same date. Draft meals are rejected (422 MEAL_IS_DRAFT).',
+      `Active or updated meals can be assigned on draft or published weeks (not past). Up to ${MAX_DISHES_PER_STREAM} Executive and ${MAX_DISHES_PER_STREAM} Salad per day. Same dish cannot appear twice on the same date. Draft meals are rejected (422 MEAL_IS_DRAFT).`,
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('assign-meal-to-slot')
@@ -150,7 +151,7 @@ export class AdminMenuController {
   @ApiOperation({
     summary: 'Publish a week',
     description:
-      'Requires min 1 Executive and 1 Salad per day, max 3 of each, and a default for each stream. The week two ahead stays locked until Thursday 18:00 Asia/Riyadh (422 WEEK_NOT_YET_UNLOCKED).',
+      `Requires min 1 Executive and 1 Salad per day, max ${MAX_DISHES_PER_STREAM} of each, and a default for each stream. The week two ahead stays locked until Thursday 18:00 Asia/Riyadh (422 WEEK_NOT_YET_UNLOCKED).`,
   })
   @ApiResponse({ status: 200 })
   @HandleErrors('publish-menu-week')

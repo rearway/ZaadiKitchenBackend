@@ -10,7 +10,48 @@ import {
   getAnchorSaudiWorkWeek,
   riyadhDateString,
   isValidCivilDate,
+  makeSlotId,
+  parseSlotIndex,
+  nextAvailableSlotIndex,
 } from '../weekUtils.js'
+
+describe('slot indexes', () => {
+  const weekId = 'w2026-42'
+  const sun = '2026-10-11'
+
+  it('creates a 4th slot id and parses it', () => {
+    expect(makeSlotId(weekId, sun, 'executive', 4)).toBe(
+      'slot_w2026-42_sun_exec_4'
+    )
+    expect(makeSlotId(weekId, sun, 'salad', 4)).toBe(
+      'slot_w2026-42_sun_salad_4'
+    )
+    expect(parseSlotIndex('slot_w2026-42_sun_exec_4')).toBe(4)
+    expect(parseSlotIndex('slot_w2026-42_sun_salad_4')).toBe(4)
+    expect(parseSlotIndex(makeSlotId(weekId, sun, 'executive', 1))).toBe(1)
+  })
+
+  it('offers index 4 when 1..3 are taken and rejects a 5th', () => {
+    const taken = [1, 2, 3].map(index =>
+      makeSlotId(weekId, sun, 'executive', index)
+    )
+    expect(nextAvailableSlotIndex(taken)).toBe(4)
+
+    const full = [...taken, makeSlotId(weekId, sun, 'executive', 4)]
+    expect(nextAvailableSlotIndex(full)).toBeNull()
+
+    const saladTaken = [1, 2, 3].map(index =>
+      makeSlotId(weekId, sun, 'salad', index)
+    )
+    expect(nextAvailableSlotIndex(saladTaken)).toBe(4)
+    expect(
+      nextAvailableSlotIndex([
+        ...saladTaken,
+        makeSlotId(weekId, sun, 'salad', 4),
+      ])
+    ).toBeNull()
+  })
+})
 
 describe('Saudi work week bounds', () => {
   function addDays(dateStr: string, days: number): string {

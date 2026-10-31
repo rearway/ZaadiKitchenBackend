@@ -68,6 +68,22 @@ describe('customerMenuDay', () => {
     ])
   })
 
+  it('returns all four dishes on a stream', () => {
+    const meals = [1, 2, 3, 4].map(n =>
+      makeMeal({ id: `exec-${n}`, nameEn: `Dish ${n}` })
+    )
+    const options = streamOptions(
+      meals.map((meal, index) => makeSlot(meal, index === 0)),
+      'executive'
+    )
+    expect(options.map(option => option.meal_id)).toEqual([
+      'exec-1',
+      'exec-2',
+      'exec-3',
+      'exec-4',
+    ])
+  })
+
   it('returns the default dish id, falling back to the first filled', () => {
     expect(
       defaultMealId([makeSlot(execA, true), makeSlot(execB)], 'executive')

@@ -3,7 +3,7 @@ import type { MenuSlot } from '../../entities/MenuSlot.js'
 import { mealTypeNameEn } from '../../../shared/meal-display.js'
 import { getDayLabel } from './weekUtils.js'
 
-export const MAX_DISHES_PER_STREAM = 3
+export const MAX_DISHES_PER_STREAM = 4
 
 export type MealTypeStream = 'executive' | 'salad'
 

@@ -43,17 +43,50 @@ describe('evaluateWeekPublishReadiness', () => {
     })
   })
 
-  it('allows extra dishes up to 3 per stream', () => {
+  it('allows extra dishes up to 4 per stream', () => {
     const slots = [
       slot(SUN, 'executive', { mealId: 'e1', isDefault: true, id: 'e-1' }),
       slot(SUN, 'executive', { mealId: 'e2', id: 'e-2' }),
       slot(SUN, 'executive', { mealId: 'e3', id: 'e-3' }),
+      slot(SUN, 'executive', { mealId: 'e4', id: 'e-4' }),
       slot(SUN, 'salad', { mealId: 's1', isDefault: true, id: 's-1' }),
+      slot(SUN, 'salad', { mealId: 's2', id: 's-2' }),
+      slot(SUN, 'salad', { mealId: 's3', id: 's-3' }),
+      slot(SUN, 'salad', { mealId: 's4', id: 's-4' }),
     ]
 
     expect(evaluateWeekPublishReadiness(slots).publishReady).toBe(true)
     expect(canAddStreamSlot(slots, SUN, 'executive')).toBe(false)
-    expect(MAX_DISHES_PER_STREAM).toBe(3)
+    expect(canAddStreamSlot(slots, SUN, 'salad')).toBe(false)
+    expect(MAX_DISHES_PER_STREAM).toBe(4)
+  })
+
+  it('blocks a fifth filled dish on either stream', () => {
+    const executiveOverflow = [
+      slot(SUN, 'executive', { mealId: 'e1', isDefault: true, id: 'e-1' }),
+      slot(SUN, 'executive', { mealId: 'e2', id: 'e-2' }),
+      slot(SUN, 'executive', { mealId: 'e3', id: 'e-3' }),
+      slot(SUN, 'executive', { mealId: 'e4', id: 'e-4' }),
+      slot(SUN, 'executive', { mealId: 'e5', id: 'e-5' }),
+      slot(SUN, 'salad', { mealId: 's1', isDefault: true, id: 's-1' }),
+    ]
+    const saladOverflow = [
+      slot(SUN, 'executive', { mealId: 'e1', isDefault: true, id: 'e-1' }),
+      slot(SUN, 'salad', { mealId: 's1', isDefault: true, id: 's-1' }),
+      slot(SUN, 'salad', { mealId: 's2', id: 's-2' }),
+      slot(SUN, 'salad', { mealId: 's3', id: 's-3' }),
+      slot(SUN, 'salad', { mealId: 's4', id: 's-4' }),
+      slot(SUN, 'salad', { mealId: 's5', id: 's-5' }),
+    ]
+
+    expect(evaluateWeekPublishReadiness(executiveOverflow).blockedReason).toBe(
+      'Sun: Platio Balanced has more than 4 dishes'
+    )
+    expect(evaluateWeekPublishReadiness(saladOverflow).blockedReason).toBe(
+      'Sun: Platio Light has more than 4 dishes'
+    )
+    expect(canAddStreamSlot(executiveOverflow, SUN, 'executive')).toBe(false)
+    expect(canAddStreamSlot(saladOverflow, SUN, 'salad')).toBe(false)
   })
 
   it('does not require empty extra slots to be filled', () => {
