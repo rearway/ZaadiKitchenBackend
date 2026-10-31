@@ -71,8 +71,8 @@ module.exports = {
     for (const [key, value] of ROWS) {
       await queryInterface.sequelize.query(
         `INSERT INTO app_settings (key, value, updated_by, updated_at)
-         SELECT $1, $2::jsonb, NULL, $3
-         WHERE NOT EXISTS (SELECT 1 FROM app_settings WHERE key = $1)`,
+         SELECT $1::varchar(64), $2::jsonb, NULL, $3::timestamptz
+         WHERE NOT EXISTS (SELECT 1 FROM app_settings WHERE key = $1::varchar(64))`,
         { bind: [key, JSON.stringify(value), now] }
       )
     }
