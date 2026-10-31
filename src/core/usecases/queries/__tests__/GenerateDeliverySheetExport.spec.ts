@@ -38,6 +38,21 @@ describe('GenerateDeliverySheetExport', () => {
     // XLSX files are zip containers, which start with the "PK" magic bytes
     expect(result.buffer.subarray(0, 2).toString()).toBe('PK')
     expect(result.filename).toBe('platio-delivery-sheet-2026-08-02.xlsx')
+
+    const XLSX = await import('xlsx')
+    const workbook = XLSX.read(result.buffer)
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(
+      workbook.Sheets.Deliveries
+    )
+    expect(rows[0]).toMatchObject({
+      'Meal Type': 'Platio Balanced',
+      'Meal Type Slug': 'executive',
+      'Meal Name': 'Lamb Kabsa',
+    })
+    expect(rows[1]).toMatchObject({
+      'Meal Type': 'Platio Light',
+      'Meal Type Slug': 'salad',
+    })
   })
 
   it('fetches deliveries for the whole day with no area/meal-type filter', async () => {

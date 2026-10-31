@@ -151,4 +151,27 @@ describe('GetDailyOps', () => {
     expect(opsResult.issues_queue).toBeNull()
     expect(opsResult.pipeline.locked_at).toBeUndefined()
   })
+
+  it('uses the meal display name when a breakdown row has no dish name', async () => {
+    const deps = buildDeps({
+      dailyOpsDayLoader: {
+        getByDate: jest.fn().mockResolvedValue(null),
+      } as unknown as ReturnType<typeof buildDeps>['dailyOpsDayLoader'],
+      deliveryDayLoader: {
+        ...buildDeps().deliveryDayLoader,
+        getMealBreakdownByDate: jest.fn().mockResolvedValue([
+          { mealType: 'salad', mealId: null, mealName: null, count: 4 },
+        ]),
+      },
+      deliveryIssueLoader: {
+        getOpenIssuesByDate: jest.fn().mockResolvedValue([]),
+      } as unknown as ReturnType<typeof buildDeps>['deliveryIssueLoader'],
+    })
+
+    const result = await makeUC(deps)({ date: PAST_DATE, role: 'ops' })
+    expect(result.meal_breakdown.rows[0]).toMatchObject({
+      type: 'salad',
+      label: 'Platio Light',
+    })
+  })
 })

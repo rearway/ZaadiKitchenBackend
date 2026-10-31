@@ -13,6 +13,11 @@ import {
 import { buildPauseHomeLabels } from '../services/pauseFrozenDays.js'
 import { todayKSA } from '../services/revenueUtils.js'
 import { toPlanDiscountFields } from '../services/planPricing.js'
+import {
+  mealTypePlanLabel,
+  type MealTypeDisplay,
+} from '../../../shared/meal-display.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface GetHomeInput {
   userId: string
@@ -71,7 +76,8 @@ function buildBanner(
   sub: Subscription | null,
   firstName: string,
   location: { buildingName: string; floor?: string; areaName?: string } | null,
-  pauseLabels: { days_frozen: number; pause_label: string } | null = null
+  pauseLabels: { days_frozen: number; pause_label: string } | null = null,
+  displays: MealTypeDisplay[] = []
 ): Record<string, unknown> {
   if (status === 'none') {
     return {
@@ -97,7 +103,7 @@ function buildBanner(
       : null
     return {
       theme: 'black',
-      plan_label: `${sub.mealType === 'executive' ? 'Executive' : 'Salad'} Plan`,
+      plan_label: mealTypePlanLabel(sub.mealType, displays),
       greeting: `${getTimeOfDayGreeting()}, ${firstName} 👋`,
       days_remaining_label: `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left`,
       end_date_label: formatEndDateLabel(sub.endDate),
@@ -234,6 +240,7 @@ export function makeUC(deps: Deps) {
     } = deps
 
     try {
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const [user, rawSub, plans] = await Promise.all([
         userLoader.getUserById(input.userId),
         subscriptionLoader.getActiveSubscriptionByUserId(input.userId),
@@ -336,7 +343,7 @@ export function makeUC(deps: Deps) {
             }
           : null,
         wallet_balance_sar: walletBalance,
-        banner: buildBanner(status, sub, firstName, locEntity, pauseHomeLabels),
+        banner: buildBanner(status, sub, firstName, locEntity, pauseHomeLabels, displays),
         quick_actions: buildQuickActions(status, sub),
         plans: buildPlans(plans, status, sub),
       }

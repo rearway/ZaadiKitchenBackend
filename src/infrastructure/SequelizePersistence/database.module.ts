@@ -32,6 +32,7 @@ import { UserDeviceModel } from './models/UserDeviceModel.js'
 import { PaymentTransactionModel } from './models/PaymentTransactionModel.js'
 import { CommsAutomationModel } from './models/CommsAutomationModel.js'
 import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
+import { AppSettingModel } from './models/AppSettingModel.js'
 
 /**
  * DatabaseModule — owns the full Sequelize connection lifecycle.
@@ -89,6 +90,7 @@ import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
             PaymentTransactionModel,
             CommsAutomationModel,
             CommsBroadcastModel,
+            AppSettingModel,
           ],
           define: {
             charset: 'utf8mb4',
@@ -140,6 +142,7 @@ import { CommsBroadcastModel } from './models/CommsBroadcastModel.js'
       PaymentTransactionModel,
       CommsAutomationModel,
       CommsBroadcastModel,
+      AppSettingModel,
     ]),
   ],
   exports: [SequelizeModule],

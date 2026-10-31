@@ -53,6 +53,10 @@ describe('SwitchMealType', () => {
 
     expect(result.effective_from).toBe('2026-10-12')
     expect(result.applied_to).toBe('all')
+    expect(result.meal_type).toBe('executive')
+    expect(result.message).toBe(
+      'Meal type updated to Platio Balanced from Mon 12 Oct onwards.'
+    )
     expect(deps.deliveryDayPersistor.updateMealTypeForSubscription).toHaveBeenCalledWith(
       expect.any(String),
       'executive',

@@ -8,6 +8,8 @@ import {
   isAdminWeekLocked,
   getAdminAheadWeekUnlockAt,
   getAnchorSaudiWorkWeek,
+  riyadhDateString,
+  isValidCivilDate,
 } from '../weekUtils.js'
 
 describe('Saudi work week bounds', () => {
@@ -40,6 +42,22 @@ describe('Saudi work week bounds', () => {
     const thisWeek = getSaudiWorkWeekBounds(wednesday)
     const nextWeek = getNextSaudiWorkWeekBounds(wednesday)
     expect(nextWeek.dateFrom).toBe(addDays(thisWeek.dateFrom, 7))
+  })
+})
+
+describe('riyadh civil date', () => {
+  it('is the next calendar day at 21:30 UTC', () => {
+    expect(riyadhDateString(new Date('2026-09-14T21:30:00.000Z'))).toBe('2026-09-15')
+  })
+
+  it('stays on the same calendar day at 02:00 UTC', () => {
+    expect(riyadhDateString(new Date('2026-09-14T02:00:00.000Z'))).toBe('2026-09-14')
+  })
+
+  it('accepts real dates and rejects impossible ones', () => {
+    expect(isValidCivilDate('2026-09-16')).toBe(true)
+    expect(isValidCivilDate('2026-02-31')).toBe(false)
+    expect(isValidCivilDate('2026-09-16T00:00:00Z')).toBe(false)
   })
 })
 

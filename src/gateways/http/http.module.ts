@@ -30,6 +30,7 @@ import { AdminDashboardController } from './admin-dashboard.controller.js'
 import { AdminRevenueController } from './admin-revenue.controller.js'
 import { AdminCommsController } from './admin-comms.controller.js'
 import { ErpIntegrationController } from './erp-integration.controller.js'
+import { AppSettingsController } from './app-settings.controller.js'
 import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
 
 @Module({
@@ -65,6 +66,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     AdminRevenueController,
     AdminCommsController,
     ErpIntegrationController,
+    AppSettingsController,
   ],
 })
 export class HttpModule {}

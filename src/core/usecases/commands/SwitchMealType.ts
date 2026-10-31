@@ -1,6 +1,8 @@
 import { Deps } from '../../entitygateway/index.js'
 import { MealType } from '../../entities/index.js'
+import { mealTypeNameEn } from '../../../shared/meal-display.js'
 import { compareDateStrings } from '../services/weekUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface SwitchMealTypeInput {
   userId: string
@@ -115,7 +117,8 @@ export function makeUC(deps: Deps) {
         })
       }
 
-      const mealTypeName = mealType === 'executive' ? 'Executive' : 'Salad'
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
+      const mealTypeName = mealTypeNameEn(mealType, displays)
       const message = `Meal type updated to ${mealTypeName} from ${formatShort(effectiveFrom)} onwards.`
 
       return {

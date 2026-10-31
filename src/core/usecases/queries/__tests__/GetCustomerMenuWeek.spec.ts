@@ -332,6 +332,40 @@ describe('GetCustomerMenuWeek', () => {
     ])
   })
 
+  it('uses the Asia/Riyadh civil date as today at 21:30 UTC', async () => {
+    jest.setSystemTime(new Date('2026-09-14T21:30:00.000Z'))
+    const deps = makeDeps({
+      slots: [
+        makeSlot('2026-09-14'),
+        makeSlot('2026-09-15', makeMeal({ id: 'meal-tue' })),
+      ],
+    })
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1' })
+    const monday = result.this_week.days.find(d => d.delivery_date === '2026-09-14')
+    const tuesday = result.this_week.days.find(d => d.delivery_date === '2026-09-15')
+
+    expect(monday).toMatchObject({ is_today: false, card_state: 'past' })
+    expect(tuesday).toMatchObject({ is_today: true, card_state: 'today' })
+  })
+
+  it('uses the Asia/Riyadh civil date as today at 02:00 UTC', async () => {
+    jest.setSystemTime(new Date('2026-09-14T02:00:00.000Z'))
+    const deps = makeDeps({
+      slots: [
+        makeSlot('2026-09-14'),
+        makeSlot('2026-09-15', makeMeal({ id: 'meal-tue' })),
+      ],
+    })
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1' })
+    const monday = result.this_week.days.find(d => d.delivery_date === '2026-09-14')
+    const tuesday = result.this_week.days.find(d => d.delivery_date === '2026-09-15')
+
+    expect(monday).toMatchObject({ is_today: true, card_state: 'today' })
+    expect(tuesday).toMatchObject({ is_today: false, card_state: 'upcoming' })
+  })
+
   it('does not treat skipped days as skipped when the subscription is paused', async () => {
     const deps = makeDeps({
       sub: makeSubscription({ status: 'paused' }),
@@ -347,6 +381,160 @@ describe('GetCustomerMenuWeek', () => {
       card_state: 'upcoming',
       skip_available: false,
       skip_reason: 'subscription_paused',
+    })
+  })
+
+  it('omits selected_date when date is not requested and does not look up holidays', async () => {
+    const deps = makeDeps({ slots: [makeSlot(TODAY)] })
+    const result = await makeUC(deps)({ userId: 'user-uuid-1' })
+
+    expect(result).not.toHaveProperty('selected_date')
+    expect(result).not.toHaveProperty('selected_day')
+    expect(result.this_week.date_from).toBe('2026-09-13')
+    expect(result.next_week.date_to).toBe('2026-09-24')
+    expect(deps.publicHolidayLoader.getHolidayDates).not.toHaveBeenCalled()
+  })
+
+  it('returns a published selected_day with cutoff and can_change', async () => {
+    const execA = makeMeal({ id: 'exec-a', nameEn: 'Default Exec' })
+    const execB = makeMeal({ id: 'exec-b', nameEn: 'Picked Exec' })
+    const deps = makeDeps({
+      slots: [
+        { ...makeSlot(UPCOMING, execA), isDefault: true },
+        { ...makeSlot(UPCOMING, execB), id: 'slot-b', isDefault: false },
+      ],
+      days: [
+        makeDeliveryDay({
+          date: UPCOMING,
+          status: 'scheduled',
+          selectedMealId: execB.id,
+        }),
+      ],
+    })
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1', date: UPCOMING })
+
+    expect(result.selected_date).toBe(UPCOMING)
+    expect(result.selected_day).toMatchObject({
+      delivery_date: UPCOMING,
+      menu_status: 'published',
+      cutoff_at: '2026-09-15T15:00:00.000Z',
+      meal_id: 'exec-b',
+      name_en: 'Picked Exec',
+      can_change: true,
+      selected_meal_id: 'exec-b',
+    })
+    expect(result.selected_day?.executive_options).toHaveLength(2)
+    expect(result.this_week.days.find(d => d.delivery_date === UPCOMING)).not.toHaveProperty(
+      'menu_status'
+    )
+  })
+
+  it('marks a published day after cutoff as not changeable', async () => {
+    const deps = makeDeps({
+      slots: [
+        makeSlot(TODAY, makeMeal({ id: 'exec-a' })),
+        { ...makeSlot(TODAY, makeMeal({ id: 'exec-b' })), id: 'slot-b', isDefault: false },
+      ],
+      days: [makeDeliveryDay({ date: TODAY, status: 'scheduled' })],
+    })
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1', date: TODAY })
+
+    expect(result.selected_day).toMatchObject({
+      menu_status: 'published',
+      can_change: false,
+      cutoff_at: '2026-09-13T15:00:00.000Z',
+    })
+  })
+
+  it('returns non_working_day with empty options for Friday and Saturday', async () => {
+    const deps = makeDeps({
+      slots: [makeSlot('2026-09-18', makeMeal({ nameEn: 'Should not leak' }))],
+    })
+
+    const friday = await makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-18' })
+    const saturday = await makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-19' })
+
+    expect(friday.selected_day).toMatchObject({
+      menu_status: 'non_working_day',
+      name_en: null,
+      executive_options: [],
+      salad_options: [],
+      cutoff_at: '2026-09-17T15:00:00.000Z',
+    })
+    expect(saturday.selected_day?.menu_status).toBe('non_working_day')
+    expect(saturday.selected_day?.cutoff_at).toBe('2026-09-18T15:00:00.000Z')
+  })
+
+  it('returns holiday and hides meals even when a published menu exists', async () => {
+    const deps = makeDeps({
+      slots: [makeSlot('2026-09-15', makeMeal({ nameEn: 'Draft leak' }))],
+    })
+    deps.publicHolidayLoader.getHolidayDates = jest
+      .fn()
+      .mockResolvedValue(['2026-09-15'])
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-15' })
+
+    expect(result.selected_day).toMatchObject({
+      menu_status: 'holiday',
+      name_en: null,
+      meal_id: null,
+      executive_options: [],
+      salad_options: [],
+    })
+    expect(result.this_week.days.find(d => d.delivery_date === '2026-09-15')?.name_en).toBe(
+      'Draft leak'
+    )
+  })
+
+  it('returns not_published with no meals when the date has no published slots', async () => {
+    const deps = makeDeps({
+      days: [
+        makeDeliveryDay({
+          date: '2026-09-15',
+          status: 'scheduled',
+          selectedMealId: 'secret-draft-meal',
+        }),
+      ],
+    })
+
+    const result = await makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-15' })
+
+    expect(result.selected_day).toMatchObject({
+      menu_status: 'not_published',
+      name_en: null,
+      meal_id: null,
+      selected_meal_id: null,
+      executive_options: [],
+      salad_options: [],
+      can_change: false,
+    })
+    expect(JSON.stringify(result.selected_day)).not.toContain('secret-draft-meal')
+  })
+
+  it.each(['2026-13-40', '09-16-2026', '2026-09-31', 'foo', '2026-09-16T00:00:00Z', ' '])(
+    'rejects invalid date %s',
+    async date => {
+      const deps = makeDeps()
+      await expect(
+        makeUC(deps)({ userId: 'user-uuid-1', date })
+      ).rejects.toMatchObject({ errorCode: 'INVALID_DATE', statusCode: 400 })
+    }
+  )
+
+  it('rejects a date outside this week and next week', async () => {
+    const deps = makeDeps()
+    await expect(
+      makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-12' })
+    ).rejects.toMatchObject({ errorCode: 'DATE_OUT_OF_RANGE', statusCode: 400 })
+    await expect(
+      makeUC(deps)({ userId: 'user-uuid-1', date: '2026-09-25' })
+    ).rejects.toMatchObject({
+      errorCode: 'DATE_OUT_OF_RANGE',
+      statusCode: 400,
+      details: { date_from: '2026-09-13', date_to: '2026-09-24' },
     })
   })
 })

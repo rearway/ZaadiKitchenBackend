@@ -1,4 +1,5 @@
 export * from './User.js'
+export * from './AppSetting.js'
 export * from './UserDevice.js'
 export * from './PaymentTransaction.js'
 export * from './OtpSession.js'
