@@ -1,5 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
+import { mealTypeNameEn } from '../../../shared/meal-display.js'
 import { getSaudiWorkWeekBounds, getNextSaudiWorkWeekBounds, formatWeekRangeLabel } from '../services/weekUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface GetMenuMetaInput {
   userId: string
@@ -28,6 +30,7 @@ export function makeUC(deps: Deps) {
     const { logger } = deps
 
     try {
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const now = new Date()
       const thisWeek = getSaudiWorkWeekBounds(now)
       const nextWeek = getNextSaudiWorkWeekBounds(now)
@@ -48,8 +51,8 @@ export function makeUC(deps: Deps) {
         },
         filter_options: [
           { id: 'all', label: 'All', is_default: true },
-          { id: 'executive', label: 'Executive', is_default: false },
-          { id: 'salad', label: 'Salad', is_default: false },
+          { id: 'executive', label: mealTypeNameEn('executive', displays), is_default: false },
+          { id: 'salad', label: mealTypeNameEn('salad', displays), is_default: false },
         ],
       }
     } catch (error) {

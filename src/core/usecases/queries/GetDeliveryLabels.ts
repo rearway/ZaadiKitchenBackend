@@ -1,6 +1,8 @@
 import type { Deps } from '../../entitygateway/index.js'
 import type { RiderDeliveryRow } from '../../entitygateway/DeliveryDay.js'
+import { mealTypeShortEn, type MealTypeDisplay } from '../../../shared/meal-display.js'
 import { todayKSA } from '../services/revenueUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export type LabelMealTypeFilter = 'all' | 'executive' | 'salad'
 
@@ -10,8 +12,11 @@ export interface GetDeliveryLabelsInput {
   areaId?: string
 }
 
-function mealLabel(mealType: LabelMealTypeFilter): string {
-  return mealType === 'all' ? 'All' : mealType === 'executive' ? 'Exec' : 'Salad'
+function mealLabel(
+  mealType: LabelMealTypeFilter,
+  displays: MealTypeDisplay[]
+): string {
+  return mealType === 'all' ? 'All' : mealTypeShortEn(mealType, displays)
 }
 
 export function makeUC(deps: Deps) {
@@ -19,6 +24,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const date = input.date ?? todayKSA()
       const mealType = input.mealType ?? 'all'
 
@@ -41,7 +47,7 @@ export function makeUC(deps: Deps) {
         areaGroups.get(key)!.rows.push(row)
       }
 
-      const label = mealLabel(mealType)
+      const label = mealLabel(mealType, displays)
       const areas = areaOrder.map(key => {
         const group = areaGroups.get(key)!
         return {

@@ -2,11 +2,15 @@ import type { Deps } from '../../entitygateway/index.js'
 import type { DeliveryDay } from '../../entities/DeliveryDay.js'
 import type { MenuSlotWithMeal } from '../../entities/MenuSlot.js'
 import type { Subscription } from '../../entities/Subscription.js'
+import { DateOutOfRangeError, InvalidDateError } from '../../../shared/errors/index.js'
 import {
   getSaudiWorkWeekBounds,
   getNextSaudiWorkWeekBounds,
   getDayLabel,
   formatWeekRangeLabel,
+  getSkipCutoffTimestamp,
+  isValidCivilDate,
+  riyadhDateString,
 } from '../services/weekUtils.js'
 import {
   isDeliverableMenuDay,
@@ -15,11 +19,13 @@ import {
 import { ensurePauseStatus } from '../services/ensurePauseStatus.js'
 import {
   canChangeMealChoice,
+  resolveCustomerMenuStatus,
   resolveDayEffectiveMeal,
   slotsForDate,
   streamOptions,
   toMealSummary,
   uniqueSortedDates,
+  type CustomerMenuStatus,
   type MealOptionCard,
   type MealSummary,
 } from '../services/customerMenuDay.js'
@@ -27,6 +33,8 @@ import {
 export interface GetCustomerMenuWeekInput {
   userId: string
   mealType?: 'all' | 'executive' | 'salad'
+  /** Optional Riyadh civil date. Omitted responses stay { this_week, next_week }. */
+  date?: string
 }
 
 type CardState = 'today' | 'upcoming' | 'past' | 'skipped'
@@ -62,9 +70,33 @@ interface WeekSection {
   days: DayMenu[]
 }
 
+export interface SelectedDayMenu extends DayMenu {
+  menu_status: CustomerMenuStatus
+  /** 18:00 Asia/Riyadh the day before delivery, as an ISO UTC timestamp. */
+  cutoff_at: string
+}
+
 export interface GetCustomerMenuWeekOutput {
   this_week: WeekSection
   next_week: WeekSection
+  selected_date?: string
+  selected_day?: SelectedDayMenu
+}
+
+function concealUnpublishedMeals(day: DayMenu): DayMenu {
+  return {
+    ...day,
+    meal_id: null,
+    name_en: null,
+    kcal: null,
+    emoji: null,
+    photo_url: null,
+    selected_meal_id: null,
+    can_change: false,
+    effective_meal: null,
+    executive_options: [],
+    salad_options: [],
+  }
 }
 
 function buildDayLabel(deliveryDate: string, isToday: boolean): string {
@@ -153,14 +185,29 @@ export function makeUC(deps: Deps) {
   return async function getCustomerMenuWeek(
     input: GetCustomerMenuWeekInput
   ): Promise<GetCustomerMenuWeekOutput> {
-    const { logger, subscriptionLoader, menuWeekLoader, deliveryDayLoader } =
-      deps
+    const {
+      logger,
+      subscriptionLoader,
+      menuWeekLoader,
+      deliveryDayLoader,
+      publicHolidayLoader,
+    } = deps
 
     try {
       const now = new Date()
-      const todayStr = now.toISOString().slice(0, 10)
+      const todayStr = riyadhDateString(now)
       const thisWeek = getSaudiWorkWeekBounds(now)
       const nextWeek = getNextSaudiWorkWeekBounds(now)
+
+      let selectedDate: string | null = null
+      if (input.date != null) {
+        const date = input.date.trim()
+        if (!isValidCivilDate(date)) throw new InvalidDateError()
+        if (date < thisWeek.dateFrom || date > nextWeek.dateTo) {
+          throw new DateOutOfRangeError(thisWeek.dateFrom, nextWeek.dateTo)
+        }
+        selectedDate = date
+      }
 
       // meal_type remains on the query for client compatibility; both streams
       // are always returned so the picker can show Executive and Salad.
@@ -196,6 +243,37 @@ export function makeUC(deps: Deps) {
           todayStr,
         })
 
+      let selected: { selected_date: string; selected_day: SelectedDayMenu } | null =
+        null
+      if (selectedDate) {
+        const holidayDates = await publicHolidayLoader.getHolidayDates(
+          selectedDate,
+          selectedDate
+        )
+        const publishedSlots = slotsForDate(allSlots, selectedDate)
+        const menuStatus = resolveCustomerMenuStatus({
+          date: selectedDate,
+          isHoliday: holidayDates.includes(selectedDate),
+          hasPublishedMenu: publishedSlots.length > 0,
+        })
+        const day = buildCustomerDayMenu({
+          date: selectedDate,
+          slots: menuStatus === 'published' ? publishedSlots : [],
+          day: dayByDate.get(selectedDate),
+          subscription: sub,
+          now,
+          todayStr,
+        })
+        selected = {
+          selected_date: selectedDate,
+          selected_day: {
+            ...(menuStatus === 'published' ? day : concealUnpublishedMeals(day)),
+            menu_status: menuStatus,
+            cutoff_at: getSkipCutoffTimestamp(selectedDate).toISOString(),
+          },
+        }
+      }
+
       return {
         this_week: {
           label: `This week · ${formatWeekRangeLabel(thisWeek.dateFrom, thisWeek.dateTo)}`,
@@ -217,6 +295,7 @@ export function makeUC(deps: Deps) {
             nextWeek.dateTo
           ).map(toDay),
         },
+        ...(selected ?? {}),
       }
     } catch (error) {
       logger.error(

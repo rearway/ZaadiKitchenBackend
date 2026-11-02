@@ -8,7 +8,50 @@ import {
   isAdminWeekLocked,
   getAdminAheadWeekUnlockAt,
   getAnchorSaudiWorkWeek,
+  riyadhDateString,
+  isValidCivilDate,
+  makeSlotId,
+  parseSlotIndex,
+  nextAvailableSlotIndex,
 } from '../weekUtils.js'
+
+describe('slot indexes', () => {
+  const weekId = 'w2026-42'
+  const sun = '2026-10-11'
+
+  it('creates a 4th slot id and parses it', () => {
+    expect(makeSlotId(weekId, sun, 'executive', 4)).toBe(
+      'slot_w2026-42_sun_exec_4'
+    )
+    expect(makeSlotId(weekId, sun, 'salad', 4)).toBe(
+      'slot_w2026-42_sun_salad_4'
+    )
+    expect(parseSlotIndex('slot_w2026-42_sun_exec_4')).toBe(4)
+    expect(parseSlotIndex('slot_w2026-42_sun_salad_4')).toBe(4)
+    expect(parseSlotIndex(makeSlotId(weekId, sun, 'executive', 1))).toBe(1)
+  })
+
+  it('offers index 4 when 1..3 are taken and rejects a 5th', () => {
+    const taken = [1, 2, 3].map(index =>
+      makeSlotId(weekId, sun, 'executive', index)
+    )
+    expect(nextAvailableSlotIndex(taken)).toBe(4)
+
+    const full = [...taken, makeSlotId(weekId, sun, 'executive', 4)]
+    expect(nextAvailableSlotIndex(full)).toBeNull()
+
+    const saladTaken = [1, 2, 3].map(index =>
+      makeSlotId(weekId, sun, 'salad', index)
+    )
+    expect(nextAvailableSlotIndex(saladTaken)).toBe(4)
+    expect(
+      nextAvailableSlotIndex([
+        ...saladTaken,
+        makeSlotId(weekId, sun, 'salad', 4),
+      ])
+    ).toBeNull()
+  })
+})
 
 describe('Saudi work week bounds', () => {
   function addDays(dateStr: string, days: number): string {
@@ -40,6 +83,22 @@ describe('Saudi work week bounds', () => {
     const thisWeek = getSaudiWorkWeekBounds(wednesday)
     const nextWeek = getNextSaudiWorkWeekBounds(wednesday)
     expect(nextWeek.dateFrom).toBe(addDays(thisWeek.dateFrom, 7))
+  })
+})
+
+describe('riyadh civil date', () => {
+  it('is the next calendar day at 21:30 UTC', () => {
+    expect(riyadhDateString(new Date('2026-09-14T21:30:00.000Z'))).toBe('2026-09-15')
+  })
+
+  it('stays on the same calendar day at 02:00 UTC', () => {
+    expect(riyadhDateString(new Date('2026-09-14T02:00:00.000Z'))).toBe('2026-09-14')
+  })
+
+  it('accepts real dates and rejects impossible ones', () => {
+    expect(isValidCivilDate('2026-09-16')).toBe(true)
+    expect(isValidCivilDate('2026-02-31')).toBe(false)
+    expect(isValidCivilDate('2026-09-16T00:00:00Z')).toBe(false)
   })
 })
 

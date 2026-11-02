@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum } from 'class-validator'
+import { IsOptional, IsEnum, IsString } from 'class-validator'
 import { ApiPropertyOptional } from '@nestjs/swagger'
 
 export class GetCustomerMenuWeekQueryDTO {
@@ -6,4 +6,12 @@ export class GetCustomerMenuWeekQueryDTO {
   @IsOptional()
   @IsEnum(['all', 'executive', 'salad'])
   meal_type?: 'all' | 'executive' | 'salad'
+
+  @ApiPropertyOptional({
+    description:
+      'Riyadh civil date YYYY-MM-DD inside this week or next week (Sunday through the following Thursday).',
+  })
+  @IsOptional()
+  @IsString()
+  date?: string
 }

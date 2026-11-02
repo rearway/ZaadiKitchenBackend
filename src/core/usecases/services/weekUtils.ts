@@ -1,4 +1,5 @@
 import { isDeliveryDateForceLocked } from './forcePipelineLock.js'
+import { MAX_DISHES_PER_STREAM } from './menuWeekPublish.js'
 
 const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
@@ -107,7 +108,7 @@ export function parseSlotIndex(slotId: string): number {
 
 export function nextAvailableSlotIndex(existingSlotIds: string[]): number | null {
   const used = new Set(existingSlotIds.map(parseSlotIndex))
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= MAX_DISHES_PER_STREAM; i++) {
     if (!used.has(i)) return i
   }
   return null
@@ -157,6 +158,26 @@ export function isAfterSkipCutoff(deliveryDate: string, now: Date = new Date()):
 
 /** Asia/Riyadh is UTC+3 year-round. 18:00 KSA = 15:00 UTC, same as the skip cutoff. */
 const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000
+
+/** YYYY-MM-DD in Asia/Riyadh (UTC+3, no DST). */
+export function riyadhDateString(now: Date = new Date()): string {
+  const { year, month, day } = riyadhCivilDate(now)
+  const monthText = String(month + 1).padStart(2, '0')
+  const dayText = String(day).padStart(2, '0')
+  return `${year}-${monthText}-${dayText}`
+}
+
+/** True for a real YYYY-MM-DD calendar date. Rejects 2026-02-31 and non-dates. */
+export function isValidCivilDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const [year, month, day] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  )
+}
 
 function riyadhCivilDate(now: Date): { year: number; month: number; day: number; dayOfWeek: number } {
   const shifted = new Date(now.getTime() + RIYADH_OFFSET_MS)

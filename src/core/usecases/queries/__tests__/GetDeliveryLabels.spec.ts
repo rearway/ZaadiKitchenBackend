@@ -70,8 +70,8 @@ describe('GetDeliveryLabels', () => {
 
     expect(result.total_count).toBe(2)
     expect(result.filtered_count).toBe(1)
-    expect(result.bulk_download_label).toBe('Download Exec Labels (1)')
-    expect(result.areas[0].area_download_label).toBe('Download Exec Al Nakheel (1)')
+    expect(result.bulk_download_label).toBe('Download Balanced Labels (1)')
+    expect(result.areas[0].area_download_label).toBe('Download Balanced Al Nakheel (1)')
   })
 
   it('passes the areaId filter through to the loader', async () => {

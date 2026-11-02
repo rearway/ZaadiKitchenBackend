@@ -11,6 +11,7 @@ import {
   isPastWeek,
 } from '../services/menuWeekPublish.js'
 import { parseSlotIndex } from '../services/weekUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface ClearMenuSlotInput {
   weekId: string
@@ -35,6 +36,7 @@ export function makeUC(deps: Deps) {
     const { logger, menuWeekLoader, menuWeekPersistor } = deps
 
     try {
+      await loadMealTypeDisplays(deps.appSettingsLoader)
       const week = await menuWeekLoader.getWeekById(input.weekId)
       if (!week) throw new ResourceNotFoundError('MenuWeek', input.weekId)
 

@@ -1,5 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
 import { ResourceNotFoundError } from '../../../shared/errors/domain.errors.js'
+import { mealTypeShortEn } from '../../../shared/meal-display.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 import { getAdminPlannableWeeks, getDayLabel } from '../services/weekUtils.js'
 import {
   canAddStreamSlot,
@@ -64,7 +66,7 @@ function mapSlot(
   return {
     slot_id: slot.id,
     meal_type: slot.mealType,
-    meal_type_label: slot.mealType === 'executive' ? 'Exec' : 'Salad',
+    meal_type_label: mealTypeShortEn(slot.mealType),
     is_default: slot.isDefault,
     meal: meal
       ? {
@@ -85,6 +87,7 @@ export function makeUC(deps: Deps) {
     const { logger, menuWeekLoader, menuWeekPersistor, mealLoader } = deps
 
     try {
+      await loadMealTypeDisplays(deps.appSettingsLoader)
       const now = new Date()
       const bounds = getAdminPlannableWeeks(now).find(week => week.weekId === input.weekId)
       if (bounds) {

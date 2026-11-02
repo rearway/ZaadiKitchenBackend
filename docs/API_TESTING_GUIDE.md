@@ -371,7 +371,69 @@ Calling it again returns 200 "Account already deleted". ADMIN or OPS get **401**
 
 ## 4. Delivery areas, start dates, config, devices
 
-All routes need a JWT.
+All routes in this section need a JWT, except `GET /app/settings`.
+
+### 4.0 `GET /app/settings` (no JWT)
+
+Public. Do not send `Authorization`. `GET /config/public-holidays` stays JWT-guarded.
+
+Optional query: `platform=ios|android` and `app_version` (semver, for example `1.2.0`).
+
+Headers: `Cache-Control: public, max-age=300` and `ETag`. A matching `If-None-Match` returns **304**.
+
+200 body (placeholders until the seed is edited):
+
+```json
+{
+  "version": "2026-10-30T12:00:00.000Z",
+  "updated_at": "2026-10-30T12:00:00.000Z",
+  "meal_types": [
+    {
+      "slug": "executive",
+      "name_en": "Platio Balanced",
+      "name_ar": "Platio متوازن",
+      "short_en": "Balanced",
+      "short_ar": "متوازن",
+      "sort": 1
+    },
+    {
+      "slug": "salad",
+      "name_en": "Platio Light",
+      "name_ar": "Platio لايت",
+      "short_en": "Light",
+      "short_ar": "لايت",
+      "sort": 2
+    }
+  ],
+  "app_versions": {
+    "ios": { "min": "1.0.0", "latest": "1.0.0", "store_url": "https://apps.apple.com/app/id0000000000" },
+    "android": { "min": "1.0.0", "latest": "1.0.0", "store_url": "https://play.google.com/store/apps/details?id=com.platio.placeholder" }
+  },
+  "update": { "status": "none" },
+  "support": { "whatsapp": "+966500000000", "email": "support@platio.example", "phone": "+966500000000" },
+  "ordering": {
+    "cutoff_local_time": "18:00",
+    "timezone": "Asia/Riyadh",
+    "working_days": ["sun", "mon", "tue", "wed", "thu"]
+  },
+  "feature_flags": { "menu_day_picker": true, "referrals": true }
+}
+```
+
+- Slugs stay `executive` and `salad`. Names are display copy only.
+- `version` and `updated_at` are the newest row's `updated_at`. Before the seed runs, `version` is `"defaults"` and `updated_at` is `null` (the same placeholder payload).
+- `update.status`: omitted `platform`/`app_version`, an unknown platform, or a non-semver version → `none`. `app_version < min` → `force`. `min <= app_version < latest` → `optional`. Otherwise `none`.
+- Unknown keys and extra fields are not returned.
+
+Migration and seed (do not run against a shared database from a feature branch; run on the target environment):
+
+```bash
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed --seed 20261030130001-seed-app-settings.js
+```
+
+1. `src/infrastructure/SequelizePersistence/migrations/20261030130000-create-app-settings.js`
+2. `src/infrastructure/SequelizePersistence/seeders/20261030130001-seed-app-settings.js`
 
 | Endpoint | Response and rules |
 |---|---|
@@ -858,7 +920,7 @@ Rules:
 
 ### 13.1 `GET /menu`
 
-200: `this_week` and `next_week`, each `{ label, date_from, date_to }` (Sun–Thu), plus `filter_options` `[{ id: "all"|"executive"|"salad", label, is_default }]`, with `all` as the default.
+200: `this_week` and `next_week`, each `{ label, date_from, date_to }` (Sun–Thu), plus `filter_options` `[{ id: "all"|"executive"|"salad", label, is_default }]`, with `all` as the default. `id` stays the slug. `label` is the display name (`Platio Balanced` / `Platio Light` unless `app_settings.meal_types` overrides it).
 
 ### 13.2 `GET /menu/week?meal_type=all`
 
@@ -867,6 +929,41 @@ Rules:
 - The `meal_type` query is accepted but **ignored**: both streams are always returned.
 - Only dates that have **published** menu slots appear, up to 5 + 5 days. A draft week is invisible to customers.
 - On Friday and Saturday, "this week" means the next Sun–Thu.
+- `is_today` uses the Asia/Riyadh civil date, not the UTC date from `toISOString`.
+
+Optional `date=YYYY-MM-DD` (Riyadh civil date). **Without `date` the JSON is only `this_week` and `next_week`.** With `date`, those two objects are unchanged and the body also has `selected_date` and `selected_day`.
+
+`selected_day` is the same day object as a week card, plus:
+
+| Field | Meaning |
+|---|---|
+| `menu_status` | `published`, `not_published`, `non_working_day`, or `holiday` |
+| `cutoff_at` | 18:00 Asia/Riyadh the day before, as ISO UTC (`…T15:00:00.000Z`). Same instant as `isAfterSkipCutoff` / `can_change`. |
+
+- Friday and Saturday inside the window → **200** `non_working_day`, empty `executive_options` and `salad_options`.
+- A public holiday on Sun–Thu → `holiday`, no meals.
+- A Sun–Thu date with no published slots → `not_published`, no meals (draft menus are not returned).
+- `published` uses the same day card, including `can_change`.
+- **400 `INVALID_DATE`** when `date` is not a real `YYYY-MM-DD`.
+- **400 `DATE_OUT_OF_RANGE`** when `date` is outside this week's Sunday through next week's Thursday (details `date_from`, `date_to`).
+
+Example:
+
+`GET /menu/week?date=2026-09-16`
+
+```json
+{
+  "selected_date": "2026-09-16",
+  "selected_day": {
+    "delivery_date": "2026-09-16",
+    "menu_status": "published",
+    "cutoff_at": "2026-09-15T15:00:00.000Z",
+    "can_change": true
+  }
+}
+```
+
+The rest of `selected_day` matches a week-card day. `this_week` and `next_week` are still present.
 
 Each day:
 
@@ -1086,7 +1183,7 @@ Roles: **ADMIN, OPS**. Base: `/admin/menu`.
 
 Day rules:
 
-- Per day, per stream: **at least 1 and at most 3 dishes**.
+- Per day, per stream: **at least 1 and at most 4 dishes**.
 - Each stream needs one **default** dish.
 - **The same dish cannot appear twice on the same date**, in either stream.
 
@@ -1094,10 +1191,10 @@ Day rules:
 |---|---|
 | `GET /admin/menu/weeks?from_week=w2026-43&count=2` | `count` 1–8, default 2. Automatically creates the current and next week. Response `weeks[]` with `week_id`, `label`, `date_from`, `date_to`, `status`, `is_current_week`, `is_editable`, `fill_status`, plus `nav.prev_week` and `nav.next_week`. |
 | `GET /admin/menu/weeks/:week_id` | `week_id`, `status`, `is_editable`, `publish_ready`, `publish_blocked_reason`, `days[]`. Each day has `delivery_date`, `default_meal_id {executive, salad}`, `can_add_executive`, `can_add_salad`, `executive_slots[]`, `salad_slots[]`. Each slot has `slot_id`, `meal_type`, `is_default`, `meal`, `is_filled`, `is_editable`. Each day starts with one empty slot per stream. |
-| `POST /admin/menu/weeks/:week_id/days/:date/slots` | Body `{ "meal_type": "executive", "meal_id": "<optional>" }`. Adds a 2nd or 3rd slot. Response `slot_id`, `meal`, `week_fill_status`. |
+| `POST /admin/menu/weeks/:week_id/days/:date/slots` | Body `{ "meal_type": "executive", "meal_id": "<optional>" }`. Adds a 2nd, 3rd, or 4th slot. Response `slot_id`, `meal`, `week_fill_status`. |
 | `POST /admin/menu/weeks/:week_id/slots/:slot_id/assign` | Body `{ "meal_id": "..." }`. The first dish in a stream becomes the default automatically. |
 | `PATCH /admin/menu/weeks/:week_id/days/:date/default` | Body `{ "meal_type": "salad", "meal_id": "..." }`. The meal must already be on that stream that day. |
-| `DELETE /admin/menu/weeks/:week_id/slots/:slot_id` | Clears the dish. Extra slots (2nd and 3rd) are removed. |
+| `DELETE /admin/menu/weeks/:week_id/slots/:slot_id` | Clears the dish. Extra slots (2nd, 3rd, and 4th) are removed. |
 | `POST /admin/menu/weeks/:week_id/publish` | Response `{ week_id, status: "published", published_at, published_by, customer_visible_from }`. |
 | `POST /admin/menu/weeks/:week_id/unpublish` | Only from `published`. Response `{ message, data }` (camelCase week). Customers no longer see it. |
 
@@ -1108,7 +1205,7 @@ Errors:
 | `SLOT_NOT_EDITABLE` | 422 | Any change on a `past` week |
 | `MEAL_IS_DRAFT` | 422 | Assigning a draft meal |
 | `MEAL_ALREADY_ON_DAY` | 409 | The same dish already on that date, in any stream |
-| `DAY_MEAL_TYPE_LIMIT` | 409 | Adding a 4th slot to a stream |
+| `DAY_MEAL_TYPE_LIMIT` | 409 | Adding a 5th slot to a stream |
 | `CANNOT_CLEAR_DEFAULT` | 409 | Clearing the default while other dishes exist in the stream. Change the default first. |
 | `CANNOT_CLEAR_LAST_STREAM_MEAL` | 409 | On a **published** week, clearing the only dish of a stream that day |
 | `WEEK_NOT_COMPLETE` | 409 | Publishing when a day is missing a stream, a default, or has a draft meal. The message is like `"Mon: Salad missing"`. |

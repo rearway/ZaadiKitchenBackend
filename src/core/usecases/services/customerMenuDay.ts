@@ -101,6 +101,33 @@ export function canChangeMealChoice(input: {
   return input.optionCount >= 2
 }
 
+export type CustomerMenuStatus =
+  | 'published'
+  | 'not_published'
+  | 'non_working_day'
+  | 'holiday'
+
+/** Friday and Saturday are not kitchen days. The date is a civil YYYY-MM-DD. */
+export function isNonWorkingCivilDay(date: string): boolean {
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay()
+  return day === 5 || day === 6
+}
+
+/**
+ * Weekend wins over a holiday. A working day with no published slots is
+ * `not_published` so draft menus are not exposed.
+ */
+export function resolveCustomerMenuStatus(input: {
+  date: string
+  isHoliday: boolean
+  hasPublishedMenu: boolean
+}): CustomerMenuStatus {
+  if (isNonWorkingCivilDay(input.date)) return 'non_working_day'
+  if (input.isHoliday) return 'holiday'
+  if (input.hasPublishedMenu) return 'published'
+  return 'not_published'
+}
+
 export function resolveDayEffectiveMeal(
   mealType: 'executive' | 'salad',
   selectedMealId: string | null | undefined,

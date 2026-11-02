@@ -247,9 +247,9 @@ The `operation` field maps to the server handler name for support correlation.
 | POST | `/admin/meals/import` | ADMIN \| OPS | Bulk import (xlsx) |
 | GET | `/admin/menu/weeks` | ADMIN \| OPS | List menu weeks |
 | GET | `/admin/menu/weeks/:week_id` | ADMIN \| OPS | Week grid |
-| POST | `/admin/menu/weeks/:week_id/days/:date/slots` | ADMIN \| OPS | Add a stream slot (max 3 per type) |
+| POST | `/admin/menu/weeks/:week_id/days/:date/slots` | ADMIN \| OPS | Add a stream slot (max 4 per type) |
 | PATCH | `/admin/menu/weeks/:week_id/days/:date/default` | ADMIN \| OPS | Set default dish for a stream |
-| POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN \| OPS | Assign meal to slot (up to 3+3 per day) |
+| POST | `/admin/menu/weeks/:week_id/slots/:slot_id/assign` | ADMIN \| OPS | Assign meal to slot (up to 4+4 per day) |
 | DELETE | `/admin/menu/weeks/:week_id/slots/:slot_id` | ADMIN \| OPS | Clear slot |
 | POST | `/admin/menu/weeks/:week_id/publish` | ADMIN \| OPS | Publish week (min 1+1, default required) |
 | POST | `/admin/menu/weeks/:week_id/unpublish` | ADMIN \| OPS | Unpublish week |

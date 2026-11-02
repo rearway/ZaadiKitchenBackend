@@ -1,6 +1,7 @@
 import {
   canChangeMealChoice,
   defaultMealId,
+  resolveCustomerMenuStatus,
   streamOptions,
 } from '../customerMenuDay'
 import { makeSubscription } from '../../../../__tests__/helpers/mock-deps'
@@ -67,6 +68,22 @@ describe('customerMenuDay', () => {
     ])
   })
 
+  it('returns all four dishes on a stream', () => {
+    const meals = [1, 2, 3, 4].map(n =>
+      makeMeal({ id: `exec-${n}`, nameEn: `Dish ${n}` })
+    )
+    const options = streamOptions(
+      meals.map((meal, index) => makeSlot(meal, index === 0)),
+      'executive'
+    )
+    expect(options.map(option => option.meal_id)).toEqual([
+      'exec-1',
+      'exec-2',
+      'exec-3',
+      'exec-4',
+    ])
+  })
+
   it('returns the default dish id, falling back to the first filled', () => {
     expect(
       defaultMealId([makeSlot(execA, true), makeSlot(execB)], 'executive')
@@ -110,5 +127,43 @@ describe('customerMenuDay', () => {
         optionCount: 2,
       })
     ).toBe(false)
+  })
+
+  it('classifies weekend, holiday, published, and unpublished days', () => {
+    expect(
+      resolveCustomerMenuStatus({
+        date: '2026-09-18',
+        isHoliday: true,
+        hasPublishedMenu: true,
+      })
+    ).toBe('non_working_day')
+    expect(
+      resolveCustomerMenuStatus({
+        date: '2026-09-19',
+        isHoliday: false,
+        hasPublishedMenu: false,
+      })
+    ).toBe('non_working_day')
+    expect(
+      resolveCustomerMenuStatus({
+        date: '2026-09-15',
+        isHoliday: true,
+        hasPublishedMenu: true,
+      })
+    ).toBe('holiday')
+    expect(
+      resolveCustomerMenuStatus({
+        date: '2026-09-15',
+        isHoliday: false,
+        hasPublishedMenu: true,
+      })
+    ).toBe('published')
+    expect(
+      resolveCustomerMenuStatus({
+        date: '2026-09-15',
+        isHoliday: false,
+        hasPublishedMenu: false,
+      })
+    ).toBe('not_published')
   })
 })

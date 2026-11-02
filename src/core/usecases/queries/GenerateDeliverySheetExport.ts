@@ -1,5 +1,7 @@
 import type { Deps } from '../../entitygateway/index.js'
+import { mealTypeNameEn } from '../../../shared/meal-display.js'
 import { todayKSA } from '../services/revenueUtils.js'
+import { loadMealTypeDisplays } from '../services/mealDisplayNames.js'
 
 export interface GenerateDeliverySheetExportInput {
   date?: string
@@ -17,6 +19,7 @@ export function makeUC(deps: Deps) {
     const { logger, deliveryDayLoader } = deps
 
     try {
+      const displays = await loadMealTypeDisplays(deps.appSettingsLoader)
       const date = input.date ?? todayKSA()
       const rows = await deliveryDayLoader.getRiderDeliveriesByDate(date)
 
@@ -30,7 +33,8 @@ export function makeUC(deps: Deps) {
         Floor: r.floor ?? '',
         'Desk/Area': r.deskArea ?? '',
         Gate: r.gate ?? '',
-        'Meal Type': r.mealType === 'executive' ? 'Executive' : 'Salad',
+        'Meal Type': mealTypeNameEn(r.mealType, displays),
+        'Meal Type Slug': r.mealType,
         'Meal Name': r.mealName ?? '',
         'Rider Notes': r.riderNotes ?? '',
       }))

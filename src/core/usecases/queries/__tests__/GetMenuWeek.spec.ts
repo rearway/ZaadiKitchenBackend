@@ -122,6 +122,9 @@ describe('GetMenuWeek', () => {
     expect(day.default_meal_id).toEqual({ executive: 'e1', salad: 's1' })
     expect(day.can_add_executive).toBe(true)
     expect(day.can_add_salad).toBe(true)
+    expect(day.executive_slots[0].meal_type).toBe('executive')
+    expect(day.executive_slots[0].meal_type_label).toBe('Balanced')
+    expect(day.salad_slots[0].meal_type_label).toBe('Light')
     expect(day.executive_slots[0].is_default).toBe(true)
     expect(day.executive_slots[0].meal?.status).toBe('updated')
     expect(result.is_editable).toBe(true)
@@ -157,6 +160,47 @@ describe('GetMenuWeek', () => {
     expect(result.is_editable).toBe(true)
     expect(result.days[0].can_add_executive).toBe(true)
     expect(result.days[0].executive_slots[0].is_editable).toBe(true)
+  })
+
+  it('keeps can_add true at 3 slots and false at 4', async () => {
+    function slotsFor(count: number, mealType: 'executive' | 'salad'): MenuSlot[] {
+      return Array.from({ length: count }, (_, index) => ({
+        id: `slot-${mealType}-${index + 1}`,
+        weekId: 'w2026-42',
+        deliveryDate: '2026-10-11',
+        mealType,
+        isDefault: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+    }
+
+    const base = buildDeps()
+    const withCount = (count: number) =>
+      buildDeps({
+        menuWeekLoader: {
+          ...base.menuWeekLoader,
+          getWeekById: jest.fn().mockResolvedValue({
+            id: 'w2026-42',
+            weekNumber: 42,
+            status: 'draft',
+          }),
+          getSlotsByWeekId: jest
+            .fn()
+            .mockResolvedValue([
+              ...slotsFor(count, 'executive'),
+              ...slotsFor(count, 'salad'),
+            ]),
+        },
+      })
+
+    const three = await makeUC(withCount(3))({ weekId: 'w2026-42' })
+    expect(three.days[0].can_add_executive).toBe(true)
+    expect(three.days[0].can_add_salad).toBe(true)
+
+    const four = await makeUC(withCount(4))({ weekId: 'w2026-42' })
+    expect(four.days[0].can_add_executive).toBe(false)
+    expect(four.days[0].can_add_salad).toBe(false)
   })
 
   it('locks past weeks', async () => {

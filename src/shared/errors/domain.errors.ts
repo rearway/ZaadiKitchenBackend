@@ -1,4 +1,5 @@
 import { BaseError } from './base.error'
+import { mealTypeNameEn } from '../meal-display.js'
 
 export class ResourceNotFoundError extends BaseError {
   constructor(resource: string, identifier?: string) {
@@ -182,14 +183,11 @@ export class DayMealTypeAlreadyAssignedError extends BaseError {
     existingSlotId: string,
     existingMealName: string
   ) {
-    const [one, many] =
-      mealType === 'salad'
-        ? ['A salad', 'salads']
-        : ['An executive meal', 'executive meals']
+    const label = mealTypeNameEn(mealType)
     super(
       'DAY_MEAL_TYPE_ALREADY_ASSIGNED',
       409,
-      `${one} (${existingMealName}) is already assigned for ${deliveryDate}. You cannot assign two ${many} on the same day.`,
+      `${label} (${existingMealName}) is already assigned for ${deliveryDate}. You cannot assign two ${label} dishes on the same day.`,
       {
         meal_type: mealType,
         delivery_date: deliveryDate,
@@ -202,7 +200,7 @@ export class DayMealTypeAlreadyAssignedError extends BaseError {
 
 export class DayMealTypeLimitError extends BaseError {
   constructor(mealType: string, deliveryDate: string, limit: number) {
-    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    const label = mealTypeNameEn(mealType)
     super(
       'DAY_MEAL_TYPE_LIMIT',
       409,
@@ -214,10 +212,11 @@ export class DayMealTypeLimitError extends BaseError {
 
 export class CannotClearDefaultError extends BaseError {
   constructor(deliveryDate: string, mealType: string) {
+    const label = mealTypeNameEn(mealType)
     super(
       'CANNOT_CLEAR_DEFAULT',
       409,
-      `Set another ${mealType} default for ${deliveryDate} before clearing this dish.`,
+      `Set another ${label} default for ${deliveryDate} before clearing this dish.`,
       { delivery_date: deliveryDate, meal_type: mealType }
     )
   }
@@ -272,12 +271,33 @@ export class MealAlreadyOnDayError extends BaseError {
 
 export class CannotClearLastStreamMealError extends BaseError {
   constructor(deliveryDate: string, mealType: string) {
-    const label = mealType === 'salad' ? 'Salad' : 'Executive'
+    const label = mealTypeNameEn(mealType)
     super(
       'CANNOT_CLEAR_LAST_STREAM_MEAL',
       409,
       `Published weeks must keep at least one ${label} dish on ${deliveryDate}.`,
       { delivery_date: deliveryDate, meal_type: mealType }
+    )
+  }
+}
+
+export class InvalidDateError extends BaseError {
+  constructor() {
+    super(
+      'INVALID_DATE',
+      400,
+      'date must be a real calendar date in YYYY-MM-DD form.'
+    )
+  }
+}
+
+export class DateOutOfRangeError extends BaseError {
+  constructor(dateFrom: string, dateTo: string) {
+    super(
+      'DATE_OUT_OF_RANGE',
+      400,
+      `date must be between ${dateFrom} and ${dateTo}.`,
+      { date_from: dateFrom, date_to: dateTo }
     )
   }
 }
