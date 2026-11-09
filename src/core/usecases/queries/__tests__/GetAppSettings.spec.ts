@@ -9,6 +9,7 @@ import {
 } from '../../../../shared/meal-display'
 import {
   DEFAULT_APP_VERSIONS,
+  DEFAULT_APP_LABELS,
   DEFAULT_FEATURE_FLAGS,
   DEFAULT_ORDERING,
   DEFAULT_SUPPORT,
@@ -49,10 +50,51 @@ describe('GetAppSettings', () => {
       }),
     ])
     expect(result.app_versions).toEqual(DEFAULT_APP_VERSIONS)
+    expect(result.labels).toEqual(DEFAULT_APP_LABELS)
+    expect(result.labels.plans.find(p => p.key === 'month')).toEqual({
+      key: 'month',
+      name_en: 'Month Plan',
+      name_ar: 'الخطة الشهرية',
+    })
+    expect(result.labels.wallet.find(w => w.key === 'admin_credit')?.name_ar).toBe(
+      'رصيد من الإدارة'
+    )
     expect(result.support).toEqual(DEFAULT_SUPPORT)
     expect(result.ordering).toEqual(DEFAULT_ORDERING)
     expect(result.feature_flags).toEqual(DEFAULT_FEATURE_FLAGS)
     expect(result.update).toEqual({ status: 'none' })
+  })
+
+  it('merges DB labels over defaults by key', async () => {
+    const deps = buildDeps({
+      appSettingsLoader: {
+        getAll: jest.fn().mockResolvedValue([
+          row('labels', {
+            plans: [
+              {
+                key: 'week',
+                name_en: 'Weekly',
+                name_ar: 'أسبوعي مخصص',
+              },
+            ],
+            wallet: [{ key: 'unknown', name_en: 'X', name_ar: 'ي' }],
+          }),
+        ]),
+      },
+    })
+
+    const result = await makeUC(deps)({})
+
+    expect(result.labels.plans.find(p => p.key === 'week')).toEqual({
+      key: 'week',
+      name_en: 'Weekly',
+      name_ar: 'أسبوعي مخصص',
+    })
+    expect(result.labels.plans.find(p => p.key === 'month')?.name_en).toBe(
+      'Month Plan'
+    )
+    expect(result.labels.wallet.find(w => w.key === 'admin_credit')).toBeTruthy()
+    expect(result.labels.wallet.find(w => w.key === 'unknown')).toBeUndefined()
   })
 
   it('propagates unexpected loader errors instead of hiding them', async () => {

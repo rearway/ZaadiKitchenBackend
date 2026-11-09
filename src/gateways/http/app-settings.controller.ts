@@ -18,7 +18,8 @@ export class AppSettingsController {
 
   @Get('settings')
   @ApiOperation({
-    summary: 'Public app settings (no JWT). Meal slugs stay executive and salad.',
+    summary:
+      'Public app settings (no JWT). Includes meal_types and bilingual labels (plans, wallet, billing).',
   })
   @ApiQuery({ name: 'platform', required: false, enum: ['ios', 'android'] })
   @ApiQuery({ name: 'app_version', required: false, type: String })
