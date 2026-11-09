@@ -415,6 +415,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
       createSubscription: jest.fn().mockResolvedValue(makeSubscription()),
       updateSubscription: jest.fn().mockResolvedValue(undefined),
       expireActiveSubscriptions: jest.fn().mockResolvedValue(0),
+      listSubscriptionsWithPauseWindows: jest.fn().mockResolvedValue([]),
     },
 
     deliveryDayLoader: {

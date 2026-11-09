@@ -34,6 +34,18 @@ export class InternalJobsController {
     })
   }
 
+  @Post('sync-pause-statuses')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Flip scheduled pauses to paused after start cutoff; clear ended pause windows (EventBridge trigger)',
+  })
+  @ApiResponse({ status: 200 })
+  @HandleErrors('sync-pause-statuses')
+  async syncPauseStatuses() {
+    return this.useCases.commands.syncPauseStatuses({})
+  }
+
   @Post('sync-pending-payments')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

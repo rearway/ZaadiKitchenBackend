@@ -14,4 +14,6 @@ export interface SubscriptionPersistor {
     updates: Partial<Subscription>
   ): Promise<Subscription>
   expireActiveSubscriptions(beforeDate: string): Promise<number>
+  /** Subscriptions with a pause window still on the row (active/paused/cancelled). */
+  listSubscriptionsWithPauseWindows(): Promise<Subscription[]>
 }

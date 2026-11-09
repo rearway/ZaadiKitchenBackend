@@ -18,6 +18,16 @@ export class TwilioWhatsAppOtpService implements OtpService {
     this.contentSid =
       this.configService.get<string>('TWILIO_WHATSAPP_CONTENT_SID') || null
     this.client = accountSid && authToken ? twilio(accountSid, authToken) : null
+
+    const isSandboxFrom =
+      !this.from ||
+      this.from.includes('14155238886') ||
+      this.from.includes('sandbox')
+    if (this.client && this.from && !isSandboxFrom && !this.contentSid) {
+      this.logger.warn(
+        'TWILIO_WHATSAPP_CONTENT_SID is unset. Production WhatsApp OTP requires a Meta-approved authentication template (Content SID HX...). Plain-text sends usually fail.'
+      )
+    }
   }
 
   async sendOtp(phone: string, code: string, _channel: OtpChannel): Promise<void> {

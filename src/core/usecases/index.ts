@@ -35,6 +35,7 @@ import * as ResumeSubscription from './commands/ResumeSubscription.js'
 import * as CancelSubscription from './commands/CancelSubscription.js'
 import * as ResubscribeSubscription from './commands/ResubscribeSubscription.js'
 import * as ExpireSubscriptions from './commands/ExpireSubscriptions.js'
+import * as SyncPauseStatuses from './commands/SyncPauseStatuses.js'
 import * as ToggleSaladForDay from './commands/ToggleSaladForDay.js'
 import * as SwitchMealType from './commands/SwitchMealType.js'
 import * as SetMealChoice from './commands/SetMealChoice.js'
@@ -351,6 +352,12 @@ export function initUseCases(deps: Deps) {
     deps,
     ExpireSubscriptions.makeUC(deps),
     ExpireSubscriptions.name,
+    ...defaultWrappers
+  )
+  const syncPauseStatuses = wrapUC(
+    deps,
+    SyncPauseStatuses.makeUC(deps),
+    SyncPauseStatuses.name,
     ...defaultWrappers
   )
   const toggleSaladForDay = wrapUC(
@@ -1057,6 +1064,7 @@ export function initUseCases(deps: Deps) {
       cancelSubscription,
       resubscribeSubscription,
       expireSubscriptions,
+      syncPauseStatuses,
       toggleSaladForDay,
       switchMealType,
       setMealChoice,
