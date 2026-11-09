@@ -21,6 +21,7 @@ import {
 } from '../../core/entities/DeliveryDay.js'
 import { SubscriptionModel, DeliveryDayModel } from './models/index.js'
 import { resolveMealPhotoUrl } from '../../core/usecases/services/mealPhotoUtils.js'
+import { todayKSA } from '../../core/usecases/services/revenueUtils.js'
 
 @Injectable()
 export class SubscriptionPersistenceService
@@ -33,6 +34,17 @@ export class SubscriptionPersistenceService
   async getActiveSubscriptionByUserId(
     userId: string
   ): Promise<Subscription | null> {
+    // The expire job runs out of process; never hand callers a plan past its end_date.
+    await SubscriptionModel.update(
+      { status: 'expired' },
+      {
+        where: {
+          userId,
+          status: ['active', 'paused', 'cancelled'],
+          endDate: { [Op.lt]: todayKSA() },
+        },
+      }
+    )
     const model = await SubscriptionModel.findOne({
       where: { userId, status: ['active', 'paused', 'cancelled'] },
       order: [['createdAt', 'DESC']],
@@ -72,6 +84,17 @@ export class SubscriptionPersistenceService
       }
     )
     return count
+  }
+
+  async listSubscriptionsWithPauseWindows(): Promise<Subscription[]> {
+    const models = await SubscriptionModel.findAll({
+      where: {
+        status: ['active', 'paused', 'cancelled'],
+        pausedFrom: { [Op.ne]: null },
+        pausedUntil: { [Op.ne]: null },
+      },
+    })
+    return models.map(m => this.toSubscriptionEntity(m))
   }
 
   async getDeliveryDaysBySubscription(

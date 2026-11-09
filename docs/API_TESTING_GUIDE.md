@@ -875,6 +875,17 @@ It sets `expired` on every `active`, `paused` or `cancelled` subscription with *
 
 After this, `GET /subscriptions/me` returns 404, `/home` shows `subscription_status: "expired"` with a Renew CTA, and checkout works again.
 
+### 11.3 `POST /internal/jobs/sync-pause-statuses` (no `/api/v1`)
+
+Same `x-internal-secret` header. No body required.
+
+- Flips `active` → `paused` when a scheduled pause’s start cutoff has passed (18:00 KSA the day before `paused_from`). Same rules as `ensurePauseStatus` (does not flip `cancelled`).
+- When calendar day is after `paused_until`, clears pause fields and sets `paused` → `active`.
+
+Response: `{ paused_count, completed_count, scanned_count, as_of_date }`.
+
+Schedule daily after 18:00 KSA (see `docs/EXPIRE_SUBSCRIPTIONS_CRON.md`).
+
 ---
 
 ## 12. Meal type switch and salad toggle
