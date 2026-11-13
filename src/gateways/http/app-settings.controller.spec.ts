@@ -24,6 +24,13 @@ describe('AppSettingsController', () => {
     version: 'defaults',
     updated_at: null,
     meal_types: [],
+    labels: {
+      plans: [],
+      wallet: [],
+      billing_categories: [],
+      transaction_types: [],
+      promo: [],
+    },
     app_versions: {},
     update: { status: 'none' as const },
     support: {},

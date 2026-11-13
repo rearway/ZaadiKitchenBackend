@@ -7,6 +7,11 @@ import {
   parseMealTypes,
   type MealTypeDisplay,
 } from '../../../shared/meal-display.js'
+import {
+  DEFAULT_APP_LABELS,
+  parseAppLabels,
+  type AppLabelsCatalog,
+} from '../../../shared/app-labels.js'
 
 export interface PlatformVersion {
   min: string
@@ -42,12 +47,16 @@ export interface AppSettingsResponse {
   version: string
   updated_at: string | null
   meal_types: MealTypeDisplay[]
+  /** Bilingual catalogs for plans, wallet, billing, etc. (mobile i18n). */
+  labels: AppLabelsCatalog
   app_versions: AppVersions
   update: { status: AppUpdateStatus }
   support: SupportContacts
   ordering: OrderingSettings
   feature_flags: FeatureFlags
 }
+
+export { DEFAULT_APP_LABELS }
 
 export const DEFAULT_APP_VERSIONS: AppVersions = {
   ios: {
@@ -262,12 +271,14 @@ export function buildAppSettingsResponse(
     ...DEFAULT_MEAL_TYPES.map(item => ({ ...item })),
   ]
   applyMealTypeDisplays(mealTypes)
+  const labels = parseAppLabels(rowValue(rows, 'labels'))
   const appVersions = parseAppVersions(rowValue(rows, 'app_versions'))
   const updatedAt = rows.length > 0 ? latestUpdatedAt(rows) : null
   return {
     version: updatedAt ?? 'defaults',
     updated_at: updatedAt,
     meal_types: mealTypes.map(item => ({ ...item })),
+    labels,
     app_versions: appVersions,
     update: {
       status: resolveAppUpdateStatus({
