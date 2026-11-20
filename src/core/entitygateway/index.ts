@@ -125,6 +125,8 @@ export type Deps = {
   useMockPayment: boolean
   /** Moyasar dashboard webhook secret. Compared to payload secret_token. Empty rejects webhooks. */
   moyasarWebhookSecret: string
+  /** Twilio auth token for status callback X-Twilio-Signature validation. */
+  twilioAuthToken: string
   jwtSecret: string
   jwtAccessExpiration: string
   jwtRefreshExpirationMobile: string

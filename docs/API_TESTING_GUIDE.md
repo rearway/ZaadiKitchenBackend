@@ -51,7 +51,7 @@ Everything in this document is taken from the backend code (`src/gateways/http/*
 ### 0.1 Base URL and Postman variables
 
 - The `base_url` Postman variable **already includes `/api/v1`**, for example `https://<host>/api/v1`.
-- Exceptions without `/api/v1`: `GET /health`, `POST /internal/jobs/expire-subscriptions`, and Swagger at `GET /api`.
+- Exceptions without `/api/v1`: `GET /health`, `POST /internal/jobs/expire-subscriptions`, `POST /api/v1/auth/webhooks/twilio/otp-status` (Twilio status callback), `POST /api/v1/payment/webhooks/moyasar`, and Swagger at `GET /api`.
 
 **Mobile collection variables:** `base_url`, `access_token`, `refresh_token`, `area_id`, `building_id`, `session_id`, `payment_method_id`, `order_id`, `meal_id`, `location_id`, `delivery_day_id`, `delivery_date`.
 
@@ -70,6 +70,9 @@ Ask the backend owner what the target environment uses. These change expected re
 | `OTP_ALLOW_INDIAN_PHONES` | `false` in code (`true` in `.env.example`) | `true`: `+91XXXXXXXXXX` numbers (10 digits) are accepted in addition to Saudi `+966XXXXXXXXX` numbers (9 digits). |
 | `OTP_REVIEW_ENABLED` / `OTP_REVIEW_ACCOUNTS` | `false` | Fixed OTP codes for review phones, e.g. `+966500000101:1234,+966500000102:1234`. Review phones skip rate limits and can verify without calling send first. |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` (+ optional `TWILIO_WHATSAPP_CONTENT_SID`) | — | Required for `channel: "whatsapp"` when `SKIP_OTP=false`. If missing, send returns 400 `VALIDATION_ERROR`. |
+| `TWILIO_STATUS_CALLBACK_URL` | unset | When set, WhatsApp OTP sends include a status callback to `POST /api/v1/auth/webhooks/twilio/otp-status` (Twilio only; not for Postman). |
+| `OTP_SMS_FALLBACK_ENABLED` | `false` | When `true`, failed WhatsApp OTP may send the same code via SMS (Twilio SMS or AWS SNS). |
+| `TWILIO_SMS_FROM` / `TWILIO_SMS_MESSAGING_SERVICE_SID` | unset | Optional Twilio SMS sender for WhatsApp fallback. |
 | `USE_MOCK_PAYMENT` | `true` | `true`: every payment succeeds and any token is accepted. `false`: real Moyasar. |
 | `SKIP_SNS` | `false` | `true`: push notifications are only logged. |
 | `INTERNAL_JOB_SECRET` | — | Header `x-internal-secret` for the internal expiry job. |

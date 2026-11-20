@@ -128,7 +128,8 @@ import { coreAdapterService } from './coreadapter.service.js'
         }
         return new RoutingOtpService(
           new SnsOtpService(),
-          new TwilioWhatsAppOtpService(configService)
+          new TwilioWhatsAppOtpService(configService),
+          configService
         )
       },
       inject: [ConfigService],

@@ -72,6 +72,7 @@ import * as SendCommsBroadcast from './commands/SendCommsBroadcast.js'
 import * as UpdateCommsAutomation from './commands/UpdateCommsAutomation.js'
 import * as SyncPendingPayments from './commands/SyncPendingPayments.js'
 import * as HandleMoyasarWebhook from './commands/HandleMoyasarWebhook.js'
+import * as HandleTwilioStatusCallback from './commands/HandleTwilioStatusCallback.js'
 
 import * as GetPendingRatings from './queries/GetPendingRatings.js'
 import * as GetSubmittedRatings from './queries/GetSubmittedRatings.js'
@@ -578,6 +579,12 @@ export function initUseCases(deps: Deps) {
     deps,
     HandleMoyasarWebhook.makeUC(deps),
     HandleMoyasarWebhook.name,
+    ...defaultWrappers
+  )
+  const handleTwilioStatusCallback = wrapUC(
+    deps,
+    HandleTwilioStatusCallback.makeUC(deps),
+    HandleTwilioStatusCallback.name,
     ...defaultWrappers
   )
   const getPendingRatings = wrapUC(
@@ -1101,6 +1108,7 @@ export function initUseCases(deps: Deps) {
       updateCommsAutomation,
       syncPendingPayments,
       handleMoyasarWebhook,
+      handleTwilioStatusCallback,
     },
   }
 }
