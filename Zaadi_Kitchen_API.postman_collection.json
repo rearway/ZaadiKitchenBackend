@@ -1204,7 +1204,7 @@
                 }
               ]
             },
-            "description": "Per delivery: meal_id, meal_name, photo_url of the effective dish (pick or default), selected_meal_id, can_change. Skip flags unchanged. See MEAL_OPTIONS_API_UI.md."
+            "description": "Per delivery: meal_id, meal_name, meal_name_ar, photo_url of the effective dish (pick or default), selected_meal_id, can_change. Skip flags unchanged. See MEAL_OPTIONS_API_UI.md."
           },
           "response": []
         },

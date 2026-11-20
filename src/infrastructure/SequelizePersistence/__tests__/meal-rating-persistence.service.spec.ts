@@ -24,6 +24,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
     expect(PENDING_RATING_DAYS_SQL).toContain('INNER JOIN LATERAL')
     expect(PENDING_RATING_DAYS_SQL).not.toContain('ms.meal_type = dd.meal_type')
     expect(PENDING_RATING_DAYS_SQL).toContain('em.photo_url')
+    expect(PENDING_RATING_DAYS_SQL).toContain('em.name_ar as meal_name_ar')
   })
 
   it('keeps unrated meals pending after Daily Ops closes the day', () => {
@@ -52,6 +53,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
         delivery_date: '2026-09-02',
         meal_id: 'meal-uuid-1',
         meal_name_en: 'Chicken Biriyani meals',
+        meal_name_ar: 'برياني دجاج',
         meal_type: 'executive',
         kcal: 320,
         emoji: '🍗',
@@ -86,6 +88,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
         deliveryDate: '2026-09-02',
         mealId: 'meal-uuid-1',
         mealName: 'Chicken Biriyani meals',
+        mealNameAr: 'برياني دجاج',
         mealType: 'executive',
         kcal: 320,
         emoji: '🍗',
@@ -102,6 +105,7 @@ describe('MealRatingPersistenceService.getPendingRatingDays', () => {
         delivery_date: '2026-09-22',
         meal_id: 'meal-uuid-2',
         meal_name_en: 'Salmon Fillet with Quinoa',
+        meal_name_ar: null,
         meal_type: 'executive',
         kcal: 560,
         emoji: '🐟',

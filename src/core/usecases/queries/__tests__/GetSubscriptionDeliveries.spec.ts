@@ -169,6 +169,7 @@ describe('GetSubscriptionDeliveries', () => {
         meal: {
           id: 'exec-b',
           nameEn: 'Picked Exec',
+          nameAr: 'كبسة',
           mealType: 'executive',
           kcal: 500,
           emoji: '🍖',
@@ -190,10 +191,21 @@ describe('GetSubscriptionDeliveries', () => {
     expect(result.deliveries[0]).toMatchObject({
       meal_id: 'exec-b',
       meal_name: 'Picked Exec',
+      meal_name_ar: 'كبسة',
       photo_url: 'https://cdn.example.com/b.jpg',
       selected_meal_id: 'exec-b',
       can_change: true,
     })
+  })
+
+  it('returns null meal_name_ar when the effective meal has no Arabic name', async () => {
+    const day = makeDeliveryDay({ date: FUTURE_DATE, mealName: 'Lamb Kabsa' })
+    const deps = makeSubWithDays({}, [day])
+    const getDeliveries = makeUC(deps)
+
+    const result = await getDeliveries({ userId: 'user-uuid-1' })
+
+    expect(result.deliveries[0].meal_name_ar).toBeNull()
   })
 
   it('includes the meal_name in each delivery item', async () => {

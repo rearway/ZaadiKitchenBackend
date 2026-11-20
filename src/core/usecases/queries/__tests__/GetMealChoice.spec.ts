@@ -43,7 +43,11 @@ function makeSlot(meal: Meal, isDefault = false): MenuSlotWithMeal {
 describe('GetMealChoice', () => {
   it('returns stream options, default, selected, and effective meal', async () => {
     const execA = makeMeal({ id: 'exec-a', nameEn: 'Default Exec' })
-    const execB = makeMeal({ id: 'exec-b', nameEn: 'Picked Exec' })
+    const execB = makeMeal({
+      id: 'exec-b',
+      nameEn: 'Picked Exec',
+      nameAr: 'تنفيذي مختار',
+    })
     const salad = makeMeal({ id: 'salad-a', mealType: 'salad', nameEn: 'Caesar' })
     const sub = makeSubscription()
     const deps = buildDeps({
@@ -81,7 +85,11 @@ describe('GetMealChoice', () => {
       selected_meal_id: 'exec-b',
       default_meal_id: 'exec-a',
       can_change: true,
-      effective_meal: { meal_id: 'exec-b', name_en: 'Picked Exec' },
+      effective_meal: {
+        meal_id: 'exec-b',
+        name_en: 'Picked Exec',
+        name_ar: 'تنفيذي مختار',
+      },
     })
     expect(result.options.map(o => o.meal_id)).toEqual([
       'exec-a',

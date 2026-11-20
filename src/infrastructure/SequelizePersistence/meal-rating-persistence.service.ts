@@ -54,6 +54,7 @@ export const PENDING_RATING_DAYS_SQL = `SELECT dd.id as delivery_day_id,
               dd.date as delivery_date,
               em.meal_id as meal_id,
               em.name_en as meal_name_en,
+              em.name_ar as meal_name_ar,
               em.meal_type,
               em.kcal,
               em.emoji,
@@ -106,6 +107,7 @@ export class MealRatingPersistenceService
       delivery_date: string
       meal_id: string
       meal_name_en: string
+      meal_name_ar: string | null
       meal_type: string
       kcal: number
       emoji: string
@@ -123,6 +125,7 @@ export class MealRatingPersistenceService
       deliveryDate: r.delivery_date,
       mealId: r.meal_id,
       mealName: r.meal_name_en,
+      mealNameAr: r.meal_name_ar,
       mealType: r.meal_type,
       kcal: r.kcal,
       emoji: r.emoji,
