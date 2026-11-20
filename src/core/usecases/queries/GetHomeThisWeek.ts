@@ -27,6 +27,7 @@ export interface GetHomeThisWeekOutput {
   cards: Array<{
     meal_id: string
     name_en: string
+    name_ar: string | null
     meal_type: string
     kcal: number
     emoji: string
@@ -177,6 +178,7 @@ export function makeUC(deps: Deps) {
           return {
             meal_id: effective.id,
             name_en: effective.nameEn,
+            name_ar: effective.nameAr ?? null,
             meal_type: assignedMealType ?? effective.mealType,
             kcal: effective.kcal,
             emoji: effective.emoji,

@@ -11,6 +11,7 @@ import { canUseSkipAndPause } from './subscriptionServicePeriod.js'
 export type MealSummary = {
   meal_id: string
   name_en: string
+  name_ar: string | null
   meal_type: string
   kcal: number
   emoji: string
@@ -26,6 +27,7 @@ export function toMealSummary(meal: Meal): MealSummary {
   return {
     meal_id: meal.id,
     name_en: meal.nameEn,
+    name_ar: meal.nameAr ?? null,
     meal_type: meal.mealType,
     kcal: meal.kcal,
     emoji: meal.emoji,

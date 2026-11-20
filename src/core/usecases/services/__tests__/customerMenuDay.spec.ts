@@ -3,6 +3,7 @@ import {
   defaultMealId,
   resolveCustomerMenuStatus,
   streamOptions,
+  toMealSummary,
 } from '../customerMenuDay'
 import { makeSubscription } from '../../../../__tests__/helpers/mock-deps'
 import type { Meal } from '../../../entities/Meal.js'
@@ -165,5 +166,18 @@ describe('customerMenuDay', () => {
         hasPublishedMenu: false,
       })
     ).toBe('not_published')
+  })
+})
+
+describe('toMealSummary', () => {
+  it('includes name_ar when present on the meal', () => {
+    const summary = toMealSummary(
+      makeMeal({ nameAr: 'كبسة لحم' })
+    )
+    expect(summary.name_ar).toBe('كبسة لحم')
+  })
+
+  it('returns null name_ar when the meal has no Arabic name', () => {
+    expect(toMealSummary(makeMeal()).name_ar).toBeNull()
   })
 })

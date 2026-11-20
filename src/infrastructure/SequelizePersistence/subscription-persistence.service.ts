@@ -145,6 +145,7 @@ export class SubscriptionPersistenceService
       date: string
       meal_type: string
       meal_name: string | null
+      meal_name_ar: string | null
       meal_id: string | null
       photo_url: string | null
       kcal: number | null
@@ -156,6 +157,7 @@ export class SubscriptionPersistenceService
               dd.date,
               dd.meal_type,
               COALESCE(em.name_en, dd.meal_name) as meal_name,
+              em.name_ar as meal_name_ar,
               em.meal_id as meal_id,
               em.photo_url,
               em.kcal,
@@ -180,6 +182,7 @@ export class SubscriptionPersistenceService
       date: r.date,
       mealType: r.meal_type,
       mealName: r.meal_name,
+      mealNameAr: r.meal_name_ar,
       photoUrl: resolveMealPhotoUrl(r.photo_url, r.meal_id),
       kcal: r.kcal,
       status: r.status,

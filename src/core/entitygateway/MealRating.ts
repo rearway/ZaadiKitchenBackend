@@ -5,6 +5,7 @@ export interface PendingRatingDay {
   deliveryDate: string
   mealId: string
   mealName: string
+  mealNameAr: string | null
   mealType: string
   kcal: number
   emoji: string

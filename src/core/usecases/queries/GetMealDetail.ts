@@ -25,7 +25,7 @@ export interface GetMealDetailInput {
 export interface GetMealDetailOutput {
   meal_id: string
   name_en: string
-  name_ar?: string
+  name_ar: string | null
   meal_type: string
   emoji: string
   photo_url: string | null
@@ -151,7 +151,7 @@ export function makeUC(deps: Deps) {
       return {
         meal_id: meal.id,
         name_en: meal.nameEn,
-        name_ar: meal.nameAr,
+        name_ar: meal.nameAr ?? null,
         meal_type: meal.mealType,
         emoji: meal.emoji,
         photo_url: meal.photoUrl ?? null,

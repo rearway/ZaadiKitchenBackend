@@ -15,6 +15,7 @@ export function effectiveMealLateralJoin(opts?: {
   return `${join} (
   SELECT m.id AS meal_id,
          m.name_en,
+         m.name_ar,
          m.meal_type,
          m.kcal,
          m.emoji,
