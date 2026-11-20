@@ -3,6 +3,13 @@ import { ConfigService } from '@nestjs/config'
 import twilio from 'twilio'
 
 import type { OtpChannel, OtpService } from '../../core/entitygateway/OtpService.js'
+import { getTwilioStatusCallbackUrl } from '../../shared/otp/twilioOtpConfig.js'
+import {
+  assertFourDigitOtpCode,
+  buildTwilioWhatsAppOtpCreateParams,
+  formatWhatsAppAddress,
+  formatWhatsAppFrom,
+} from '../../shared/otp/twilioWhatsAppPayload.js'
 
 @Injectable()
 export class TwilioWhatsAppOtpService implements OtpService {
@@ -10,6 +17,7 @@ export class TwilioWhatsAppOtpService implements OtpService {
   private readonly client: ReturnType<typeof twilio> | null
   private readonly from: string | null
   private readonly contentSid: string | null
+  private readonly statusCallbackUrl: string | null
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID')
@@ -17,7 +25,17 @@ export class TwilioWhatsAppOtpService implements OtpService {
     this.from = this.configService.get<string>('TWILIO_WHATSAPP_FROM') || null
     this.contentSid =
       this.configService.get<string>('TWILIO_WHATSAPP_CONTENT_SID') || null
+    this.statusCallbackUrl = getTwilioStatusCallbackUrl()
     this.client = accountSid && authToken ? twilio(accountSid, authToken) : null
+
+    const messagingServiceSid = this.configService.get<string>(
+      'TWILIO_MESSAGING_SERVICE_SID'
+    )
+    if (messagingServiceSid) {
+      this.logger.warn(
+        'TWILIO_MESSAGING_SERVICE_SID is set but WhatsApp OTP sends use From only (no MessagingServiceSid) to avoid sender mismatch with authentication templates.'
+      )
+    }
 
     const isSandboxFrom =
       !this.from ||
@@ -37,23 +55,55 @@ export class TwilioWhatsAppOtpService implements OtpService {
       )
     }
 
-    const from = this.from.startsWith('whatsapp:') ? this.from : `whatsapp:${this.from}`
-    const to = `whatsapp:${phone}`
+    assertFourDigitOtpCode(code)
+    const from = formatWhatsAppFrom(this.from)
+    const to = formatWhatsAppAddress(phone)
+    const statusCallback = this.statusCallbackUrl ?? undefined
 
-    // Outside the 24h session window (production) WhatsApp only delivers approved templates.
-    const message = this.contentSid
-      ? await this.client.messages.create({
-          from,
-          to,
-          contentSid: this.contentSid,
-          contentVariables: JSON.stringify({ '1': code }),
-        })
-      : await this.client.messages.create({
-          from,
-          to,
-          body: `Your Platio Kitchen verification code is ${code}. Valid for 2 minutes.`,
-        })
+    if (this.contentSid) {
+      const createParams = buildTwilioWhatsAppOtpCreateParams({
+        from: this.from,
+        phoneE164: phone,
+        code,
+        contentSid: this.contentSid,
+        statusCallbackUrl: this.statusCallbackUrl,
+      })
 
-    this.logger.log(`OTP WhatsApp sent to ${phone} (sid: ${message.sid}, status: ${message.status})`)
+      const message = await this.client.messages.create(createParams)
+
+      if (
+        message.status === 'failed' ||
+        (message.errorCode !== undefined && message.errorCode !== null)
+      ) {
+        throw new Error(
+          `Twilio WhatsApp template send failed (status: ${message.status}, error: ${message.errorCode})`
+        )
+      }
+
+      this.logger.log(
+        `OTP WhatsApp template sent to ${phone} (sid: ${message.sid}, status: ${message.status})`
+      )
+      return
+    }
+
+    const message = await this.client.messages.create({
+      from,
+      to,
+      body: `Your Platio Kitchen verification code is ${code}. Valid for 2 minutes.`,
+      ...(statusCallback ? { statusCallback } : {}),
+    })
+
+    if (
+      message.status === 'failed' ||
+      (message.errorCode !== undefined && message.errorCode !== null)
+    ) {
+      throw new Error(
+        `Twilio WhatsApp send failed (status: ${message.status}, error: ${message.errorCode})`
+      )
+    }
+
+    this.logger.log(
+      `OTP WhatsApp sent to ${phone} (sid: ${message.sid}, status: ${message.status})`
+    )
   }
 }

@@ -11,6 +11,7 @@ import { AdminPlansController } from './admin-plans.controller.js'
 import { CheckoutController } from './checkout.controller.js'
 import { PaymentController } from './payment.controller.js'
 import { MoyasarWebhookController } from './moyasar-webhook.controller.js'
+import { TwilioWebhookController } from './twilio-webhook.controller.js'
 import { OrdersController } from './orders.controller.js'
 import { SubscriptionsController } from './subscriptions.controller.js'
 import { ReferralsController } from './referrals.controller.js'
@@ -46,6 +47,7 @@ import { CoreAdapterModule } from '../../coreadapter/coreadapter.module.js'
     CheckoutController,
     PaymentController,
     MoyasarWebhookController,
+    TwilioWebhookController,
     OrdersController,
     SubscriptionsController,
     ReferralsController,

@@ -123,6 +123,7 @@ export const coreAdapterService: FactoryProvider = {
         'MOYASAR_WEBHOOK_SECRET',
         ''
       ),
+      twilioAuthToken: configService.get<string>('TWILIO_AUTH_TOKEN', ''),
       jwtSecret: configService.get<string>('JWT_SECRET', 'default-secret'),
       jwtAccessExpiration: configService.get<string>(
         'JWT_ACCESS_EXPIRATION',

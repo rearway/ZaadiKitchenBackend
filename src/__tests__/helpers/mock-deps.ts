@@ -240,6 +240,7 @@ export function buildDeps(overrides: Partial<Deps> = {}): Deps {
     skipOtp: true,
     useMockPayment: true,
     moyasarWebhookSecret: 'whsec_test',
+    twilioAuthToken: 'twilio_test_auth_token',
     jwtSecret: 'test-jwt-secret-key-at-least-32-chars-long',
     jwtAccessExpiration: '15m',
     jwtRefreshExpirationMobile: '30d',
