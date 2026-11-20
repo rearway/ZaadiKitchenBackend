@@ -710,7 +710,7 @@ Assertions on every call:
 Each delivery has:
 
 - `date`, `label` (e.g. `Sun 12 Jun · Today`)
-- `meal_id`, `meal_name`, `photo_url` (the **effective** dish)
+- `meal_id`, `meal_name`, `meal_name_ar`, `photo_url` (the **effective** dish; `meal_name_ar` is `null` when the dish has no Arabic name)
 - `meal_type` (this day's stream)
 - `status` (1.5)
 - `selected_meal_id`
@@ -983,10 +983,10 @@ Each day:
 | `delivery_date`, `day_label` (`TODAY` or `Mon 14`), `is_today` | |
 | `card_state` | `today`, `upcoming`, `past` or `skipped` |
 | `meal_type` | This day's stream: from the delivery row, or the subscription default when there is no row |
-| `meal_id`, `name_en`, `kcal`, `emoji`, `photo_url`, `effective_meal` | The effective dish (1.8) |
+| `meal_id`, `name_en`, `name_ar`, `kcal`, `emoji`, `photo_url`, `effective_meal` | The effective dish (1.8); `name_ar` is `null` when missing |
 | `selected_meal_id` | The customer's pick, or `null` |
 | `can_change` | Whether the dish can be changed (1.6) |
-| `executive_options[]`, `salad_options[]` | `{ meal_id, name_en, meal_type, kcal, emoji, photo_url, is_default, is_selected }` |
+| `executive_options[]`, `salad_options[]` | `{ meal_id, name_en, name_ar, meal_type, kcal, emoji, photo_url, is_default, is_selected }` |
 | `skip_available`, `skip_reason`, `undoable`, `is_skipped`, `is_deliverable` | 1.6. A day without a delivery row gives `skip_reason:"no_delivery"` and `is_deliverable:false`. |
 
 ### 13.3 `GET /meals/:meal_id?delivery_date=YYYY-MM-DD`
@@ -1007,8 +1007,8 @@ An unknown meal returns 404.
 - `default_meal_id` (the admin default for the stream)
 - `can_change`
 - `cutoff_at` (ISO, 18:00 KSA the day before)
-- `effective_meal`
-- `options[]` (both streams), `executive_options[]`, `salad_options[]`
+- `effective_meal` (includes `name_ar`, or `null` when missing)
+- `options[]` (both streams), `executive_options[]`, `salad_options[]` (each option includes `name_ar`)
 
 No subscription, or no delivery row for the date, returns 404.
 
@@ -1070,7 +1070,7 @@ Assert that home's `days_remaining` equals `/subscriptions/me` `remaining_count`
 
 Each card:
 
-- The effective dish, `delivery_date`, `day_label`
+- The effective dish (`name_en`, `name_ar`, …), `delivery_date`, `day_label`
 - `card_state`: `today`, `upcoming`, `skipped`, `past`, `browse_only` or `past_greyed`
 - `card_border`
 - The skip flags, `is_deliverable`, `can_change`
@@ -1085,8 +1085,8 @@ Paused gives browse only. No subscription gives a Subscribe CTA. Expired gives a
 
 | Endpoint | Notes |
 |---|---|
-| `GET /subscriptions/me/history?page=1&per_page=20&period=last_30_days` | `period` is `last_30_days` or `last_90_days`. `per_page` max 50. Response is **camelCase** `{ data: { entries: [{ deliveryDayId, date, mealType, mealName, photoUrl, kcal, status, stars, tags }], pagination: { page, perPage, total, totalPages } } }`. Only `delivered` and `skipped` days. |
-| `GET /subscriptions/me/pending-ratings` | `{ data: [...] }`, at most **5**, newest first. Delivered days with no rating. No subscription gives `{ data: [] }`. |
+| `GET /subscriptions/me/history?page=1&per_page=20&period=last_30_days` | `period` is `last_30_days` or `last_90_days`. `per_page` max 50. Response is **camelCase** `{ data: { entries: [{ deliveryDayId, date, mealType, mealName, mealNameAr, photoUrl, kcal, status, stars, tags }], pagination: { page, perPage, total, totalPages } } }`. Only `delivered` and `skipped` days. `mealNameAr` is `null` when the resolved dish has no Arabic name (or when only a legacy English `meal_name` snapshot exists). |
+| `GET /subscriptions/me/pending-ratings` | `{ data: [...] }` (camelCase: `mealName`, `mealNameAr`, …), at most **5**, newest first. Delivered days with no rating. No subscription gives `{ data: [] }`. |
 | `GET /subscriptions/me/ratings?page&per_page` | `{ data: { ratings: [...camelCase], pagination } }` |
 | `POST /meals/:meal_id/rating` | Body `{ "deliveryDayId": "<uuid>", "stars": 1-5, "tags": ["Great portion"] }`. 201 `{ message, data }`. |
 

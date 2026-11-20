@@ -19,6 +19,7 @@ export interface DeliveryItem {
   label: string
   meal_id: string | null
   meal_name: string | null
+  meal_name_ar: string | null
   photo_url: string | null
   meal_type: string
   status: string
@@ -122,6 +123,7 @@ export function makeUC(deps: Deps) {
           label: formatShortLabel(dayDate, today),
           meal_id: effective?.id ?? null,
           meal_name: effective?.nameEn ?? day.mealName ?? null,
+          meal_name_ar: effective?.nameAr ?? null,
           photo_url: effective?.photoUrl ?? null,
           meal_type: day.mealType,
           status: day.status,

@@ -53,6 +53,7 @@ export interface DayMenu {
   meal_type: string | null
   meal_id: string | null
   name_en: string | null
+  name_ar: string | null
   kcal: number | null
   emoji: string | null
   photo_url: string | null
@@ -88,6 +89,7 @@ function concealUnpublishedMeals(day: DayMenu): DayMenu {
     ...day,
     meal_id: null,
     name_en: null,
+    name_ar: null,
     kcal: null,
     emoji: null,
     photo_url: null,
@@ -164,6 +166,7 @@ export function buildCustomerDayMenu(input: {
     meal_type: assignedMealType ?? null,
     meal_id: summary?.meal_id ?? null,
     name_en: summary?.name_en ?? null,
+    name_ar: summary?.name_ar ?? null,
     kcal: summary?.kcal ?? null,
     emoji: summary?.emoji ?? null,
     photo_url: summary?.photo_url ?? null,
